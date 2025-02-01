@@ -24,8 +24,7 @@ const createWindow = () => {
 
   // Updated: go up two levels from dist to locate the renderer folder.
   const indexPath = path.join(__dirname, '../../renderer/out/index.html');
-  const indexUrl = url.format({
-    pathname: indexPath,
+  const indexUrl = url.format({    pathname: indexPath,
     protocol: 'file:',
     slashes: true,
   });
