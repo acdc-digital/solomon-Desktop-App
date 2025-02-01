@@ -1,0 +1,14 @@
+{
+  "name": "solomon-desktop-app",
+  "version": "0.1.0",
+  "description": "",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "test": "echo 'This is a monorepo for Solomon Desktop-App'"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "GNU"
+}
