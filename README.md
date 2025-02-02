@@ -11,7 +11,7 @@ Our Goal at ACDC.digital is to create a Full-Service workstation which enables E
 Once cloned ensure you have pnpm installed (if not already): npm install -g pnpm
 
 1. pnpm install
-2. Optional development mode: pnpm run dev
+2. **Optional development mode:** pnpm run dev
 3. pnpm run build
 4. pnpm run start
 
