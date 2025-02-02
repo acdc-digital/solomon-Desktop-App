@@ -4,18 +4,20 @@
   "description": "solomon-desktop-application artifically powered Task station",
   "private": true,
   "devDependencies": {
-    "typescript": "5.7.3",
+    "@eslint/eslintrc": "^3",
     "@types/node": "^20.5.6",
     "@types/react": "^19.x",
     "@types/react-dom": "^19.x",
+    "concurrently": "^9.1.2",
     "eslint": "^9.x",
     "eslint-config-next": "15.1.6",
-    "@eslint/eslintrc": "^3"
+    "typescript": "5.7.3"
   },
   "scripts": {
     "test": "echo 'This is a monorepo for Solomon Desktop-App'",
     "build": "pnpm --filter=renderer run build && pnpm --filter=electron run build",
     "build:all": "pnpm -r run build",
+    "dev": "concurrently \"pnpm --filter=renderer run dev\" \"pnpm --filter=electron run dev\"",
     "dev:all": "pnpm -r run dev",
     "lint": "pnpm -r run lint",
     "start": "pnpm --filter electron run start"

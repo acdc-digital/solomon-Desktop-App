@@ -6,8 +6,8 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc && electron-builder",
-    "prestart": "npm run build",
     "start": "electron .",
+    "dev": "concurrently \"tsc --watch\" \"wait-on http://localhost:3000 && cross-env NODE_ENV=development electron .\"",
     "package": "electron-builder --dir",
     "dist": "electron-builder",
     "make": "electron-forge make",
@@ -33,8 +33,11 @@
     "@electron/fuses": "^1.8.0",
     "@types/electron": "^1.6.12",
     "@types/electron-squirrel-startup": "^1.0.2",
+    "concurrently": "^9.1.2",
+    "cross-env": "^7.0.3",
     "electron": "^34.0.2",
-    "electron-builder": "^25.1.8"
+    "electron-builder": "^25.1.8",
+    "wait-on": "^8.0.2"
   },
   "keywords": [],
   "author": "matthewsimon",
