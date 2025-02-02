@@ -14,7 +14,7 @@
   },
   "scripts": {
     "test": "echo 'This is a monorepo for Solomon Desktop-App'",
-    "build": "pnpm --filter=... build",
+    "build": "pnpm --filter=renderer run build && pnpm --filter=electron run build",
     "build:all": "pnpm -r run build",
     "dev:all": "pnpm -r run dev",
     "lint": "pnpm -r run lint",

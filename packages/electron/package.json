@@ -5,13 +5,22 @@
   "description": "My Electron application description",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && electron-builder",
     "prestart": "npm run build",
-    "start": "electron-forge start",
-    "package": "electron-forge package",
+    "start": "electron .",
+    "package": "electron-builder --dir",
+    "dist": "electron-builder",
     "make": "electron-forge make",
     "publish": "electron-forge publish",
     "lint": "eslint 'src/**/*.{ts,tsx}'"
+  },
+  "build": {
+    "appId": "com.solomon.desktop",
+    "productName": "Solomon Desktop App",
+    "files": [
+      "dist/**/*",
+      "../renderer/out/**/*"
+    ]
   },
   "devDependencies": {
     "@electron-forge/cli": "^7.6.1",
@@ -24,11 +33,12 @@
     "@electron/fuses": "^1.8.0",
     "@types/electron": "^1.6.12",
     "@types/electron-squirrel-startup": "^1.0.2",
-    "electron": "^34.0.2"
+    "electron": "^34.0.2",
+    "electron-builder": "^25.1.8"
   },
   "keywords": [],
   "author": "matthewsimon",
-  "license": "MIT",
+  "license": "GNU",
   "dependencies": {
     "electron-squirrel-startup": "^1.0.1"
   }
