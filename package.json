@@ -1,14 +1,26 @@
 {
   "name": "solomon-desktop-app",
   "version": "0.1.0",
-  "description": "",
-  "workspaces": [
-    "packages/*"
-  ],
+  "description": "solomon-desktop-application artifically powered Task station",
+  "private": true,
+  "devDependencies": {
+    "typescript": "5.7.3",
+    "@types/node": "^20.5.6",
+    "@types/react": "^19.x",
+    "@types/react-dom": "^19.x",
+    "eslint": "^9.x",
+    "eslint-config-next": "15.1.6",
+    "@eslint/eslintrc": "^3"
+  },
   "scripts": {
-    "test": "echo 'This is a monorepo for Solomon Desktop-App'"
+    "test": "echo 'This is a monorepo for Solomon Desktop-App'",
+    "build": "pnpm --filter=... build",
+    "build:all": "pnpm -r run build",
+    "dev:all": "pnpm -r run dev",
+    "lint": "pnpm -r run lint",
+    "start": "pnpm --filter electron run start"
   },
   "keywords": [],
-  "author": "",
+  "author": "matthew simon",
   "license": "GNU"
 }
