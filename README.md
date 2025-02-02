@@ -10,10 +10,10 @@ Our Goal at ACDC.digital is to create a Full-Service workstation which enables E
 
 ## Try our Domain
 
-#### Deployment   
+**Deployment**   
 solomon-desktop-33o1isx0l-acdcdigitals-projects.vercel.app
 
-#### Domain   
+**Domain**   
 https://solomon-desktop-app.vercel.app/
 
 ## Clone our Repo
