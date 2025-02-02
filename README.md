@@ -17,6 +17,8 @@ solomon-desktop-33o1isx0l-acdcdigitals-projects.vercel.app
 https://solomon-desktop-app.vercel.app/
 
 ## Clone our Repo
+**git clone https://github.com/acdc-digital/solomon-Desktop-App.git**
+
 Once cloned ensure you have pnpm installed (if not already): npm install -g pnpm
 
 1. pnpm install
