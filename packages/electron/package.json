@@ -1,7 +1,7 @@
 {
   "name": "solomon-desktop-app",
   "productName": "Solomon Desktop App",
-  "version": "1.0.9",
+  "version": "1.0.11",
   "description": "My Electron application description",
   "main": "dist/index.js",
   "scripts": {
