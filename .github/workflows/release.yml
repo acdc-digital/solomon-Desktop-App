@@ -1,7 +1,8 @@
 name: Build and Publish Electron App
 
 permissions:
-  contents: write  # Needed to create/edit releases, all else defaults to 'none'
+  contents: write
+  actions: read
 
 on:
   push:
@@ -12,7 +13,10 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       # 1. Check out your repository code
       - name: Checkout Repository
@@ -54,4 +58,11 @@ jobs:
         working-directory: packages/electron
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
-        run: pnpm run dist
+        run: |
+          if [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+            npx electron-builder --publish always --mac
+          elif [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            npx electron-builder --publish always --win
+          else
+            npx electron-builder --publish always --linux
+          fi
