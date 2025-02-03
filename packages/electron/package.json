@@ -1,7 +1,7 @@
 {
   "name": "solomon-desktop-app",
   "productName": "Solomon Desktop App",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "description": "My Electron application description",
   "main": "dist/index.js",
   "scripts": {
@@ -21,6 +21,12 @@
     ],
     "linux": {
       "target": ["AppImage"]
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "category": "public.app-category.productivity"
     },
     "publish": [
       {
