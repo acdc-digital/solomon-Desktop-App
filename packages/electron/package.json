@@ -1,16 +1,15 @@
 {
-  "name": "electron",
-  "productName": "electron",
+  "name": "solomon-desktop-app",
+  "productName": "Solomon Desktop App",
   "version": "1.0.9",
   "description": "My Electron application description",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc && electron-builder",
+    "build": "tsc",
     "start": "electron .",
     "dev": "concurrently \"tsc --watch\" \"wait-on http://localhost:3000 && cross-env NODE_ENV=development electron .\"",
     "package": "electron-builder --dir",
-    "dist": "electron-builder --publish always",
-    "make": "electron-forge make",
+    "dist": "npm run build && electron-builder --publish always",
     "lint": "eslint 'src/**/*.{ts,tsx}'"
   },
   "build": {
