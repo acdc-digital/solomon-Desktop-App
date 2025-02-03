@@ -4,8 +4,8 @@
 export default function Home() {
   return (
     <div
-      className="min-h-screen bg-cover bg-center"
-      style={{ backgroundImage: "url('/genie-particle.png')" }}
+      className="min-h-screen bg-no-repeat bg-center"
+      style={{ backgroundImage: "url('/genie-particle.png')", backgroundSize: 'contain' }}
     />
   );
 }
