@@ -5,7 +5,11 @@ export default function Home() {
   return (
     <div
       className="min-h-screen bg-no-repeat bg-center"
-      style={{ backgroundImage: "url('/genie-particle.png')", backgroundSize: 'contain' }}
+      style={{
+        backgroundColor: "#313131",
+        backgroundImage: "url('/genie-particle.png')",
+        backgroundSize: "contain"
+      }}
     />
   );
 }
