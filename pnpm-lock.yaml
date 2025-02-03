@@ -20,6 +20,9 @@ importers:
       '@types/react-dom':
         specifier: ^19.x
         version: 19.0.3(@types/react@19.0.8)
+      '@types/semver':
+        specifier: ^7.5.8
+        version: 7.5.8
       concurrently:
         specifier: ^9.1.2
         version: 9.1.2
@@ -634,6 +637,9 @@ packages:
 
   '@types/responselike@1.0.3':
     resolution: {integrity: sha512-H/+L+UkTV33uf49PH5pCAUBVPNj2nDBXTN+qS1dOwyyg24l3CcicicCA7ca+HMvJBZcFgl5r8e+RR6elsb4Lyw==}
+
+  '@types/semver@7.5.8':
+    resolution: {integrity: sha512-I8EUhyrgfLrcTkzV3TSsGyl1tSuPrEDzr0yd5m90UgNxQkyDXULk3b6MlQqTCpZpNtWe1K0hzclnZkTcLBe2UQ==}
 
   '@types/verror@1.10.10':
     resolution: {integrity: sha512-l4MM0Jppn18hb9xmM6wwD1uTdShpf9Pn80aXTStnK1C94gtPvJcV2FrDmbOQUAQfJ1cKZHktkQUDwEqaAKXMMg==}
@@ -4095,6 +4101,8 @@ snapshots:
   '@types/responselike@1.0.3':
     dependencies:
       '@types/node': 20.17.16
+
+  '@types/semver@7.5.8': {}
 
   '@types/verror@1.10.10':
     optional: true
