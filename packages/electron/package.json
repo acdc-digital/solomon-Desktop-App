@@ -11,7 +11,6 @@
     "package": "electron-builder --dir",
     "dist": "electron-builder",
     "make": "electron-forge make",
-    "publish": "electron-forge publish",
     "lint": "eslint 'src/**/*.{ts,tsx}'"
   },
   "build": {
@@ -20,6 +19,13 @@
     "files": [
       "dist/**/*",
       "../renderer/out/**/*"
+    ],
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "acdc-digital",
+        "repo": "solomon-Desktop-App"
+      }
     ]
   },
   "devDependencies": {
@@ -43,6 +49,8 @@
   "author": "matthewsimon",
   "license": "GNU",
   "dependencies": {
-    "electron-squirrel-startup": "^1.0.1"
+    "electron-log": "^5.3.0",
+    "electron-squirrel-startup": "^1.0.1",
+    "electron-updater": "^6.3.9"
   }
 }

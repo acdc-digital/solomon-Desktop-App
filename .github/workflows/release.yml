@@ -1,0 +1,45 @@
+# Github Actions
+# /Users/matthewsimon/Documents/Github/solomon-Desktop-App/.github/workflows/release.yml
+
+name: Build and Publish Electron App
+
+on:
+  push:
+    # Trigger on tags, or on a specific branch (e.g., main)
+    tags:
+      - 'v*.*.*'
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+          cache: 'pnpm'
+
+      - name: Install Dependencies
+        run: pnpm install
+        # Use -w if installing in workspace root
+        # run: pnpm install -w
+
+      - name: Build Renderer
+        working-directory: packages/renderer
+        run: pnpm run build
+
+      - name: Build Electron App
+        working-directory: packages/electron
+        run: pnpm run build
+
+      - name: Publish Release
+        working-directory: packages/electron
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: pnpm run dist
+        # Ensure that your electron-builder configuration in package.json includes the publish field.
