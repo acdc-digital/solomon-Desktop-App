@@ -47,3 +47,5 @@ To Begin, we'll be launching our application on Vercel, and using Electron's Aut
 4. git push origin main vx.x.x
 
 If you follow these steps, you’ll have a smooth, automated release process.
+
+Enjoy!
