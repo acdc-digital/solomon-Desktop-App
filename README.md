@@ -6,7 +6,11 @@
 
 Welcome!
 
-Our Goal at ACDC.digital is to create a Full-Service workstation which enables ERP (enterprise resource planning) with integrated artificial intellgent assistants. To be a part of our jounrey, you can begin by cloning our repository and following the below steps to get started with our ongoing development:
+Our Goal at ACDC.digital is to create a Full-Service workstation which enables ERP (enterprise resource planning) with integrated artificial intellgent assistants. To be a part of our jounrey, you can begin by following any of the below steps to be a part of our ongoing development:
+
+## Download the App
+
+You can download the latest version of the Solomon Desktop App from our [GitHub Releases page](https://github.com/acdc-digital/solomon-Desktop-App/releases).
 
 ## Try our Domain
 
