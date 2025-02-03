@@ -1,5 +1,10 @@
 name: Build and Publish Electron App
 
+# Restrict permissions to exactly what you need.
+permissions:
+  contents: write     # Needed to create/edit releases
+  # all other permissions default to 'none'
+
 on:
   push:
     tags:
@@ -27,14 +32,13 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
         with:
-          # Change '8' to your preferred pnpm version
-          version: 8
+          version: 8  # or your preferred version
 
-      # 4. Verify pnpm installed (optional, but helps confirm success in logs)
+      # 4. Verify pnpm installed (optional)
       - name: Check pnpm version
         run: pnpm --version
 
-      # 5. Install dependencies at the workspace root
+      # 5. Install dependencies (monorepo root)
       - name: Install Dependencies
         run: pnpm install
 
