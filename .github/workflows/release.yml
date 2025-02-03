@@ -1,9 +1,7 @@
 name: Build and Publish Electron App
 
-# Restrict permissions to exactly what you need.
 permissions:
-  contents: write     # Needed to create/edit releases
-  # all other permissions default to 'none'
+  contents: write  # Needed to create/edit releases, all else defaults to 'none'
 
 on:
   push:
@@ -20,19 +18,19 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      # 2. Set up Node.js (v16). The 'cache: pnpm' line speeds up pnpm installs,
-      #    but doesn't install pnpm itself.
+      # 2. Set up Node.js (v16)
+      # Remove "cache: 'pnpm'" so it won't try to run pnpm before it's installed
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '16'
-          cache: 'pnpm'
 
       # 3. Install pnpm using the official pnpm/action-setup@v2
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
         with:
-          version: 8  # or your preferred version
+          # Change '8' to your preferred pnpm version
+          version: 8
 
       # 4. Verify pnpm installed (optional)
       - name: Check pnpm version
@@ -47,12 +45,12 @@ jobs:
         working-directory: packages/renderer
         run: pnpm run build
 
-      # 7. Build the Electron app (TypeScript compile + local packaging)
+      # 7. Build the Electron app
       - name: Build Electron App
         working-directory: packages/electron
         run: pnpm run build
 
-      # 8. Publish Release if we're on a new tag matching "v*.*.*"
+      # 8. Publish Release if on a new tag matching "v*.*.*"
       - name: Publish Release
         if: startsWith(github.ref, 'refs/tags/v')
         working-directory: packages/electron
