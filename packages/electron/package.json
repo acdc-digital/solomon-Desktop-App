@@ -1,7 +1,7 @@
 {
   "name": "electron",
   "productName": "electron",
-  "version": "1.0.4",
+  "version": "1.0.6",
   "description": "My Electron application description",
   "main": "dist/index.js",
   "scripts": {
@@ -20,6 +20,9 @@
       "dist/**/*",
       "../renderer/out/**/*"
     ],
+    "linux": {
+      "target": ["AppImage"]
+    },
     "publish": [
       {
         "provider": "github",

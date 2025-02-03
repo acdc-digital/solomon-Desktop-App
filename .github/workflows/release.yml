@@ -18,25 +18,23 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      # 2. Set up Node.js (v16)
-      # Remove "cache: 'pnpm'" so it won't try to run pnpm before it's installed
+      # 2. Set up Node.js (v18). No caching so no pnpm conflict.
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
 
-      # 3. Install pnpm using the official pnpm/action-setup@v2
+      # 3. Install pnpm using pnpm/action-setup
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
         with:
-          # Change '8' to your preferred pnpm version
           version: 8
 
-      # 4. Verify pnpm installed (optional)
+      # 4. Verify pnpm (optional check)
       - name: Check pnpm version
         run: pnpm --version
 
-      # 5. Install dependencies (monorepo root)
+      # 5. Install dependencies
       - name: Install Dependencies
         run: pnpm install
 
