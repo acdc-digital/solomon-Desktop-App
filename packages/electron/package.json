@@ -1,7 +1,7 @@
 {
   "name": "electron",
   "productName": "electron",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "My Electron application description",
   "main": "dist/index.js",
   "scripts": {
@@ -9,7 +9,7 @@
     "start": "electron .",
     "dev": "concurrently \"tsc --watch\" \"wait-on http://localhost:3000 && cross-env NODE_ENV=development electron .\"",
     "package": "electron-builder --dir",
-    "dist": "electron-builder",
+    "dist": "electron-builder --publish always",
     "make": "electron-forge make",
     "lint": "eslint 'src/**/*.{ts,tsx}'"
   },
