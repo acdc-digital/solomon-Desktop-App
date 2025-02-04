@@ -35,10 +35,12 @@ Once cloned ensure you have pnpm installed (if not already): npm install -g pnpm
 **Note3:** Occassionally, you may need to manually delete the electron/ dist directory, whereas it could potentially try to load previous 'versions' when updating the version in the package.json  
 **Note4:** By restricting the Linux build target to something like "AppImage", electron-builder won’t attempt to create or publish a .snap file, thus avoiding errors about “snapcraft is not installed.”
 
-## Development Logs 
-To Begin, we'll be launching our application on Vercel, and using Electron's Auto-Updater, we're able to manually change the versions in our package.json to seamlessly ship updates to the deployed front-end.
+## Release Notes (development logs)
+Our Front-End application is currently being hosted on Vercel, free tier as noted in the domain above.
 
-**Heading into Development:** We'll begin by hosting our Front-End on Vercel. Whereas Electron is maintained in a local environment, we'll host our Next.Js architecture on Vercel to enhance the scalability of the application, and ease auto-updates as our application development progresses. Ie; The Next.js front end (hosted on Vercel) and the Electron shell (packaged and distributed separately) allow you to update your UI frequently without forcing a full update of the desktop app. This separation is a best practice for maintainability and user experience.
+**Latest Release:**   
+v1.1.0
+Our Nextjs front end is hosted on Vercel, with an animated background. We'll continue development from here.
 
 ### Git Update Version Main Commands (steps)
 1. git add .
