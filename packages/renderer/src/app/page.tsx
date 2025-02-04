@@ -9,10 +9,9 @@ import { useEffect, useRef } from "react";
 // Adjustable Parameters
 // --------------------
 const PARTICLE_COUNT = 1000;         // Total number of particles
-const FLOW_STRENGTH = 0.5;           // Base multiplier applied to the flow (in the update shader)
-const FRICTION = 1;                  // Friction (applied in shader)
+const FLOW_STRENGTH = 0.0;           // With no image flow, set flow strength to zero.
+const FRICTION = 0.98;               // Friction applied each update (values less than 1 slow particles over time)
 const BACKGROUND_COLOR = "#1b1b1b";  // Background color
-const OVERLAY_OPACITY = 0.5;         // Overall opacity for the edge overlay
 
 // --------------------
 // Helper Functions for Shader Compilation
@@ -72,12 +71,18 @@ class ParticleSystem {
   vaos: WebGLVertexArrayObject[] = [];
   flowTexture: WebGLTexture;
 
-  constructor(gl: WebGL2RenderingContext, particleCount: number, flowTexture: WebGLTexture) {
+  constructor(
+    gl: WebGL2RenderingContext,
+    particleCount: number,
+    flowTexture: WebGLTexture
+  ) {
     this.gl = gl;
     this.particleCount = particleCount;
     this.flowTexture = flowTexture;
 
     // --- Setup Update Program ---
+    // The update shader now samples a constant flow texture.
+    // With FLOW_STRENGTH set to 0, no additional force is applied.
     const updateVertexSource = `#version 300 es
       precision highp float;
       layout(location = 0) in vec2 aPosition;
@@ -91,12 +96,17 @@ class ParticleSystem {
       out vec2 vVelocity;
       
       void main() {
+        // Normalize particle position to [0,1] for texture lookup.
         vec2 uv = aPosition / uResolution;
         vec4 texSample = texture(uFlowTexture, uv);
+        // Convert red and green channels to flow direction in [-1,1].
         vec2 flow = texSample.rg * 2.0 - 1.0;
+        // With no dynamic flow, FLOW_STRENGTH is 0 so the force is zero.
         float edgeStrength = texSample.a;
         
-        vec2 newVelocity = aVelocity + flow * uDeltaTime * ${FLOW_STRENGTH.toFixed(3)} * edgeStrength;
+        vec2 newVelocity = aVelocity + flow * uDeltaTime * ${FLOW_STRENGTH.toFixed(
+      3
+    )} * edgeStrength;
         newVelocity *= ${FRICTION.toFixed(3)};
         vec2 newPosition = aPosition + newVelocity * uDeltaTime;
         
@@ -244,49 +254,30 @@ class ParticleSystem {
 }
 
 // --------------------
-// Overlay Rendering (Edge Map)
+// Create a Constant Flow Texture
 // --------------------
-function createOverlayProgram(gl: WebGL2RenderingContext): WebGLProgram {
-  const vsSource = `#version 300 es
-    precision highp float;
-    layout(location = 0) in vec2 aPosition;
-    uniform vec2 uOverlayScale;
-    out vec2 vUV;
-    void main() {
-      vec2 pos = aPosition * uOverlayScale;
-      gl_Position = vec4(pos, 0.0, 1.0);
-      vUV = vec2((aPosition.x + 1.0) * 0.5, 1.0 - ((aPosition.y + 1.0) * 0.5));
-    }
-  `;
-  const fsSource = `#version 300 es
-    precision highp float;
-    in vec2 vUV;
-    uniform sampler2D uOverlayTexture;
-    uniform float uOverlayOpacity;
-    out vec4 fragColor;
-    void main() {
-      vec4 texColor = texture(uOverlayTexture, vUV);
-      float intensity = texColor.a;
-      fragColor = vec4(vec3(1.0), intensity * uOverlayOpacity);
-    }
-  `;
-  return createProgram(gl, vsSource, fsSource);
-}
-
-function createFullScreenQuadBuffer(gl: WebGL2RenderingContext): WebGLBuffer {
-  const quadBuffer = gl.createBuffer();
-  if (!quadBuffer) throw new Error("Failed to create quad buffer");
-  gl.bindBuffer(gl.ARRAY_BUFFER, quadBuffer);
-  const positions = new Float32Array([
-    -1, -1,
-     1, -1,
-    -1,  1,
-    -1,  1,
-     1, -1,
-     1,  1,
-  ]);
-  gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);
-  return quadBuffer;
+function createConstantFlowTexture(gl: WebGL2RenderingContext): WebGLTexture {
+  // Create a 1x1 texture whose RG channels are 0.5 (which maps to a flow vector of (0,0))
+  // and whose alpha is 1.0.
+  const pixel = new Uint8Array([128, 128, 0, 255]); // 128/255 = 0.5, 255 means full strength.
+  const texture = gl.createTexture();
+  if (!texture) throw new Error("Failed to create constant flow texture");
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+  gl.texImage2D(
+    gl.TEXTURE_2D,
+    0,
+    gl.RGBA,
+    1,
+    1,
+    0,
+    gl.RGBA,
+    gl.UNSIGNED_BYTE,
+    pixel
+  );
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+  gl.bindTexture(gl.TEXTURE_2D, null);
+  return texture;
 }
 
 // --------------------
@@ -303,153 +294,37 @@ export default function Home() {
       console.error("WebGL2 not supported.");
       return;
     }
-    // Assert that gl is non-null.
-    const gl = glRaw;
+    const gl = glRaw; // Assert non-null
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
-    // Load the image from the public directory.
-    const image = new Image();
-    image.src = "/genie-stock.png";
-    image.crossOrigin = "Anonymous";
+    // Create a constant flow texture (no image, no border).
+    const flowTexture = createConstantFlowTexture(gl);
 
-    image.onload = () => {
-      const offCanvas = document.createElement("canvas");
-      offCanvas.width = image.width;
-      offCanvas.height = image.height;
-      const offCtx = offCanvas.getContext("2d");
-      if (!offCtx) return;
-      offCtx.drawImage(image, 0, 0, image.width, image.height);
-      const imageData = offCtx.getImageData(0, 0, image.width, image.height);
-      const data = imageData.data;
-      const imgWidth = image.width;
-      const imgHeight = image.height;
+    // Instantiate the ParticleSystem.
+    const particleSystem = new ParticleSystem(gl, PARTICLE_COUNT, flowTexture);
 
-      const kernelX = [
-        [-1, 0, 1],
-        [-2, 0, 2],
-        [-1, 0, 1],
-      ];
-      const kernelY = [
-        [-1, -2, -1],
-        [0,  0,  0],
-        [1,  2,  1],
-      ];
+    // No overlay rendering code since we are removing the genie image and border.
 
-      const flowData = new Uint8Array(imgWidth * imgHeight * 4);
-      for (let y = 0; y < imgHeight; y++) {
-        for (let x = 0; x < imgWidth; x++) {
-          let gx = 0;
-          let gy = 0;
-          for (let ky = -1; ky <= 1; ky++) {
-            for (let kx = -1; kx <= 1; kx++) {
-              const px = x + kx;
-              const py = y + ky;
-              const idx = (py * imgWidth + px) * 4;
-              let r = 0, g = 0, b = 0;
-              if (px >= 0 && py >= 0 && px < imgWidth && py < imgHeight) {
-                r = data[idx];
-                g = data[idx + 1];
-                b = data[idx + 2];
-              }
-              const gray = (r + g + b) / 3;
-              gx += gray * kernelX[ky + 1][kx + 1];
-              gy += gray * kernelY[ky + 1][kx + 1];
-            }
-          }
-          const strength = Math.sqrt(gx * gx + gy * gy);
-          const angle = (strength / 255) * Math.PI * 2;
-          const flowX = Math.cos(angle);
-          const flowY = Math.sin(angle);
-          const mappedX = Math.floor((flowX + 1) / 2 * 255);
-          const mappedY = Math.floor((flowY + 1) / 2 * 255);
-          const normStrength = Math.min(strength / 255, 1.0);
-          const mappedAlpha = Math.floor(normStrength * 255);
-          const index = (y * imgWidth + x) * 4;
-          flowData[index] = mappedX;
-          flowData[index + 1] = mappedY;
-          flowData[index + 2] = 0;
-          flowData[index + 3] = mappedAlpha;
-        }
-      }
-
-      const flowTexture = gl.createTexture();
-      if (!flowTexture) {
-        console.error("Failed to create flow texture.");
-        return;
-      }
-      gl.bindTexture(gl.TEXTURE_2D, flowTexture);
-      gl.texImage2D(
-        gl.TEXTURE_2D,
-        0,
-        gl.RGBA,
-        imgWidth,
-        imgHeight,
-        0,
-        gl.RGBA,
-        gl.UNSIGNED_BYTE,
-        flowData
-      );
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-      gl.bindTexture(gl.TEXTURE_2D, null);
-
-      const particleSystem = new ParticleSystem(gl, PARTICLE_COUNT, flowTexture);
-
-      const overlayProgram = createOverlayProgram(gl);
-      const quadBuffer = createFullScreenQuadBuffer(gl);
-      const overlayPosLoc = gl.getAttribLocation(overlayProgram, "aPosition");
-
-      let lastTime = performance.now();
-      function renderLoop() {
-        const now = performance.now();
-        const deltaTime = now - lastTime;
-        lastTime = now;
-        
-        particleSystem.update(deltaTime);
-        
-        gl.enable(gl.BLEND);
-        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-        gl.clearColor(0.11, 0.11, 0.11, 0.05);
-        gl.clear(gl.COLOR_BUFFER_BIT);
-        
-        particleSystem.render();
-        
-        gl.useProgram(overlayProgram);
-        const canvasAspect = gl.canvas.width / gl.canvas.height;
-        const imageAspect = imgWidth / imgHeight;
-        let scaleX = 1.0;
-        let scaleY = 1.0;
-        if (canvasAspect > imageAspect) {
-          scaleX = imageAspect / canvasAspect;
-        } else {
-          scaleY = canvasAspect / imageAspect;
-        }
-        const uOverlayScaleLoc = gl.getUniformLocation(overlayProgram, "uOverlayScale");
-        if (uOverlayScaleLoc) {
-          gl.uniform2f(uOverlayScaleLoc, scaleX, scaleY);
-        }
-        
-        gl.bindBuffer(gl.ARRAY_BUFFER, quadBuffer);
-        gl.enableVertexAttribArray(overlayPosLoc);
-        gl.vertexAttribPointer(overlayPosLoc, 2, gl.FLOAT, false, 0, 0);
-        
-        gl.activeTexture(gl.TEXTURE0);
-        gl.bindTexture(gl.TEXTURE_2D, flowTexture);
-        const overlayTexLoc = gl.getUniformLocation(overlayProgram, "uOverlayTexture");
-        const overlayOpacityLoc = gl.getUniformLocation(overlayProgram, "uOverlayOpacity");
-        if (overlayTexLoc) gl.uniform1i(overlayTexLoc, 0);
-        if (overlayOpacityLoc) gl.uniform1f(overlayOpacityLoc, OVERLAY_OPACITY);
-        
-        gl.drawArrays(gl.TRIANGLES, 0, 6);
-        gl.disableVertexAttribArray(overlayPosLoc);
-        gl.bindBuffer(gl.ARRAY_BUFFER, null);
-        
-        requestAnimationFrame(renderLoop);
-      }
-      renderLoop();
-    };
+    let lastTime = performance.now();
+    function renderLoop() {
+      const now = performance.now();
+      const deltaTime = now - lastTime;
+      lastTime = now;
+      
+      particleSystem.update(deltaTime);
+      
+      gl.enable(gl.BLEND);
+      gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+      gl.clearColor(0.11, 0.11, 0.11, 0.05);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      
+      particleSystem.render();
+      
+      requestAnimationFrame(renderLoop);
+    }
+    renderLoop();
 
     const resizeHandler = () => {
       canvas.width = window.innerWidth;
@@ -461,7 +336,13 @@ export default function Home() {
   }, []);
 
   return (
-    <div style={{ backgroundColor: BACKGROUND_COLOR, height: "100vh", overflow: "hidden" }}>
+    <div
+      style={{
+        backgroundColor: BACKGROUND_COLOR,
+        height: "100vh",
+        overflow: "hidden",
+      }}
+    >
       <canvas ref={canvasRef} style={{ display: "block" }} />
     </div>
   );
