@@ -8,12 +8,11 @@ import { useEffect, useRef } from "react";
 // --------------------
 // Adjustable Parameters
 // --------------------
-const FIELD_RESOLUTION = 10;         // (Not used in GPU update, but kept for consistency)
 const PARTICLE_COUNT = 1000;         // Total number of particles
 const FLOW_STRENGTH = 0.5;           // Base multiplier applied to the flow (in the update shader)
 const FRICTION = 1;                  // Friction (applied in shader)
 const BACKGROUND_COLOR = "#1b1b1b";  // Background color
-const TRAIL_ALPHA = 0.1;             // Alpha for trail effect
+const OVERLAY_OPACITY = 0.5;         // Overall opacity for the edge overlay
 
 // --------------------
 // Helper Functions for Shader Compilation
@@ -233,7 +232,7 @@ class ParticleSystem {
   
     // Bind the VAO for the current reading buffer.
     gl.bindVertexArray(this.vaos[this.currentBufferIndex]);
-    // Unbind ARRAY_BUFFER to ensure no transform feedback buffer is also bound as a vertex attribute source.
+    // Unbind ARRAY_BUFFER to avoid conflicts with transform feedback.
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
   
     gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, this.transformFeedback);
@@ -272,13 +271,65 @@ class ParticleSystem {
 }
 
 // --------------------
+// Overlay Rendering (Edge Map)
+// --------------------
+function createOverlayProgram(gl: WebGL2RenderingContext): WebGLProgram {
+  // Vertex shader: draws a full-screen quad with a scaling uniform.
+  const vsSource = `#version 300 es
+    precision highp float;
+    layout(location = 0) in vec2 aPosition;
+    uniform vec2 uOverlayScale;
+    out vec2 vUV;
+    void main() {
+      // Scale the quad to preserve the image aspect ratio.
+      vec2 pos = aPosition * uOverlayScale;
+      gl_Position = vec4(pos, 0.0, 1.0);
+      // Compute UV from aPosition in clip space, then flip vertically.
+      vUV = vec2((aPosition.x + 1.0) * 0.5, 1.0 - ((aPosition.y + 1.0) * 0.5));
+    }
+  `;
+  // Fragment shader: samples the overlay texture and outputs a semi-transparent white modulated by the texture's alpha.
+  const fsSource = `#version 300 es
+    precision highp float;
+    in vec2 vUV;
+    uniform sampler2D uOverlayTexture;
+    uniform float uOverlayOpacity;
+    out vec4 fragColor;
+    void main() {
+      vec4 texColor = texture(uOverlayTexture, vUV);
+      // Use the alpha channel (edge strength) as intensity.
+      float intensity = texColor.a;
+      fragColor = vec4(vec3(1.0), intensity * uOverlayOpacity);
+    }
+  `;
+  return createProgram(gl, vsSource, fsSource);
+}
+
+function createFullScreenQuadBuffer(gl: WebGL2RenderingContext): WebGLBuffer {
+  const quadBuffer = gl.createBuffer();
+  if (!quadBuffer) throw new Error("Failed to create quad buffer");
+  gl.bindBuffer(gl.ARRAY_BUFFER, quadBuffer);
+  // Two triangles covering the full clip space.
+  const positions = new Float32Array([
+    -1, -1,
+     1, -1,
+    -1,  1,
+    -1,  1,
+     1, -1,
+     1,  1,
+  ]);
+  gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);
+  return quadBuffer;
+}
+
+// --------------------
 // Next.js Home Component
 // --------------------
 export default function Home() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    // Get the canvas and WebGL2 context.
+    // Get canvas and WebGL2 context.
     const canvas = canvasRef.current;
     if (!canvas) return;
     const gl = canvas.getContext("webgl2");
@@ -336,7 +387,7 @@ export default function Home() {
               const px = x + kx;
               const py = y + ky;
               // Handle boundary conditions.
-              let idx = (py * imgWidth + px) * 4;
+              const idx = (py * imgWidth + px) * 4;
               let r = 0, g = 0, b = 0;
               if (px >= 0 && py >= 0 && px < imgWidth && py < imgHeight) {
                 r = data[idx];
@@ -392,7 +443,12 @@ export default function Home() {
       // Instantiate the ParticleSystem with the computed flow texture.
       const particleSystem = new ParticleSystem(gl, PARTICLE_COUNT, flowTexture);
 
-      // Start the render loop.
+      // Create overlay program and full-screen quad buffer.
+      const overlayProgram = createOverlayProgram(gl);
+      const quadBuffer = createFullScreenQuadBuffer(gl);
+      const overlayPosLoc = gl.getAttribLocation(overlayProgram, "aPosition");
+
+      // --- Render Loop ---
       let lastTime = performance.now();
       function renderLoop() {
         const now = performance.now();
@@ -411,6 +467,43 @@ export default function Home() {
         
         // Render the particles.
         particleSystem.render();
+        
+        // Render the overlay (edge map) as a semi-transparent textured quad.
+        gl.useProgram(overlayProgram);
+        // Compute overlay scale to preserve image aspect ratio and center the image.
+        const canvasAspect = gl.canvas.width / gl.canvas.height;
+        const imageAspect = imgWidth / imgHeight;
+        let scaleX = 1.0;
+        let scaleY = 1.0;
+        if (canvasAspect > imageAspect) {
+          // Canvas is wider than image: scale down X.
+          scaleX = imageAspect / canvasAspect;
+        } else {
+          // Canvas is taller than image: scale down Y.
+          scaleY = canvasAspect / imageAspect;
+        }
+        const uOverlayScaleLoc = gl.getUniformLocation(overlayProgram, "uOverlayScale");
+        if (uOverlayScaleLoc) {
+          gl.uniform2f(uOverlayScaleLoc, scaleX, scaleY);
+        }
+        
+        // Bind the quad buffer.
+        gl.bindBuffer(gl.ARRAY_BUFFER, quadBuffer);
+        gl.enableVertexAttribArray(overlayPosLoc);
+        gl.vertexAttribPointer(overlayPosLoc, 2, gl.FLOAT, false, 0, 0);
+        
+        // Bind the flow texture as the overlay texture.
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, flowTexture);
+        const overlayTexLoc = gl.getUniformLocation(overlayProgram, "uOverlayTexture");
+        const overlayOpacityLoc = gl.getUniformLocation(overlayProgram, "uOverlayOpacity");
+        if (overlayTexLoc) gl.uniform1i(overlayTexLoc, 0);
+        if (overlayOpacityLoc) gl.uniform1f(overlayOpacityLoc, OVERLAY_OPACITY);
+        
+        // Draw the full-screen quad.
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
+        gl.disableVertexAttribArray(overlayPosLoc);
+        gl.bindBuffer(gl.ARRAY_BUFFER, null);
         
         // Continue the loop.
         requestAnimationFrame(renderLoop);
