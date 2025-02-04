@@ -9,8 +9,8 @@ import { useEffect, useRef } from "react";
 // Adjustable Parameters
 // --------------------
 const PARTICLE_COUNT = 1000;         // Total number of particles
-const FLOW_STRENGTH = 0.0;           // With no image flow, set flow strength to zero.
-const FRICTION = 0.98;               // Friction applied each update (values less than 1 slow particles over time)
+const FLOW_STRENGTH = 0.5;           // With no image flow, set flow strength to zero.
+const FRICTION = 1;               // Friction applied each update (values less than 1 slow particles over time)
 const BACKGROUND_COLOR = "#1b1b1b";  // Background color
 
 // --------------------
