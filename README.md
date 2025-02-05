@@ -42,7 +42,7 @@ Our Front-End application is currently being hosted on Vercel, free tier as note
 v1.1.0    
 Our Nextjs front end is hosted on Vercel, with an animated background. We'll continue development from here.
 
-### Git Update Version Main Commands (steps)
+#### Git Update Version Main Commands (steps)
 1. git add .
 2. git commit -m "Updated Electron version to x.x.x"
 3. git tag vx.x.x
