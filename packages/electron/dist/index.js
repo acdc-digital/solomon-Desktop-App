@@ -1,46 +1,46 @@
+"use strict";
 // INDEX FILE
 // /Users/matthewsimon/Documents/Github/solomon-Desktop-App/packages/electron/src/index.ts
-
-"use strict";
-
-import { app, BrowserWindow, dialog } from 'electron';
-import { autoUpdater } from 'electron-updater';
-import path from 'node:path';
-import url from 'node:url';
-import isDev from 'electron-is-dev';
-import squirrelStartup from 'electron-squirrel-startup';
-
-if (squirrelStartup) {
-    app.quit();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const electron_1 = require("electron");
+const electron_updater_1 = require("electron-updater");
+const node_path_1 = __importDefault(require("node:path"));
+const node_url_1 = __importDefault(require("node:url"));
+const electron_squirrel_startup_1 = __importDefault(require("electron-squirrel-startup"));
+if (electron_squirrel_startup_1.default) {
+    electron_1.app.quit();
 }
-
 // Set up logging
-import log from 'electron-log';
-autoUpdater.logger = log;
-(autoUpdater.logger as any).transports.file.level = 'info';
-
+const electron_log_1 = __importDefault(require("electron-log"));
+electron_updater_1.autoUpdater.logger = electron_log_1.default;
+// Cast to 'any' to bypass the type-check for transports property
+;
+electron_updater_1.autoUpdater.logger.transports.file.level = 'info';
 // Check if we’re in development mode:
-//const isDev = process.env.NODE_ENV === 'development'; //moved to import
-
+const isDev = process.env.NODE_ENV === 'development';
 const createWindow = () => {
-    const mainWindow = new BrowserWindow({
+    const mainWindow = new electron_1.BrowserWindow({
         width: 1024,
         height: 768,
         webPreferences: {
-            preload: path.join(__dirname, 'preload.js'),
-            contextIsolation: true, // Enable context isolation
-            nodeIntegration: false, // Disable node integration
+            preload: node_path_1.default.join(__dirname, 'preload.js'),
+            // If you eventually want more security:
+            // contextIsolation: true,
+            // nodeIntegration: false,
         },
     });
-
     if (isDev) {
         // Load the local Next.js dev server
         mainWindow.loadURL('http://localhost:3000');
         mainWindow.webContents.openDevTools();
-    } else {
+    }
+    else {
         // Load the production build from renderer/out/index.html
-        const indexPath = path.join(__dirname, '../../renderer/out/index.html');
-        const indexUrl = url.format({
+        const indexPath = node_path_1.default.join(__dirname, '../../renderer/out/index.html');
+        const indexUrl = node_url_1.default.format({
             pathname: indexPath,
             protocol: 'file:',
             slashes: true,
@@ -48,50 +48,40 @@ const createWindow = () => {
         mainWindow.loadURL(indexUrl);
     }
 };
-
-app.whenReady().then(async () => { // Use async/await for clarity
+electron_1.app.whenReady().then(() => {
     createWindow();
-
-    try {
-        await autoUpdater.checkForUpdatesAndNotify();
-    } catch (error) {
-        log.error("autoUpdater Error:", error)
-    }
-
-    app.on('activate', () => {
-        if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    // Check for updates after window creation
+    electron_updater_1.autoUpdater.checkForUpdatesAndNotify();
+    electron_1.app.on('activate', () => {
+        if (electron_1.BrowserWindow.getAllWindows().length === 0)
+            createWindow();
     });
 });
-
-autoUpdater.on('update-available', () => {
-    log.info('Update available.');
+electron_updater_1.autoUpdater.on('update-available', () => {
+    electron_log_1.default.info('Update available.');
     // Optionally, notify the user that an update is downloading.
 });
-
-autoUpdater.on('update-downloaded', () => {
-    log.info('Update downloaded.');
+electron_updater_1.autoUpdater.on('update-downloaded', () => {
+    electron_log_1.default.info('Update downloaded.');
     // Prompt the user to restart the app to apply updates.
-    dialog
+    electron_1.dialog
         .showMessageBox({
-            type: 'info',
-            title: 'Update Available',
-            message: 'A new version has been downloaded. Restart the application to apply the updates?',
-            buttons: ['Restart', 'Later'],
-        })
+        type: 'info',
+        title: 'Update Available',
+        message: 'A new version has been downloaded. Restart the application to apply the updates?',
+        buttons: ['Restart', 'Later'],
+    })
         .then((result) => {
-            if (result.response === 0) {
-                autoUpdater.quitAndInstall();
-            }
-        })
-        .catch((err) => { // Add error handling
-            log.error('Error displaying update dialog:', err);
-        });
+        if (result.response === 0) {
+            electron_updater_1.autoUpdater.quitAndInstall();
+        }
+    });
 });
-
-autoUpdater.on('error', (err) => {
-    log.error('Error in auto-updater: ', err);
+electron_updater_1.autoUpdater.on('error', (err) => {
+    electron_log_1.default.error('Error in auto-updater: ', err);
 });
-
-app.on('window-all-closed', () => {
-    if (process.platform !== 'darwin') app.quit();
+electron_1.app.on('window-all-closed', () => {
+    if (process.platform !== 'darwin')
+        electron_1.app.quit();
 });
+//# sourceMappingURL=index.js.map
