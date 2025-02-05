@@ -1,7 +1,7 @@
 {
   "name": "solomon-desktop-app",
   "productName": "Solomon Desktop App",
-  "version": "1.1.11",
+  "version": "1.1.12",
   "description": "My Electron application description",
   "main": "dist/index.js",
   "scripts": {
@@ -31,7 +31,8 @@
       "gatekeeperAssess": false,
       "notarize": {
         "teamId": "JNNAATJZ3T"
-        },
+        }
+    },
     "win": {
       "target": [
         "nsis"
