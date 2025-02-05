@@ -7,7 +7,15 @@
     "esModuleInterop": true,
     "moduleResolution": "node",
     "resolveJsonModule": true,
-    "types": ["node", "electron", "electron-squirrel-startup"]
+    "types": ["node", "electron", "electron-squirrel-startup"],
+    "sourceMap": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
   },
-  "include": ["src/**/*", "declarations.d.ts"]
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+        "node_modules"
+  ]
 }
