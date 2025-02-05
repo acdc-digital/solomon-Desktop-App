@@ -2,8 +2,16 @@ const config = {
     appId: "com.solomon.desktop",
     productName: "Solomon Desktop App",
     files: [
-      "dist/**/*",
-      "../renderer/out/**/*"
+      {
+        from: "dist",
+        to: ".", 
+        filter: ["**/*"]
+      },
+      {
+        from: "../renderer/out",
+        to: "renderer",
+        filter: ["**/*"]
+      }
     ],
     linux: {
       target: [
