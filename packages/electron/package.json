@@ -29,9 +29,6 @@
       "target": ["dmg"],
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
-      "sign": {
-        "identity": "Developer ID Application: MATTHEW_SIMON (JNNAATJZ3T)"
-      },
       "notarize": {
         "teamId": "JNNAATJZ3T"
       }
