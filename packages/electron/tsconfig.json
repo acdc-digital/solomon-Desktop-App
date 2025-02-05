@@ -7,7 +7,8 @@
     "esModuleInterop": true,
     "moduleResolution": "node",
     "resolveJsonModule": true,
-    "types": ["node", "electron", "electron-squirrel-startup"]
+    "types": ["node", "electron", "electron-squirrel-startup"],
+    "allowJs": true
   },
   "include": ["src/**/*", "declarations.d.ts"]
 }
