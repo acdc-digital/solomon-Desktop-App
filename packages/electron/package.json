@@ -1,7 +1,7 @@
 {
   "name": "solomon-desktop-app",
   "productName": "Solomon Desktop App",
-  "version": "1.1.16",
+  "version": "1.1.17",
   "description": "My Electron Application.",
   "main": "dist/index.js",
   "scripts": {
@@ -11,54 +11,6 @@
     "package": "electron-builder --dir",
     "dist": "npm run build && electron-builder --publish always",
     "lint": "eslint 'src/**/*.{ts,tsx}'"
-  },
-  "build": {
-    "appId": "com.solomon.desktop",
-    "productName": "Solomon Desktop App",
-    "files": [
-      "dist/**/*",
-      "../renderer/out/**/*"
-    ],
-    "linux": {
-      "target": [
-        "AppImage"
-      ]
-    },
-    "mac": {
-      "category": "public.app-category.productivity",
-      "target": ["dmg", "zip"],
-      "hardenedRuntime": true,
-      "entitlements": "entitlements.mac.plist",
-      "entitlementsInherit": "entitlements.mac.inherit.plist"
-    },
-    "dmg": {
-      "contents": [
-        {
-          "x": 410,
-          "y": 150,
-          "type": "link",
-          "path": "/Applications"
-        },
-        {
-          "x": 130,
-          "y": 150,
-          "type": "file"
-        }
-      ]
-    },
-    "win": {
-      "target": [
-        "nsis"
-      ]
-    },
-    "afterSign": "./afterSign.js",
-    "publish": [
-      {
-        "provider": "github",
-        "owner": "acdc-digital",
-        "repo": "solomon-Desktop-App"
-      }
-    ]
   },
   "devDependencies": {
     "@electron-forge/cli": "^7.6.1",
