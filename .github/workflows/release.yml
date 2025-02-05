@@ -7,9 +7,9 @@ permissions:
 on:
   push:
     tags:
-      - 'v*.*.*'
+      - 'v*.*.*'  # Trigger on tags like v1.2.3
     branches:
-      - main
+      - main      # Also trigger on pushes to the main branch (optional, but useful)
 
 jobs:
   build-and-publish:
@@ -37,7 +37,7 @@ jobs:
       - name: Install Dependencies
         run: pnpm install
 
-      - name: Build Renderer
+      - name: Build Renderer (Next.js)
         working-directory: packages/renderer
         run: pnpm run build
 
@@ -45,21 +45,63 @@ jobs:
         working-directory: packages/electron
         run: pnpm run build
 
-      - name: Package Electron App
-        if: startsWith(github.ref, 'refs/tags/v')
-        working-directory: packages/electron
-        run: npx electron-builder --dir --${{ matrix.os == 'macos-latest' && 'mac' || matrix.os == 'windows-latest' && 'win' || 'linux' }}
-
-      - name: Publish Release
-        if: startsWith(github.ref, 'refs/tags/v')
+      # --- macOS Specific Steps ---
+      - name: Package macOS App (if tag)
+        if: matrix.os == 'macos-latest' && startsWith(github.ref, 'refs/tags/v')
         working-directory: packages/electron
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
           CSC_LINK: ${{ secrets.CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.TEAM_ID }}
-          DEBUG: "electron-builder:*"
-        run: npx electron-builder --publish always --${{ matrix.os == 'macos-latest' && 'mac' || matrix.os == 'windows-latest' && 'win' || 'linux' }}
+          DEBUG: "electron-builder:*" # Keep this for troubleshooting
+        run: npx electron-builder --mac  # Package for macOS (creates .dmg and .zip)
+
+      - name: Publish macOS Release (if tag)
+        if: matrix.os == 'macos-latest' && startsWith(github.ref, 'refs/tags/v')
+        working-directory: packages/electron
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }} # Only GitHub token needed for publishing
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.TEAM_ID }}
+        run: npx electron-builder --mac --publish always # Publish to GitHub Releases
+
+
+      # --- Windows Specific Steps ---
+      - name: Package Windows App (if tag)
+        if: matrix.os == 'windows-latest' && startsWith(github.ref, 'refs/tags/v')
+        working-directory: packages/electron
+        env:
+          CSC_LINK: ${{ secrets.CSC_LINK }}  # Windows signing (optional, but recommended)
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+        run: npx electron-builder --win
+
+      - name: Publish Windows Release (if tag)
+        if: matrix.os == 'windows-latest' && startsWith(github.ref, 'refs/tags/v')
+        working-directory: packages/electron
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: npx electron-builder --win --publish always
+
+      # --- Linux Specific Steps ---
+      - name: Package Linux App (if tag)
+        if: matrix.os == 'ubuntu-latest' && startsWith(github.ref, 'refs/tags/v')
+        working-directory: packages/electron
+        run: npx electron-builder --linux
+
+      - name: Publish Linux Release (if tag)
+        if: matrix.os == 'ubuntu-latest' && startsWith(github.ref, 'refs/tags/v')
+        working-directory: packages/electron
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: npx electron-builder --linux --publish always
+
+      # --- Package for local Development (no tag)---
+      - name: Package Electron App Dir
+        if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+        working-directory: packages/electron
+        run: npx electron-builder --dir --${{ matrix.os == 'macos-latest' && 'mac' || matrix.os == 'windows-latest' && 'win' || 'linux' }}
