@@ -39,7 +39,7 @@ Once cloned ensure you have pnpm installed (if not already): npm install -g pnpm
 Our Front-End application is currently being hosted on Vercel, free tier as noted in the domain above.
 
 **Latest Release:**   
-v1.1.24   
+v1.1.25   
 Our Nextjs front end is hosted on Vercel, with an animated background. The Apple .dmg has been corrected. Notary has been disabled (temporarily) until a more robust structure can be reviewed for Prodcution. In the meantime, contuing in development-mode for now [scaffolding is there].
 
 #### Git Update Version Main Commands (steps)
