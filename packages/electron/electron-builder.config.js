@@ -1,7 +1,10 @@
+// /Users/matthewsimon/Documents/Github/solomon-Desktop-App/packages/electron/electron-builder.config.js
+
 const config = {
     appId: "com.solomon.desktop",
     productName: "Solomon Desktop App",
     files: [
+      "package.json",
       {
         from: "dist",
         to: ".", 
@@ -13,6 +16,7 @@ const config = {
         filter: ["**/*"]
       }
     ],
+    asar: false,
     linux: {
       target: [
         "AppImage"
