@@ -16,7 +16,6 @@ const config = {
         filter: ["**/*"]
       }
     ],
-    asar: false,
     linux: {
       target: [
         "AppImage"
