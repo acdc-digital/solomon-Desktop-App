@@ -38,7 +38,7 @@ jobs:
         run: pnpm install
 
       - name: Build Renderer
-        working-directory: packages/renderer
+        working-directory: packages/renderer/solomon-next
         run: pnpm run build
 
       - name: Build Electron App
