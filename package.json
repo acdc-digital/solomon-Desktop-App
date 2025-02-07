@@ -1,5 +1,5 @@
 {
-  "name": "solomon-desktop-app",
+  "name": "solomon-monorepo",
   "version": "0.1.0",
   "description": "solomon-desktop-application artifically powered Task station",
   "private": true,
@@ -16,12 +16,12 @@
   },
   "scripts": {
     "test": "echo 'This is a monorepo for Solomon Desktop-App'",
-    "build": "pnpm --filter=renderer run build && pnpm --filter=solomon-desktop-app run build",
+    "build": "pnpm --filter=solomon-next run build && pnpm --filter=solomon-desktop-app run build",
     "build:all": "pnpm -r run build",
-    "dev": "concurrently \"pnpm --filter=renderer run dev\" \"pnpm --filter=solomon-desktop-app run dev\"",
+    "dev": "concurrently \"pnpm --filter=solomon-next run dev\" \"pnpm --filter=solomon-desktop-app run dev\"",
     "dev:all": "pnpm -r run dev",
     "lint": "pnpm -r run lint",
-    "start": "pnpm --filter electron run start"
+    "start": "pnpm --filter=solomon-desktop-app run start"
   },
   "keywords": [],
   "author": "matthew simon",
