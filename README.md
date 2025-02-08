@@ -41,9 +41,9 @@ Our Front-End application is currently being hosted on Vercel, free tier as note
 **Latest Release:**   
 v1.1.48   
 
-**Stable Version:**
+**Stable Version:**   
 v1.1.15   
-
+   
 Our Nextjs front end is hosted on Vercel. The Apple .dmg has been corrected, but is non-secure. Notary has been disabled (temporarily) until a more robust structure can be reviewed for Prodcution. In the meantime, contuing in development-mode for now [scaffolding is there].
 
 #### Git Update Version Main Commands (steps)
