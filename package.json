@@ -2,6 +2,7 @@
   "name": "solomon-desktop-app",
   "version": "0.1.0",
   "description": "solomon-desktop-application artifically powered Task station",
+  "packageManager": "pnpm@9.15.4",
   "private": true,
   "devDependencies": {
     "@eslint/eslintrc": "^3",
