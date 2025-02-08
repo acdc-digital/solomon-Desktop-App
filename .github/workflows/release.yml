@@ -35,10 +35,14 @@ jobs:
         run: pnpm --version
 
       - name: Install Dependencies
+        env:
+          NEXT_PUBLIC_CONVEX_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_URL }}
         run: pnpm install
 
       - name: Build Renderer
         working-directory: packages/renderer
+        env:
+          NEXT_PUBLIC_CONVEX_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_URL }}
         run: pnpm run build
 
       - name: Build Electron App
