@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ConvexClientProvider } from "./ConvexClientProvider";
 // import { Geist, Geist_Mono } from "next/font/google";  <-- Remove
 import "./globals.css";
 
@@ -25,8 +26,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       {/* Remove references to the variables */}
-      <body className="antialiased">
-        {children}
+      <body>
+        <ConvexClientProvider>
+          {children}
+        </ConvexClientProvider>
       </body>
     </html>
   );
