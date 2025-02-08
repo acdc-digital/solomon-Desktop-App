@@ -1,10 +1,4 @@
 {
-    "builds": [
-      {
-        "src": "packages/renderer/package.json",
-        "use": "@vercel/next"
-      }
-    ],
     "routes": [
       {
         "src": "/(.*)",
