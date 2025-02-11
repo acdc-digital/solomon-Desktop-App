@@ -2,7 +2,6 @@
 // /Users/matthewsimon/Documents/GitHub/acdc.solomon-electron/solomon-electron/next/src/components/canvas/Canvasheader.tsx
 
 import React from 'react';
-import Link from "next/link";
 import { Button } from '../ui/button';
 
 interface CanvasHeaderProps {
@@ -16,7 +15,7 @@ const CanvasHeader: React.FC<CanvasHeaderProps & {
 	onFilesClick: () => void, 
 	onTasksClick: () => void, 
 	onDocsClick: () => void,
-	}> = ({ title, onAdminClick, onProjectsClick, onFilesClick, onTasksClick, onDocsClick }) => {
+	}> = ({ onAdminClick, onProjectsClick, onFilesClick, onDocsClick }) => {
     // Modify your Button components to call the provided callbacks on click
     return (
         <div className="px-4 py-1 border-b flex flex-row items-center bg-gray-50">

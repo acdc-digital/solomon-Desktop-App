@@ -1,14 +1,14 @@
 'use client'
 
 import React from "react";
-import { useUser } from "@clerk/clerk-react";
 
 import Image from "next/image";
 import { Button } from "../../ui/button";
 import { PlusCircle } from "lucide-react";
+import { useUser } from "@/hooks/useUser";
 
 const Tasks = () => {
-  const { user } = useUser();
+  useUser();
 
   return (
     <div className="mt-24 flex flex-col h-full items-center space-y-4 overflow-hidden">

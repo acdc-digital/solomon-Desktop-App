@@ -66,7 +66,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onProjectSelect }) => {
   // Handle project selection
   const handleProjectSelect = (projectId: string) => {
     // Set the projectId in the editor store as soon as a project is selected
-    setProjectId(projectId as any); // Replace 'as any' with proper typing if projectId is Id<"projects">
+    setProjectId(projectId); // No cast needed
 
     // Call the parent prop with the selected projectId
     onProjectSelect(projectId);

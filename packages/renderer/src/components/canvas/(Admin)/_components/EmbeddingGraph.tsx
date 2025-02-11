@@ -1,8 +1,6 @@
 // Graph-UI
 // /Users/matthewsimon/Documents/Github/solomon-desktop/solomon-Desktop/next/src/components/canvas/(Admin)/_components/EmbeddingGraph.tsx
 
-// /Users/matthewsimon/Documents/GitHub/solomon-desktop/solomon-Desktop/next/src/components/canvas/(Admin)/_components/EmbeddingGraph.tsx
-
 import React, { useEffect, useState, useRef } from "react";
 import dynamic from "next/dynamic";
 import { useQuery, useMutation } from "convex/react";
@@ -14,10 +12,54 @@ import { CircleMinus, CirclePlus, RefreshCcw } from "lucide-react";
 import pLimit from "p-limit";
 import { refineNodeLabel, refineEdgeRelationship } from "./nodeRefiner";
 
-// 1) Import ForceGraph2D dynamically.
-const ForceGraph2D = dynamic<any>(() => import("react-force-graph-2d"), {
-  ssr: false,
-});
+// --- Define Types for ForceGraph2D ---
+
+// Camera state interface used by the graph.
+interface CameraState {
+  x: number;
+  y: number;
+  z: number;
+}
+
+// Interface for the ForceGraph2D instance (the methods you need).
+interface ForceGraph2DInstance {
+  camera: {
+    (state: CameraState, transitionDuration?: number): void;
+    (): CameraState;
+  };
+}
+
+// Define the props expected by the ForceGraph2D component.
+interface ForceGraph2DProps {
+  graphData: GraphData;
+  nodeLabel: string;
+  linkLabel: string;
+  nodeAutoColorBy: string;
+  linkWidth: (link: GraphLink) => number;
+  linkDirectionalParticles: number;
+  linkDirectionalParticleWidth: (link: GraphLink) => number;
+  backgroundColor: string;
+  onEngineStop: () => void;
+  width: number;
+  height: number;
+  nodeCanvasObject: (
+    node: GraphNode,
+    ctx: CanvasRenderingContext2D,
+    globalScale: number
+  ) => void;
+}
+
+// Dynamically import ForceGraph2D with proper typing.
+// We cast the import as a Promise resolving to an object whose default export is a component of type React.ComponentType<ForceGraph2DProps>.
+const ForceGraph2D = dynamic(
+  () =>
+    import("react-force-graph-2d") as Promise<{
+      default: React.ComponentType<ForceGraph2DProps>;
+    }>,
+  { ssr: false }
+);
+
+// --- Component Code ---
 
 interface EmbeddingChunk {
   id: string;
@@ -32,24 +74,25 @@ interface EmbeddingChunk {
 
 const EmbeddingGraph: React.FC = () => {
   const INITIAL_LIMIT = 100;
-  const [limit, setLimit] = useState(INITIAL_LIMIT);
+  const [limit, setLimit] = useState<number>(INITIAL_LIMIT);
   const [cursor, setCursor] = useState<string | null>(null);
   const [allEmbeddings, setAllEmbeddings] = useState<EmbeddingChunk[]>([]);
   const [graphData, setGraphData] = useState<GraphData>({ nodes: [], links: [] });
-  const [linkStrength, setLinkStrength] = useState(1);
+  // Since we never update linkStrength, we only destructure the value.
+  const [linkStrength] = useState<number>(1);
   const [cursorHistory, setCursorHistory] = useState<(string | null)[]>([null]);
   const topK = 5;
-  const graphRef = useRef<any>();
+  const graphRef = useRef<ForceGraph2DInstance>(null);
 
-  // Convex mutations for batch updating graph data
+  // Convex mutations for batch updating graph data.
   const batchUpsertGraphNodes = useMutation(api.graph.batchUpsertGraphNodes);
   const batchUpsertGraphLinks = useMutation(api.graph.batchUpsertGraphLinks);
 
-  // 2) Fetch chunk embeddings
+  // 2) Fetch chunk embeddings.
   const data = useQuery(api.chunks.getAllEmbeddings, { limit, cursor });
   const isLoading = data === undefined;
 
-  // 3) On mount, load from sessionStorage if present
+  // 3) On mount, load from sessionStorage if present.
   useEffect(() => {
     const savedEmbeddings = sessionStorage.getItem("allEmbeddings");
     const savedGraphData = sessionStorage.getItem("graphData");
@@ -59,19 +102,19 @@ const EmbeddingGraph: React.FC = () => {
       setAllEmbeddings(JSON.parse(savedEmbeddings));
       setGraphData(JSON.parse(savedGraphData));
       if (savedCamera && graphRef.current) {
-        const cameraState = JSON.parse(savedCamera);
+        const cameraState = JSON.parse(savedCamera) as CameraState;
         // Restore camera position from saved state.
         graphRef.current.camera(cameraState);
       }
     }
   }, []);
 
-  // 4) Debug-log the newly fetched data
+  // 4) Debug-log the newly fetched data.
   useEffect(() => {
     console.log("Fetched Data:", data);
   }, [data]);
 
-  // 5) If we have no embeddings from sessionStorage and we got new data
+  // 5) If we have no embeddings from sessionStorage and we got new data.
   useEffect(() => {
     if (allEmbeddings.length === 0 && data?.chunks && data.chunks.length > 0) {
       console.log("Fetched Chunks:", data.chunks);
@@ -81,7 +124,7 @@ const EmbeddingGraph: React.FC = () => {
     }
   }, [data, allEmbeddings.length]);
 
-  // 6) Build (or rebuild) the graph whenever `allEmbeddings` changes
+  // 6) Build (or rebuild) the graph whenever `allEmbeddings` changes.
   useEffect(() => {
     if (allEmbeddings.length === 0) return;
 
@@ -162,7 +205,7 @@ const EmbeddingGraph: React.FC = () => {
     buildGraph();
   }, [allEmbeddings, batchUpsertGraphNodes, batchUpsertGraphLinks]);
 
-  // 7) Persist data to sessionStorage
+  // 7) Persist data to sessionStorage.
   useEffect(() => {
     if (allEmbeddings.length > 0) {
       sessionStorage.setItem("allEmbeddings", JSON.stringify(allEmbeddings));
@@ -170,7 +213,7 @@ const EmbeddingGraph: React.FC = () => {
     }
   }, [allEmbeddings, graphData]);
 
-  // 8) Save camera state on engine stop
+  // 8) Save camera state on engine stop.
   const handleEngineStop = () => {
     if (graphRef.current) {
       const camera = graphRef.current.camera();
@@ -189,7 +232,7 @@ const EmbeddingGraph: React.FC = () => {
     };
   }, []);
 
-  // 9) Pagination controls
+  // 9) Pagination controls.
   const loadMore = () => {
     const latestCursor = cursorHistory[cursorHistory.length - 1];
     if (latestCursor) {
@@ -206,7 +249,7 @@ const EmbeddingGraph: React.FC = () => {
     }
   };
 
-  // 10) Refresh entire graph
+  // 10) Refresh entire graph.
   const handleRefresh = () => {
     sessionStorage.removeItem("allEmbeddings");
     sessionStorage.removeItem("graphData");
@@ -218,7 +261,7 @@ const EmbeddingGraph: React.FC = () => {
     setCursorHistory([null]);
   };
 
-  // 11) Loading/Empty states
+  // 11) Loading/Empty states.
   if ((isLoading || !data) && allEmbeddings.length === 0) {
     return <div>Loading...</div>;
   }
@@ -226,14 +269,14 @@ const EmbeddingGraph: React.FC = () => {
     return <div>No embeddings available.</div>;
   }
 
-  // 12) Render ForceGraph2D
+  // 12) Render ForceGraph2D.
   return (
     <div className="w-full h-full">
       <ForceGraph2D
         ref={graphRef}
         graphData={graphData}
         nodeLabel="label"
-        linkLabel="relationship" // Show relationship on hover
+        linkLabel="relationship" // Show relationship on hover.
         nodeAutoColorBy="group"
         linkWidth={(link) => link.similarity * linkStrength}
         linkDirectionalParticles={1}
@@ -243,10 +286,12 @@ const EmbeddingGraph: React.FC = () => {
         width={1180}
         height={620}
         // For performance, only draw circles for nodes.
-        nodeCanvasObject={(node, ctx, globalScale) => {
+        nodeCanvasObject={(node: GraphNode, ctx, globalScale) => {
+          // Cast the node to include an optional color property.
+          const nodeWithColor = node as GraphNode & { color?: string };
           const fontSize = 12 / globalScale;
           ctx.font = `${fontSize}px Sans-Serif`;
-          ctx.fillStyle = node.color;
+          ctx.fillStyle = nodeWithColor.color || "#000";
           ctx.beginPath();
           ctx.arc(node.x!, node.y!, 8, 0, 2 * Math.PI, false);
           ctx.fill();

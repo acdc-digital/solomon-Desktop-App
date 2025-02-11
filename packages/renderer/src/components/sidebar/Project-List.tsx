@@ -3,14 +3,14 @@
 
 "use client"
 
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { Doc, Id } from "../../../convex/_generated/dataModel"
 import { useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { ProjectItem } from "./ProjectItem";
 import { cn } from "@/lib/utils";
-import { FileIcon, FolderIcon } from "lucide-react";
+import { FolderIcon } from "lucide-react";
 
 interface ProjectListProps {
 	parentProjectId?: Id<"projects">;
@@ -25,7 +25,7 @@ export const ProjectList = ({
 	onProjectSelect
 }: ProjectListProps) => {
 	const params = useParams();
-	const router = useRouter();
+	// const router = useRouter();
 	const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
 	const onExpand = (documentId: string) => {

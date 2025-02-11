@@ -5,7 +5,6 @@
 import React from 'react';
 
 import { Settings, Trash2Icon } from 'lucide-react';
-import { Button } from '../ui/button';
 import { ProjectItem } from '@/components/sidebar/ProjectItem';
 import { useSettings } from '@/hooks/use-settings';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';

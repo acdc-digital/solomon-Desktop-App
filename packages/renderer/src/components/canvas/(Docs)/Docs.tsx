@@ -7,12 +7,12 @@ import React from "react";
 // import { useUser } from "@clerk/clerk-react";
 import { Badge } from "@/components/ui/badge"
 import Image from "next/image";
-import { Separator } from "@/components/ui/separator";
+// import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/hooks/useUser";
 
 const Docs = () => {
-  const { user } = useUser();
+  useUser();
 
     return (
         <div>

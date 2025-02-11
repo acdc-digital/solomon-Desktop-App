@@ -27,7 +27,7 @@ interface ChatHeaderProps {
 export const GRAPH_CHAT_ID = "graph-chat";
 
 const ChatHeader: React.FC<ChatHeaderProps> = ({ title }) => {
-  const { user } = useUser();
+  useUser();
   const { projectId, setProjectId } = useEditorStore();
 
   // Fetch projects for the dropdown. Using undefined for parentProject.

@@ -11,7 +11,6 @@ import {
   HighlighterIcon,
   LinkIcon,
   ImageIcon,
-  TableIcon,
   UndoIcon,
   RedoIcon,
   ListIcon,
@@ -27,9 +26,7 @@ import {
   Save,
   SquareCheck,
   ChevronDownIcon,
-  Highlighter,
   UploadIcon,
-  SearchIcon,
   Link2Icon,
   MinusIcon,
   PlusIcon,
@@ -67,17 +64,8 @@ import TaskItem from '@tiptap/extension-task-item'
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuPortal,
-  DropdownMenuSeparator,
-  DropdownMenuShortcut,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
@@ -87,13 +75,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
+// import { Label } from "@/components/ui/label"
 import { Input } from '@/components/ui/input';
 import { FontSizeExtension } from '@/extensions/fontsize';
 import { lineHeightExtension } from '@/extensions/lineheight';
 
 import { cn } from '@/lib/utils';
-import { type ColorResult, CirclePicker, CompactPicker, SketchPicker } from "react-color";
+import { type ColorResult, CompactPicker } from "react-color";
 import PageVisualization from './PageVisualization';
 
 /**
@@ -260,17 +248,17 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
   /**
    * Prompts user for an image URL, then inserts the image into the document.
    */
-  const addImage = () => {
+  {/* const addImage = () => {
     const url = window.prompt('Enter image URL');
     if (url) {
       editor.chain().focus().setImage({ src: url }).run();
     }
-  };
+  }; */}
 
   /**
    * Prompts user to set or unset a hyperlink on the selected text.
    */
-  const setLink = () => {
+  {/* const setLink = () => {
     const previousUrl = editor.getAttributes('link').href;
     const url = window.prompt('Enter URL', previousUrl);
     if (url === null) return;   // User pressed cancel
@@ -281,7 +269,7 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
       // Otherwise, set the link to the new URL
       editor.chain().focus().setLink({ href: url }).run();
     }
-  };
+  }; */}
 
   /**
    * Enable Font Size Button.
@@ -631,13 +619,13 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
   /**
    * Inserts a 3x3 table with a header row into the editor.
    */
-  const addTable = () => {
+  {/* const addTable = () => {
     editor
       .chain()
       .focus()
       .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
       .run();
-  };
+  }; */}
 
   /**
    * Dynamically applies a style to toolbar buttons based on the editor’s state.

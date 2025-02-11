@@ -9,7 +9,7 @@ import { useForm } from "react-hook-form"
 import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { useAction, useMutation } from "convex/react"
+import { useMutation } from "convex/react"
 import { api } from "../../../../../convex/_generated/api"
 import { Id } from "../../../../../convex/_generated/dataModel"
 
@@ -87,27 +87,29 @@ export default function UploadDocumentForm({ onUpload, projectId }: UploadDocume
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="file"
-          render={({ field: { value, onChange, ...fieldProps } }) => (
-            <FormItem>
-              <FormLabel>File</FormLabel>
-              <FormControl>
-                <Input
-                  {...fieldProps}
-                  type="file"
-                  accept=".txt, .xml, .doc, .pdf, application/pdf"
-                  onChange={(event) => {
-                    const file = event.target.files?.[0];
-                    onChange(file);
-                  }}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          <FormField
+            control={form.control}
+            name="file"
+            render={({
+              field: { onChange, value: _value, ...fieldProps } // eslint-disable-line @typescript-eslint/no-unused-vars
+            }) => (
+              <FormItem>
+                <FormLabel>File</FormLabel>
+                <FormControl>
+                  <Input
+                    {...fieldProps}
+                    type="file"
+                    accept=".txt, .xml, .doc, .pdf, application/pdf"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      onChange(file);
+                    }}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         <Button type="submit">Submit</Button>
       </form>
     </Form>

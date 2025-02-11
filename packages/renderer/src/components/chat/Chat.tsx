@@ -6,7 +6,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useAction, useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import { ArrowUp, Loader2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
@@ -49,7 +48,7 @@ export default function Chat({ projectId }: ChatProps) {
 
   // 3. Local states.
   const [message, setMessage] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [setIsLoading] = useState(false);
   const [pendingMessages, setPendingMessages] = useState<PendingMessage[]>([]);
 
   // 4. Refs for scrolling and auto-resize.

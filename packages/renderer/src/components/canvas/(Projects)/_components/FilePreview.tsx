@@ -14,7 +14,6 @@ import {
   ZoomOutIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  RotateCwIcon,
   Highlighter,
 } from "lucide-react"; 
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
@@ -75,7 +74,6 @@ const FilePreview: React.FC = () => {
   // Zoom Handlers
   const zoomIn = () => setScale((prev) => Math.min(prev + 0.2, 5));
   const zoomOut = () => setScale((prev) => Math.max(prev - 0.2, 0.2));
-  const resetZoom = () => setScale(1.0);
 
   const handleBack = () => {
     setActiveView("files");
@@ -104,11 +102,11 @@ const FilePreview: React.FC = () => {
   };
 
   // Highlighting
-  const [isHighlighting, setIsHighlighting] = useState(false);
+  {/* const [isHighlighting, setIsHighlighting] = useState(false);
 
   const toggleHighlight = () => {
   setIsHighlighting((prev) => !prev);
-  };
+  }; */}
 
   return (
     <div className="flex flex-col h-[calc(87vh-100px)] overflow-hidden">

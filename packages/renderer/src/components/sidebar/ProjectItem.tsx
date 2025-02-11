@@ -7,8 +7,6 @@ import {
   ChevronDown,
   ChevronRight,
   LucideIcon,
-  MoreHorizontal,
-  Plus,
   PlusCircle,
   Trash2Icon,
   TrashIcon,
@@ -18,7 +16,7 @@ import { cn } from '@/lib/utils';
 import { Skeleton } from '../ui/skeleton';
 import { useMutation } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
-import { useRouter } from 'next/navigation';
+// import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import {
   DropdownMenu,
@@ -55,7 +53,7 @@ export const ProjectItem = ({
   expanded,
 }: ProjectItemProps) => {
   const { user } = useUser();
-  const router = useRouter();
+  // const router = useRouter();
   const create = useMutation(api.projects.create);
   const archive = useMutation(api.projects.archive);
 
@@ -85,15 +83,12 @@ export const ProjectItem = ({
   ) => {
     event.stopPropagation();
     if (!id) return;
-    const promise = create({ title: 'Untitled', parentProject: id }).then(
-      (projectId) => {
-        if (!expanded) {
-          onExpand?.();
-        }
-        // router.push(`/projects/${projectId}`);
+    const promise = create({ title: 'Untitled', parentProject: id }).then(() => {
+      if (!expanded) {
+        onExpand?.();
       }
-    );
-
+      // router.push(`/projects/${projectId}`);
+    });
     toast.promise(promise, {
       loading: 'Creating a new Project...',
       success: 'New Project Created!',

@@ -5,25 +5,24 @@
 
 import * as React from "react";
 import Link from "next/link";
-import Image from "next/image";
-
-import { Moon, Sun } from "lucide-react";
-import { useTheme } from "next-themes";
 
 import { Button } from '@/components/ui/button';
-import {
+
+{/* import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Moon, Sun } from "lucide-react";
+import { useTheme } from "next-themes"; */}
 
 interface SidebarHeaderProps {
   title: string;
   isExpanded: boolean; // Added isExpanded prop
 }
 
-const ModeToggle = () => {
+{/* const ModeToggle = () => {
   const { theme, setTheme } = useTheme();
 
   return (
@@ -48,7 +47,7 @@ const ModeToggle = () => {
       </DropdownMenuContent>
     </DropdownMenu>
   );
-};
+}; */}
 
 const SidebarHeader: React.FC<SidebarHeaderProps> = ({ title, isExpanded }) => {
   return (

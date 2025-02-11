@@ -9,7 +9,7 @@ import CanvasHeader from '@/components/canvas/Canvasheader';
 import Admin from '@/components/canvas/(Admin)/Admin'; 
 import Projects from '@/components/canvas/(Projects)/Projects'
 import Files from '@/components/canvas/(Files)/Files'; 
-import Tasks from '@/components/canvas/(Tasks)/Tasks';
+// import Tasks from '@/components/canvas/(Tasks)/Tasks';
 import Docs from '@/components/canvas/(Docs)/Docs';
 import Users from '@/components/canvas/(User)/Users'; // Import Users component
 

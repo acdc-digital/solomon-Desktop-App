@@ -8,4 +8,6 @@ const ForceGraph2DWrapper = forwardRef((props, ref) => {
   return <ForceGraph2D ref={ref} {...props} />;
 });
 
+ForceGraph2DWrapper.displayName = "ForceGraph2DWrapper";
+
 export default ForceGraph2DWrapper;

@@ -7,7 +7,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@types/node": "^20.5.6",
-    "@types/react": "^19.x",
+    "@types/react": "^19.0.8",
     "@types/react-dom": "^19.x",
     "@types/semver": "^7.5.8",
     "concurrently": "^9.1.2",
@@ -28,6 +28,8 @@
   "author": "matthew simon",
   "license": "GNU",
   "dependencies": {
-    "jwt-decode": "^4.0.0"
+    "jwt-decode": "^4.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   }
 }

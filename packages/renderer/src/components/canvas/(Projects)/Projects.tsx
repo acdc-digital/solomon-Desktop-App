@@ -7,11 +7,11 @@ import { api } from "../../../../convex/_generated/api";
 import { Id } from "../../../../convex/_generated/dataModel";
 import { Title } from "./_components/Title";
 import { Button } from "@/components/ui/button";
-import { AlignHorizontalDistributeCenterIcon, BoldIcon, BoltIcon, BotIcon, BotMessageSquareIcon, CodeIcon, CogIcon, FolderIcon, Heading1Icon, Heading2Icon, Heading3Icon, ItalicIcon, ListIcon, ListOrderedIcon, PilcrowIcon, SplitIcon, Strikethrough, SquareCheck, TextQuoteIcon, UnderlineIcon, HighlighterIcon, LinkIcon, ImageIcon, TableIcon } from 'lucide-react';
+import { BoltIcon, BotIcon, FolderIcon } from 'lucide-react';
 import { useEditorStore } from "@/lib/store/editorStore";
 import { UploadDocumentButton } from "./_components/FileTable";
 import { FileList } from "./_components/FileList";
-import { DocumentData } from "@/types/DocumentData";
+// import { DocumentData } from "@/types/DocumentData";
 
 import useChatStore from '@/lib/store/chatStore';
 // import FilePreview from "./_components/FilePreview";
@@ -25,7 +25,7 @@ const FilePreviewNoSSR = dynamic(() => import('./_components/FilePreview'), {
 // Fetch project data based on projectId
 const Projects: React.FC<{ projectId: string }> = ({ projectId }) => {
   // Destructure activateFiles from the store
-  const { activeView, setActiveView, setSelectedFile, selectedFile } = useEditorStore();
+  const { activeView, setActiveView, selectedFile } = useEditorStore();
 
   // Destructure activateChat from the store
   const { isChatActive, activateChat } = useChatStore();

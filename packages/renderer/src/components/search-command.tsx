@@ -11,12 +11,12 @@ import { api } from "../../convex/_generated/api";
 import { useUser } from "@/hooks/useUser";
 
 export const SearchCommand = () => {
-    const { user } = useUser();
+    useUser();
     const router = useRouter();
     const projects = useQuery(api.projects.getSearch);
     const [isMounted, setIsMounted] = useState(false);
 
-    const toggle = useSearch((store) => store.toggle);
+    // const toggle = useSearch((store) => store.toggle);
     const isOpen = useSearch((store) => store.isOpen);
     const onClose = useSearch((store) => store.onClose);
 

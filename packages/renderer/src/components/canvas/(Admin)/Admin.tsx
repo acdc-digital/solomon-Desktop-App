@@ -6,14 +6,14 @@
 import React from "react";
 // import { useUser } from "@clerk/clerk-react";
 
-import Image from "next/image";
-import { Button } from "../../ui/button";
-import { PlusCircle } from "lucide-react";
+// import Image from "next/image";
+// import { Button } from "../../ui/button";
+// import { PlusCircle } from "lucide-react";
 import EmbeddingGraph from "./_components/EmbeddingGraph";
 import { useUser } from "@/hooks/useUser";
 
 const Admin = () => {
-  const { user } = useUser();
+  useUser();
 
   return (
     <div className="flex flex-col h-screen overflow-y">

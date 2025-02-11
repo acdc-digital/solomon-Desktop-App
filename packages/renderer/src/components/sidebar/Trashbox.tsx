@@ -24,7 +24,7 @@ export const Trashbox = () => {
 	});
 
 	const onClick = (projectId: string) => {
-		router.push(`/projects/${projects}`);
+		router.push(`/projects/${projectId}`);
 	};
 
 	const onRestore = (
