@@ -26,5 +26,8 @@
   },
   "keywords": [],
   "author": "matthew simon",
-  "license": "GNU"
+  "license": "GNU",
+  "dependencies": {
+    "jwt-decode": "^4.0.0"
+  }
 }
