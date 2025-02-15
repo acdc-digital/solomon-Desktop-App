@@ -1,37 +1,36 @@
 // Dashboard 
 // /Users/matthewsimon/Documents/Github/solomon-Desktop-App/packages/renderer/src/app/dashboard/page.tsx
 
-// Dashboard Page
-// /Users/matthewsimon/Documents/GitHub/acdc.solomon-electron/solomon-electron/next/src/app/dashboard/page.tsx
+"use client";
 
-'use client'
+import React, { useState } from "react";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import SidebarWrapper from "./_components/Sidebar";
+import Canvas from "./_components/Canvas";
+import Chat from "./_components/Chat";
+import useChatStore from "@/lib/store/chatStore";
 
-import React, { useState } from 'react';
-
-import DashboardLayout from './DashboardLayout';
-import Sidebar from './_components/Sidebar';
-import Canvas from './_components/Canvas';
-import Chat from './_components/Chat';
-import useChatStore from '@/lib/store/chatStore';
-
-
-const DashboardPage: React.FC = () => {
+export default function DashboardPage() {
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
   const isChatActive = useChatStore((state) => state.isChatActive);
 
-  const handleProjectSelection = (projectId: string) => {
+  function handleProjectSelection(projectId: string) {
     setActiveProjectId(projectId);
-  };
+  }
 
   return (
-    <DashboardLayout >
-      <div className="flex flex-1 h-screen pb-2">
-          <Sidebar onProjectSelect={handleProjectSelection} />
+    <SidebarProvider>
+      {/* This flex container sets up the columns */}
+      <div className="flex h-screen w-screen">
+        {/* Left: Our new “AppSidebar” with old logic intact */}
+        <SidebarWrapper onProjectSelect={handleProjectSelection} />
+
+        {/* Right: Canvas + optional Chat */}
+        <div className="flex flex-1">
           <Canvas activeProjectId={activeProjectId} />
           {isChatActive && <Chat />}
+        </div>
       </div>
-    </DashboardLayout>
+    </SidebarProvider>
   );
-};
-
-export default DashboardPage;
+}

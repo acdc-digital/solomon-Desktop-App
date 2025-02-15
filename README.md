@@ -39,7 +39,7 @@ Once cloned ensure you have pnpm installed (if not already): npm install -g pnpm
 Our Front-End application is currently being hosted on Vercel, free tier as noted in the domain above.
 
 **Latest Release:**   
-v1.1.53   
+v1.2.54   
 
 **Stable Version:**   
 v1.1.51   
@@ -51,6 +51,7 @@ Our Nextjs front end is hosted on Vercel. The Apple .dmg has been corrected, but
 2. git commit -m "Updated Electron version to x.x.x"
 3. git tag vx.x.x
 4. git push origin main vx.x.x
+5. (optional) git reset --hard vx.x.x
 
 If you follow these steps, you’ll have a smooth, automated release process.
 
