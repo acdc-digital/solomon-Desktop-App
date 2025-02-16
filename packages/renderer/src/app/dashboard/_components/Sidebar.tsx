@@ -195,7 +195,7 @@ export function AppSidebar({ onProjectSelect }: SidebarProps) {
         </SidebarGroup>
 
         {state === "expanded" && (
-          <p className="px-3 pt-2 text-xs text-gray-400">© 2025 Solomon</p>
+          <p className="px-3 pt-2 pb-2 text-xs text-gray-400">© 2025 Solomon</p>
         )}
       </SidebarFooter>
     </Sidebar>

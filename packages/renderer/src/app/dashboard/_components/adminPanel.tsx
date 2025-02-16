@@ -76,14 +76,14 @@ const AdminPanel: React.FC = () => {
         <BrainCircuit className="w-5 h-5" />
       </Button>
 
-      {/* 4) Files */}
-      <Button variant="ghost" onClick={handleFilesClick}>
-        <FilesIcon className="w-5 h-5" />
-      </Button>
-
-      {/* 5) Projects */}
+      {/* 4) Projects */}
       <Button variant="ghost" onClick={handleProjectsClick}>
         <FolderGit2 className="w-5 h-5" />
+      </Button>
+
+      {/* 5) Files */}
+      <Button variant="ghost" onClick={handleFilesClick}>
+        <FilesIcon className="w-5 h-5" />
       </Button>
 
       {/* 6) Tasks */}
@@ -91,14 +91,14 @@ const AdminPanel: React.FC = () => {
         <AlarmClockCheck className="w-5 h-5" />
       </Button>
 
-      {/* 7) Docs */}
-      <Button variant="ghost" onClick={handleDocsClick}>
-        <BookOpenCheck className="w-5 h-5" />
-      </Button>
-
-      {/* 8) Calendar */}
+      {/* 7) Calendar */}
       <Button variant="ghost" onClick={handleCalendarClick}>
         <CalendarDays className="w-5 h-5" />
+      </Button>
+
+      {/* 8) Docs */}
+      <Button variant="ghost" onClick={handleDocsClick}>
+        <BookOpenCheck className="w-5 h-5" />
       </Button>
     </div>
   );

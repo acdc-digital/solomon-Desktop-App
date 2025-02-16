@@ -1,147 +1,181 @@
-// Dashboard Projects
-// /Users/matthewsimon/Documents/GitHub/solomon-electron/solomon-electron/next/src/components/canvas/Projects.tsx
+"use client";
 
 import { useEffect } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { Id } from "../../../../convex/_generated/dataModel";
 import { Title } from "./_components/Title";
-import { Button } from "@/components/ui/button";
-import { BoltIcon, BotIcon, FolderIcon } from 'lucide-react';
-import { useEditorStore } from "@/lib/store/editorStore";
 import { UploadDocumentButton } from "./_components/FileTable";
 import { FileList } from "./_components/FileList";
-// import { DocumentData } from "@/types/DocumentData";
-
-import useChatStore from '@/lib/store/chatStore';
-// import FilePreview from "./_components/FilePreview";
 import TipTapEditor from "./_components/TipTapEditor";
-import dynamic from 'next/dynamic';
+import dynamic from "next/dynamic";
 
-const FilePreviewNoSSR = dynamic(() => import('./_components/FilePreview'), {
+import { useEditorStore } from "@/lib/store/editorStore";
+// import useChatStore from "@/lib/store/chatStore"; // Commented out chat store
+
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import { BoltIcon, FolderIcon } from "lucide-react";
+
+const FilePreviewNoSSR = dynamic(() => import("./_components/FilePreview"), {
   ssr: false,
 });
 
-// Fetch project data based on projectId
 const Projects: React.FC<{ projectId: string }> = ({ projectId }) => {
-  // Destructure activateFiles from the store
   const { activeView, setActiveView, selectedFile } = useEditorStore();
+  // const { isChatActive, activateChat } = useChatStore(); // Commented out chat store
 
-  // Destructure activateChat from the store
-  const { isChatActive, activateChat } = useChatStore();
+  // Convex mutations/queries
+  const update = useMutation(api.projects.update);
+  const projectIdOrUndefined = projectId ?? undefined;
+  const project = useQuery(api.projects.getById, {
+    projectId: projectIdOrUndefined as Id<"projects"> | undefined,
+  });
 
   useEffect(() => {
     if (projectId) {
       console.log("Fetching data for project ID:", projectId);
     }
-    // This effect runs when projectId changes
-    }, [projectId]);
+  }, [projectId]);
 
-  const update = useMutation(api.projects.update);
   const onChange = async (content: string) => {
     try {
       await update({ id: projectId, content });
     } catch (error) {
       console.error("Update error:", error);
     }
-  };  
+  };
 
-  const projectIdOrUndefined = projectId ?? undefined;
-  const project = useQuery(api.projects.getById, { projectId: projectIdOrUndefined as Id<"projects"> | undefined });
+  if (!projectId) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <p>Select a project to continue.</p>
+      </div>
+    );
+  }
 
-    if (!projectId) {
-      // No project ID is set, so display a message
-      return (
-        <div className="flex items-center justify-center h-full">
-          <p>Select a project to continue.</p>
-        </div>
-      );
+  if (project === undefined) {
+    return <p>Loading...</p>;
+  }
+
+  if (project === null) {
+    return null;
+  }
+
+  const handleTabChange = (value: string) => {
+    if (value === "editor") {
+      setActiveView("editor");
+    } else if (value === "files") {
+      setActiveView("files");
     }
+    // else if (value === "chat") { ... }
+  };
 
-    if (project === undefined) {
-      return <p>Loading...</p>
-    }
-
-    if (project === null) {
-      return null;
-    }
+  const currentTabValue = activeView;
 
   return (
-      <div className="flex flex-col h-screen overflow-y">
-        <p className="ml-4 mt-0 text-xs text-gray-400">
-          Showing details for Convex project ID: {projectId}
-        </p>
-          <div className="flex flex-col items-start justify-between">
-            <div className="m-3 rounded-lg border border-b">
-            <Title
-            initialData={project} 
-            />
+    <div className="flex flex-col bg-gray-100 h-screen overflow-y">
+      <div className="flex flex-col flex-1 ml-3 mr-3">
+        <Tabs
+          value={currentTabValue}
+          onValueChange={handleTabChange}
+          className="flex flex-col h-full"
+        >
+          <TabsList
+            className="
+              relative
+              grid grid-cols-3
+              h-10
+              w-full
+              pt-2
+            "
+          >
+            {/* Project Title */}
+            <div
+              className="
+                px-4 py-2
+                text-sm font-semibold
+                flex items-center
+                relative
+              "
+            >
+              <Title initialData={project} />
             </div>
-          </div>
 
-          {/* Canvas State-Change Header */}
-          <div className="flex flex-row gap-x-4 border rounded-t-lg bg-gray-50 ml-3 mr-3 p-4 pl-4 py-2 justify-end">
-              <Button className={`text-gray-600 ${
-                      activeView === "editor" ? "border-b border-gray-500" : ""
-                      }`}
-                      variant="outline"
-                      onClick={() => setActiveView("editor")} >
-                    <BoltIcon className="mr-2 h-4 w-4" />
-                  Editor
-              </Button>
-              <Button className={`text-gray-600 ${
-                      activeView === "files" ? "border-b border-gray-500" : ""
-                      }`}
-                      variant="outline"
-                      onClick={() => setActiveView("files")} >
-                    <FolderIcon className="mr-2 h-4 w-4" />
-                  Files
-              </Button>
-              {/* <Button
-                className="text-gray-600"
-                variant="outline"
-                >
-                <SquareCheck className="mr-2 h-5 w-5" />
-                Tasks
-              </Button> */}
-              <Button
-                className={`text-gray-600 ${
-                  isChatActive ? "border-b border-gray-500" : ""
-                }`}
-                variant="outline"
-                onClick={() => activateChat()}
-              >
-                <BotIcon className="mr-2 h-5 w-5" />
-                Chat
-              </Button>
-          </div>
+            {/* Editor Tab Trigger */}
+            <TabsTrigger
+              value="editor"
+              className="
+                relative
+                overflow-visible
+                px-4 py-2
+                text-sm font-semibold
+                flex items-center gap-2
+                ring-0 border-0 shadow-none
+                data-[state=active]:ring-0
+                data-[state=active]:border-0
+                data-[state=active]:shadow-none
+                data-[state=active]:rounded-out-b-2xl
+                data-[state=active]:bg-white
+                data-[state=active]:z-10
+              "
+            >
+              <BoltIcon className="h-4 w-4" />
+              Editor
+            </TabsTrigger>
 
-          {/* State-Change Components */}
-          {/* Editor */}
-          {activeView === "editor" && (
-            <div className="flex flex-col flex-1 ml-3 mr-3 border-b border-l border-r">
-            <TipTapEditor
-            initialContent={project.content}
-            onChange={onChange}
-            immediatelyRender={false}
-            />
+            {/* Files Tab Trigger */}
+            <TabsTrigger
+              value="files"
+              className="
+                relative
+                overflow-visible
+                px-4 py-2
+                text-sm font-semibold
+                flex items-center gap-2
+                ring-0 border-0 shadow-none
+                data-[state=active]:ring-0
+                data-[state=active]:border-0
+                data-[state=active]:shadow-none
+                data-[state=active]:rounded-out-bl-2xl
+                data-[state=active]:bg-white
+                data-[state=active]:z-10
+              "
+            >
+              <FolderIcon className="h-4 w-4" />
+              Files
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="editor" className="bg-white flex-1">
+            <div className="p-0 h-full flex flex-col">
+              <TipTapEditor
+                initialContent={project.content}
+                onChange={onChange}
+                immediatelyRender={false}
+              />
             </div>
-          )}
-          {/* Files */}
-          {activeView === "files" && (
-            <div className="ml-3 mr-3 border-b border-l border-r">
-              <UploadDocumentButton projectId={projectId} />
-              <FileList projectId={projectId} />
-            </div>
-          )}
-          {/* Preview */}
-          {activeView === "preview" && selectedFile && (
-            <div className="ml-3 mr-3 border-b border-l border-r">
-              <FilePreviewNoSSR />
-            </div>
-      )}
+          </TabsContent>
+
+          <TabsContent value="files" className="bg-white p-4">
+            <UploadDocumentButton projectId={projectId} />
+            <FileList projectId={projectId} />
+          </TabsContent>
+        </Tabs>
+
+        {/* Optional File Preview */}
+        {activeView === "preview" && selectedFile && (
+          <div className="border-l border-r border-b border-gray-200 p-4">
+            <FilePreviewNoSSR />
+          </div>
+        )}
       </div>
-    )
+    </div>
+  );
 };
 
 export default Projects;
