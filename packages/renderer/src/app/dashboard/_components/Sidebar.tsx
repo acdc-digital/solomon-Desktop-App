@@ -9,8 +9,6 @@ import {
   Search,
   Settings,
   Trash2Icon,
-  PanelRightOpen,
-  PanelRightClose,
 } from "lucide-react";
 import { useMutation } from "convex/react";
 import { toast } from "sonner";
@@ -24,7 +22,6 @@ import { ProjectList } from "@/components/sidebar/Project-List";
 
 import {
   Sidebar,
-  SidebarHeader,
   SidebarFooter,
   SidebarContent,
   SidebarGroup,
@@ -36,20 +33,23 @@ import {
   SidebarSeparator,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
 
 interface SidebarProps {
   onProjectSelect: (projectId: string) => void;
 }
 
 export function AppSidebar({ onProjectSelect }: SidebarProps) {
-  const { state, toggleSidebar } = useSidebar(); // ShadCN sidebar state
+  const { state } = useSidebar(); // "expanded" or "collapsed"
   const search = useSearch();
   const settings = useSettings();
   const { setProjectId } = useEditorStore();
   const createProject = useMutation(api.projects.create);
 
-  // Create a new project
   function handleCreate() {
     const promise = createProject({ title: "New Project" });
     toast.promise(promise, {
@@ -59,78 +59,68 @@ export function AppSidebar({ onProjectSelect }: SidebarProps) {
     });
   }
 
-  // When a project is selected
   function handleProjectSelect(projectId: string) {
     setProjectId(projectId);
     onProjectSelect(projectId);
   }
 
+  // If collapsed, don't render anything
+  if (state === "collapsed") {
+    return null; 
+  }
+
   return (
     <Sidebar
-      collapsible="icon"
+      // Remove collapsible="icon" so it won't show a slim icon column
       side="left"
       variant="sidebar"
-      className="relative"
+      className="relative border-r border-gray-200 bg-white"
     >
-      {/** -------------------------------------------
-           HEADER (sticky at top, only expand/collapse)
-      -------------------------------------------- */}
-      <SidebarHeader>
-        {/**
-         * Force a horizontal layout with some spacing 
-         * so the expand/collapse button is in the top row, clearly visible.
-         */}
-        <SidebarMenu className="!flex-row items-center gap-2 p-2">
-          <SidebarMenuItem className="inline-flex">
-            <SidebarMenuButton
-              onClick={toggleSidebar}
-              aria-label="Toggle sidebar"
-              className="
-                transition-colors duration-150
-                hover:bg-muted hover:text-muted-foreground
-                px-2
-
-                /* Force any SVG child inside */
-                [&>svg]:!h-6
-                [&>svg]:!w-6
-              "
-            >
-              {state === "expanded" ? (
-                <PanelRightClose />
-              ) : (
-                <PanelRightOpen />
-              )}
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarHeader>
+      {/* <SidebarHeader> ... your old toggle code (commented out) ... </SidebarHeader> */}
 
       <SidebarSeparator />
 
-      {/** -------------------------------------------
-           MAIN SCROLLABLE CONTENT
-      -------------------------------------------- */}
+      {/* MAIN SCROLLABLE CONTENT */}
       <SidebarContent>
-        {/** Tools group: Search + New Project */}
         <SidebarGroup>
-          <SidebarGroupLabel>Tools</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
+          <SidebarGroupLabel className="text-xs text-gray-400 px-3 mt-1">
+            Tools
+          </SidebarGroupLabel>
+          <SidebarGroupContent className="mt-0.5">
+            <SidebarMenu className="space-y-0">
               <SidebarMenuItem>
                 <SidebarMenuButton
                   onClick={search.onOpen}
-                  className="transition-colors duration-150 hover:bg-muted hover:text-muted-foreground"
+                  className="
+                    transition-colors duration-150
+                    hover:bg-gray-100 hover:text-gray-900
+                    rounded-md px-2 py-0
+                    flex items-center
+                    text-sm text-gray-600
+                    [&>svg]:mr-2
+                    [&>svg]:h-4
+                    [&>svg]:w-4
+                  "
                 >
-                  <Search className="mr-2 h-4 w-4" />
+                  <Search />
                   <span>Search</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton
                   onClick={handleCreate}
-                  className="transition-colors duration-150 hover:bg-muted hover:text-muted-foreground"
+                  className="
+                    transition-colors duration-150
+                    hover:bg-gray-100 hover:text-gray-900
+                    rounded-md px-2 py-0
+                    flex items-center
+                    text-sm text-gray-600
+                    [&>svg]:mr-2
+                    [&>svg]:h-4
+                    [&>svg]:w-4
+                  "
                 >
-                  <PlusCircle className="mr-2 h-4 w-4" />
+                  <PlusCircle />
                   <span>New Project</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -138,9 +128,10 @@ export function AppSidebar({ onProjectSelect }: SidebarProps) {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/** Projects group: project tree */}
-        <SidebarGroup>
-          <SidebarGroupLabel>Projects</SidebarGroupLabel>
+        <SidebarGroup className="mt-2">
+          <SidebarGroupLabel className="text-xs text-gray-400 px-3 mb-0.5">
+            Projects
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <ProjectList onProjectSelect={handleProjectSelect} />
           </SidebarGroupContent>
@@ -149,19 +140,30 @@ export function AppSidebar({ onProjectSelect }: SidebarProps) {
 
       <SidebarSeparator />
 
-      {/** -------------------------------------------
-           FOOTER: Trash + Settings
-      -------------------------------------------- */}
-      <SidebarFooter>
+      {/* FOOTER: Trash + Settings */}
+      <SidebarFooter className="px-2 pb-1">
         <SidebarGroup>
-          <SidebarGroupLabel>Utilities</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-xs text-gray-400 px-1 mb-0.5">
+            Utilities
+          </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="space-y-0.5">
               <SidebarMenuItem>
                 <Popover>
                   <PopoverTrigger asChild>
-                    <SidebarMenuButton className="transition-colors duration-150 hover:bg-muted hover:text-muted-foreground">
-                      <Trash2Icon className="mr-2 h-4 w-4" />
+                    <SidebarMenuButton
+                      className="
+                        transition-colors duration-150
+                        hover:bg-gray-100 hover:text-gray-900
+                        rounded-md px-2 py-1
+                        flex items-center
+                        text-sm text-gray-600
+                        [&>svg]:mr-2
+                        [&>svg]:h-4
+                        [&>svg]:w-4
+                      "
+                    >
+                      <Trash2Icon />
                       <span>Trashcan</span>
                     </SidebarMenuButton>
                   </PopoverTrigger>
@@ -173,9 +175,18 @@ export function AppSidebar({ onProjectSelect }: SidebarProps) {
               <SidebarMenuItem>
                 <SidebarMenuButton
                   onClick={settings.onOpen}
-                  className="transition-colors duration-150 hover:bg-muted hover:text-muted-foreground"
+                  className="
+                    transition-colors duration-150
+                    hover:bg-gray-100 hover:text-gray-900
+                    rounded-md px-2 py-1
+                    flex items-center
+                    text-sm text-gray-600
+                    [&>svg]:mr-2
+                    [&>svg]:h-4
+                    [&>svg]:w-4
+                  "
                 >
-                  <Settings className="mr-2 h-4 w-4" />
+                  <Settings />
                   <span>Settings</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -183,17 +194,10 @@ export function AppSidebar({ onProjectSelect }: SidebarProps) {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/** Show “© 2025 Solomon” only if expanded */}
         {state === "expanded" && (
-          <p className="px-6 py-2 text-xs text-muted-foreground">
-            © 2025 Solomon
-          </p>
+          <p className="px-3 pt-2 text-xs text-gray-400">© 2025 Solomon</p>
         )}
       </SidebarFooter>
-
-      {/**
-       * No <SidebarRail> since we handle the collapse button in the header row.
-       */}
     </Sidebar>
   );
 }

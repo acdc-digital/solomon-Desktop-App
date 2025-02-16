@@ -1,12 +1,13 @@
 // Dashboard Layout
 // /Users/matthewsimon/Documents/GitHub/acdc.solomon-electron/solomon-electron/next/src/app/dashboard/DashboardLayout.tsx
 
-'use client'
+"use client";
 
-import { SearchCommand } from '@/components/search-command';
-import { useConvexAuth } from 'convex/react';
-import { redirect } from 'next/navigation';
-import React from 'react';
+import { SearchCommand } from "@/components/search-command";
+import { useConvexAuth } from "convex/react";
+import { redirect } from "next/navigation";
+import React from "react";
+import { SidebarProvider } from "@/components/ui/sidebar";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -18,9 +19,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   if (isLoading) {
     return (
       <div>
-        <p className='text-sm'>
-           Loading...
-        </p>
+        <p className="text-sm">Loading...</p>
       </div>
     );
   }
@@ -29,13 +28,15 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     return redirect("/");
   }
 
+  // Wrap the content in SidebarProvider, so everything under /dashboard
+  // can use the sidebar context safely.
   return (
-    <div>
+    <SidebarProvider>
       <div className="dashboard-content">
         <SearchCommand />
         {children}
       </div>
-    </div>
+    </SidebarProvider>
   );
 };
 
