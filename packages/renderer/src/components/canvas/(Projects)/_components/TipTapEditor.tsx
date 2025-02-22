@@ -656,7 +656,7 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
   // Render
   // --------------------------------------------
   return (
-    <div className="h-full overflow-hidden">
+    <div className="h-[calc(87vh-100px)] overflow-hidden">
       {/*
         Editor Toolbar
         - Contains formatting controls, list toggles, alignment tools,

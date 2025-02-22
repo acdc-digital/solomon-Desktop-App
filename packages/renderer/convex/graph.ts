@@ -8,7 +8,7 @@ import { v } from "convex/values";
 export const upsertGraphNode = mutation({
   args: {
     // Use the ID type for the "graph" table.
-    id: v.optional(v.id("graph")),
+    id: v.optional(v.id("graph")),  
     documentChunkId: v.string(),
     label: v.string(),
     group: v.string(),
@@ -86,7 +86,7 @@ export const batchUpsertGraphNodes = mutation({
         documentChunkId: v.string(),
         label: v.string(),
         group: v.string(),
-        significance: v.optional(v.number()), // Keep optional
+        significance: v.optional(v.number()),
       })
     ),
   },
@@ -94,11 +94,11 @@ export const batchUpsertGraphNodes = mutation({
     const results = [];
     for (const node of nodes) {
       const data = {
-        elementType: "node", // Add elementType here
+        elementType: "node",
         documentChunkId: node.documentChunkId,
         label: node.label,
         group: node.group,
-        significance: node.significance ?? 0, // Handle optional
+        significance: node.significance ?? 0,
       };
       results.push(await ctx.db.insert("graph", data));
     }
@@ -122,7 +122,7 @@ export const batchUpsertGraphLinks = mutation({
     const results = [];
     for (const link of links) {
       const data = {
-        elementType: "link", // Add elementType here
+        elementType: "link",
         source: link.source,
         target: link.target,
         similarity: link.similarity,
