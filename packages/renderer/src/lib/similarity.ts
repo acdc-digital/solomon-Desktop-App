@@ -7,9 +7,12 @@
  * @returns Cosine similarity value between -1 and 1.
  */
 export function cosineSimilarity(vecA: number[], vecB: number[]): number {
-    if (vecA.length !== vecB.length) {
-      throw new Error("Vectors must be of the same length.");
-    }
+  if (!vecA || !vecB) {
+    throw new Error("Both vectors must be defined.");
+  }
+  if (vecA.length !== vecB.length) {
+    throw new Error("Vectors must be of the same length.");
+  }
   
     const dotProduct = vecA.reduce((sum, a, idx) => sum + a * (vecB[idx] || 0), 0);
     const magnitudeA = Math.sqrt(vecA.reduce((sum, a) => sum + a * a, 0));

@@ -19,7 +19,8 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
-import { BoltIcon, FolderIcon } from "lucide-react";
+// Added CheckSquareIcon for "Tasks" tab:
+import { CheckSquareIcon, FolderOpen, StickyNote } from "lucide-react";
 
 const FilePreviewNoSSR = dynamic(() => import("./_components/FilePreview"), {
   ssr: false,
@@ -71,8 +72,9 @@ const Projects: React.FC<{ projectId: string }> = ({ projectId }) => {
       setActiveView("editor");
     } else if (value === "files") {
       setActiveView("files");
+    } else if (value === "tasks") {
+      setActiveView("tasks");
     }
-    // else if (value === "chat") { ... }
   };
 
   const currentTabValue = activeView;
@@ -83,72 +85,69 @@ const Projects: React.FC<{ projectId: string }> = ({ projectId }) => {
         <Tabs
           value={currentTabValue}
           onValueChange={handleTabChange}
-          className="flex flex-col h-full"
+          className="flex flex-col h-full pt-4"
         >
-          <TabsList
-            className="
-              relative
-              grid grid-cols-3
-              h-10
-              w-full
-              pt-2
-            "
-          >
-            {/* Project Title */}
-            <div
-              className="
-                px-4 py-2
-                text-sm font-semibold
-                flex items-center
-                relative
-              "
-            >
+          <TabsList className="relative flex items-center justify-between h-6 w-full pt-2">
+            {/* Left: Title */}
+            <div className="flex-1 px-4 py-2 text-sm font-semibold">
               <Title initialData={project} />
             </div>
-
-            {/* Editor Tab Trigger */}
+            {/* Right: Tab Triggers */}
+            <div className="flex items-center gap-2 pr-4">
             <TabsTrigger
-              value="editor"
-              className="
-                relative
-                overflow-visible
-                px-4 py-2
-                text-sm font-semibold
-                flex items-center gap-2
-                ring-0 border-0 shadow-none
-                data-[state=active]:ring-0
-                data-[state=active]:border-0
-                data-[state=active]:shadow-none
-                data-[state=active]:rounded-out-b-2xl
-                data-[state=active]:bg-white
-                data-[state=active]:z-10
-              "
-            >
-              <BoltIcon className="h-4 w-4" />
-              Editor
-            </TabsTrigger>
+                value="editor"
+                className="
+                  relative
+                  overflow-visible
+                  px-4 py-2
+                  text-sm font-semibold
+                  flex items-center gap-2 w-36
+                  border border-gray-300 border-b-0
+                  data-[state=active]:rounded-out-b-xl
+                  data-[state=active]:bg-white
+                  data-[state=active]:z-10
+                "
+              >
+                <StickyNote className="h-4 w-4" />
+                Editor
+              </TabsTrigger>
 
-            {/* Files Tab Trigger */}
-            <TabsTrigger
-              value="files"
-              className="
-                relative
-                overflow-visible
-                px-4 py-2
-                text-sm font-semibold
-                flex items-center gap-2
-                ring-0 border-0 shadow-none
-                data-[state=active]:ring-0
-                data-[state=active]:border-0
-                data-[state=active]:shadow-none
-                data-[state=active]:rounded-out-bl-2xl
-                data-[state=active]:bg-white
-                data-[state=active]:z-10
-              "
-            >
-              <FolderIcon className="h-4 w-4" />
-              Files
-            </TabsTrigger>
+              <TabsTrigger
+                value="files"
+                className="
+                  relative
+                  overflow-visible
+                  px-4 py-2
+                  text-sm font-semibold
+                  flex items-center gap-2 w-36
+                  border border-gray-300 border-b-0
+                  data-[state=active]:rounded-out-b-xl
+                  data-[state=active]:bg-white
+                  data-[state=active]:z-10
+                "
+              >
+                <FolderOpen className="h-4 w-4" />
+                Files
+              </TabsTrigger>
+
+              <TabsTrigger
+                value="tasks"
+                className="
+                  relative
+                  overflow-visible
+                  px-4 py-2
+                  text-sm font-semibold
+                  flex items-center gap-2 w-36
+                  border border-gray-300 border-b-0
+                  data-[state=active]:rounded-out-b-xl
+                  data-[state=active]:bg-white
+                  data-[state=active]:z-10
+                "
+              >
+                <CheckSquareIcon className="h-4 w-4" />
+                Tasks
+              </TabsTrigger>
+            </div>
           </TabsList>
 
           <TabsContent value="editor" className="bg-white flex-1">
@@ -165,9 +164,14 @@ const Projects: React.FC<{ projectId: string }> = ({ projectId }) => {
             <UploadDocumentButton projectId={projectId} />
             <FileList projectId={projectId} />
           </TabsContent>
+
+          <TabsContent value="tasks" className="bg-white p-4">
+            <div className="p-2 text-sm">
+              <p>This is a placeholder for tasks.</p>
+            </div>
+          </TabsContent>
         </Tabs>
 
-        {/* Optional File Preview */}
         {activeView === "preview" && selectedFile && (
           <div className="border-l border-r border-b border-gray-200 p-4">
             <FilePreviewNoSSR />
