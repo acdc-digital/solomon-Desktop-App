@@ -39,7 +39,7 @@ Once cloned ensure you have pnpm installed (if not already): npm install -g pnpm
 Our Front-End application is currently being hosted on Vercel, free tier as noted in the domain above.
 
 **Latest Release:**   
-v1.2.56   
+v1.2.57   
 
 **Stable Version:**   
 v1.1.51   
