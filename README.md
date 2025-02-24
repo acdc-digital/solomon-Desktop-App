@@ -26,9 +26,11 @@ https://solomon-desktop-app.vercel.app/
 Once cloned ensure you have pnpm installed (if not already): npm install -g pnpm
 
 1. pnpm install
-2. **Optional development mode:** pnpm run dev
-3. pnpm run build
-4. pnpm run start
+2. (spinup Convex bakcend for dev/ build to run) npx convex dev
+3. **Optional development mode:** pnpm run dev
+4. pnpm run build
+5. pnpm run start
+6. (note) New dependencies may require the additon of: --legacy-peer-deps
 
 **Note:** currently we're using 'electron-builder' which provides some advanced functionality that will be more important later on during development. electron-builder is a popular alternative for generating more advanced binaries/installers (like .dmg, .exe/NSIS, .AppImage, .deb etc.). The pitfall is that the builder takes a little longer but it works none-the-less.   
 **Note2:** I've temporarilty disabled the "prestart": "npm run build" to avoid generating a completely fresh build every time simply to expedite the above concern.   
@@ -39,7 +41,7 @@ Once cloned ensure you have pnpm installed (if not already): npm install -g pnpm
 Our Front-End application is currently being hosted on Vercel, free tier as noted in the domain above.
 
 **Latest Release:**   
-v1.2.58   
+v1.2.59   
 
 **Stable Version:**   
 v1.1.51   

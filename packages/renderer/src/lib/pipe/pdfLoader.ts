@@ -3,7 +3,7 @@
 
 import fetch from "node-fetch";
 import { LlamaParseReader, Document } from "llamaindex";
-// import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import convex from "@/lib/convexClient";
 import { retryWithBackoff } from "./utils";
 

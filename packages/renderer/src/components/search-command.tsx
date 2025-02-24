@@ -4,11 +4,18 @@ import { useEffect, useState } from "react";
 import { File } from "lucide-react";
 import { useQuery } from "convex/react";
 import { useRouter } from "next/navigation";
-// import { useUser } from "@clerk/clerk-react";
-import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import {
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList
+} from "@/components/ui/command";
 import { useSearch } from "@/hooks/use-search";
 import { api } from "../../convex/_generated/api";
 import { useUser } from "@/hooks/useUser";
+import { DialogTitle, DialogDescription } from "@radix-ui/react-dialog"; 
 
 export const SearchCommand = () => {
     useUser();
@@ -48,34 +55,33 @@ export const SearchCommand = () => {
 
     return (
         <CommandDialog open={isOpen} onOpenChange={onClose}>
-            <CommandInput
-            placeholder={`Search`} />
+            <CommandInput placeholder="Search" />
+            <DialogTitle>Search Projects</DialogTitle>
+            <DialogDescription>
+                Type keywords to search through your projects.
+            </DialogDescription>
             <CommandList>
                 <CommandEmpty>
                     No Results Found.
                 </CommandEmpty>
                 <CommandGroup heading="Projects">
-                    {projects?.map((project) =>
-                    <CommandItem
-                    key={project._id}
-                    value={`${project._id}-${project.title}`}
-                    title={project.title}
-                    onSelect={onSelect}
-                    >
-                        {project.icon ? (
-                            <p className="mr-2 text-[18px]">
-                                {project.icon}
-                            </p>
-                        ) : (
-                            <File className="mr-2 h-4 w-4" />
-                        )}
-                        <span>
-                            {project.title}
-                        </span>
-                    </CommandItem>
-                    )}
+                    {projects?.map((project) => (
+                        <CommandItem
+                            key={project._id}
+                            value={`${project._id}-${project.title}`}
+                            title={project.title}
+                            onSelect={() => onSelect(project._id)}
+                        >
+                            {project.icon ? (
+                                <p className="mr-2 text-[18px]">{project.icon}</p>
+                            ) : (
+                                <File className="mr-2 h-4 w-4" />
+                            )}
+                            <span>{project.title}</span>
+                        </CommandItem>
+                    ))}
                 </CommandGroup>
             </CommandList>
         </CommandDialog>
-    )
-}
+    );
+};
