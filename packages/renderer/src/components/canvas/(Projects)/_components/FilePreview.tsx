@@ -178,7 +178,7 @@ const FilePreview: React.FC = () => {
         <div className="w-px h-6 bg-gray-300 mx-2" />
 
         {/* Highlighter toggle */}
-        <div>
+        {/* <div>
           <button
             onClick={toggleHighlight}
             className="bg-gray-200 p-2 hover:bg-gray-300 rounded"
@@ -186,7 +186,7 @@ const FilePreview: React.FC = () => {
           >
             <Highlighter className="h-4 w-4" />
           </button>
-        </div>
+        </div> */}
       </div>
 
       {/* Content Area */}
