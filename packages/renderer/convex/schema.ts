@@ -24,9 +24,9 @@ const schema = defineSchema({
   projects: defineTable({
     type: v.string(), // 'project' or 'document'
     title: v.optional(v.string()),
-    userId: v.string(),
+    userId: v.id("users"),
     isArchived: v.boolean(),
-    parentProject: v.optional(v.id("projects")),
+    parentProject: v.union(v.null(), v.id("projects")),
     content: v.optional(v.string()),
     isPublished: v.optional(v.boolean()),
     noteEmbeddings: v.optional(v.array(v.float64())),

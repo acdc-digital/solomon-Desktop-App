@@ -1,54 +1,56 @@
+// convex/auth.ts (Implement afterUserCreatedOrUpdated to patch users.authId)
 import GitHub from "@auth/core/providers/github";
-// import Resend from "@auth/core/providers/resend";
-import { convexAuth, getAuthUserId } from "@convex-dev/auth/server";
-import { VALID_ROLES } from "./lib/permissions";
-import { query, mutation } from "./_generated/server";
+import { convexAuth } from "@convex-dev/auth/server";
 import { v } from "convex/values";
+import { query, mutation } from "./_generated/server";
+import { getAuthUserId } from "@convex-dev/auth/server";
+import { api } from "./_generated/api";
 
-/**
- * Configure authentication using Convex's auth system.
- * This setup enables:
- * - GitHub OAuth authentication
- * - Resend email authentication
- *
- * The exported functions (auth, signIn, signOut, store) can be used
- * in your frontend to manage authentication state.
- *
- * We supply a custom `createUser` callback to ensure that the new user
- * document includes an `authId` field. (We cast the config as `any` to allow this.)
- */
-export const { auth, signIn, signOut, store } = convexAuth(
-  ({
-    providers: [
-      GitHub({
-        clientId: process.env.AUTH_GITHUB_ID || "",
-        clientSecret: process.env.AUTH_GITHUB_SECRET || "",
-      }),
-    ],
-    // Custom createUser callback to ensure authId is set.
-    createUser: async (ctx: any, providerUser: any) => {
-      // For GitHub, we can derive an authId by prefixing the provider id.
-      return {
-        authId: `github|${providerUser.id}`,
-        email: providerUser.email,
-        emailVerificationTime: providerUser.emailVerificationTime,
-        image: providerUser.image,
-        name: providerUser.name,
-      };
+export const { auth, signIn, signOut, store } = convexAuth({
+  providers: [
+    GitHub({
+      clientId: process.env.AUTH_GITHUB_ID,
+      clientSecret: process.env.AUTH_GITHUB_SECRET,
+    }),
+  ],
+  // afterUserCreatedOrUpdated callback to patch users.authId
+  callbacks: {
+    async afterUserCreatedOrUpdated(ctx, args) {
+      console.log("--- afterUserCreatedOrUpdated CALLBACK EXECUTING ---");
+      console.log("Callback Arguments:", args); // Log callback arguments
+      const profile = args.profile;
+      const userId = args.userId; // Get userId from args
+
+      if (!profile) {
+        console.warn("profile is not available in afterUserCreatedOrUpdated callback.");
+        return;
+      }
+
+      try {
+        let authId: string;
+        if (profile.id) {
+          authId = `github|${profile.id}`;
+        } else if (profile.email) {
+          authId = `github|${profile.email}`;
+          console.warn("Warning: Using profile.email as fallback for authId. profile.id is undefined.");
+        } else {
+          authId = 'github|unknown';
+          console.error("Error: Could not generate authId. profile.id and profile.email are undefined.");
+        }
+        console.log("Generated authId:", authId);
+
+        // Patch users.authId in your custom users table
+        console.log("Patching users table with authId:", authId, "for userId:", userId); // Log patch action
+        await ctx.db.patch(userId, { authId: authId }); // <--- PATCH users.authId HERE!
+        console.log("users table patched successfully with authId.");
+
+      } catch (error: any) {
+        console.error("Error in afterUserCreatedOrUpdated callback:", error);
+        throw error;
+      }
     },
-    callbacks: {
-      /**
-       * This callback runs after a user signs in or updates their auth info.
-       * Here we set the default role for new users.
-       */
-      async afterUserCreatedOrUpdated(ctx: any, args: any) {
-        await ctx.db.patch(args.userId, {
-          role: VALID_ROLES.READ,
-        });
-      },
-    },
-  } as any) // Cast to any to bypass type-checking on unsupported properties.
-);
+  },
+});
 
 /**
  * Query to get the currently authenticated user's data.

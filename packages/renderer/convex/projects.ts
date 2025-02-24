@@ -2,6 +2,7 @@
 // /Users/matthewsimon/Documents/GitHub/solomon-electron/solomon-electron/next/convex/projects.ts
 
 import { v } from "convex/values";
+import { getStableUserDoc } from "./lib/getUserOrThrow";
 import { mutation, MutationCtx, query, internalAction, ActionCtx, action } from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
 import { api } from "./_generated/api";
@@ -15,131 +16,19 @@ import fetch from "node-fetch";
 // import pdfParse from 'pdf-parse';
 // import OpenAI from "openai";
 
-/**
- * Query to retrieve the parentProjectId for a given documentId.
- *
- * @param ctx - Convex server context
- * @param documentId - The ID of the document
- * @returns The parentProjectId if found, otherwise null
- */
 export const getParentProjectId = query({
-  args: {
-    documentId: v.id("projects"),
-  },
-  handler: async (
-    ctx,
-    { documentId }: { documentId: Id<"projects"> }
-  ): Promise<Id<"projects"> | null> => {
-    console.log(`Fetching document with ID: ${documentId}`);
-
-    // Fetch the document directly by its ID
-    const document = await ctx.db.get(documentId);
-
-    if (!document) {
-      console.error(`Document with ID ${documentId} not found.`);
-      return null;
-    }
-
-    if (document.type !== "document") {
-      console.error(`Document with ID ${documentId} is not of type 'document'.`);
-      return null;
-    }
-
-    if (!document.parentProject) {
-      console.error(`Document with ID ${documentId} does not have a parentProject.`);
-      return null;
-    }
-
-    console.log(`Parent Project ID: ${document.parentProject}`);
-    return document.parentProject as Id<"projects">;
-  },
-});
-
-{/* export const processDocument = action({
 	args: {
 	  documentId: v.id("projects"),
 	},
 	handler: async (ctx, { documentId }) => {
-	  // Step 1: Retrieve the document via a query
-	  const document = await ctx.runQuery(api.projects.getDocument, { documentId });
-	  if (!document) {
-		throw new Error("Document not found.");
-	  }
-	  if (!document.fileId) {
-		throw new Error("No file associated with the document.");
-	  }
-	  console.log("Loading document...");
+	  const doc = await ctx.db.get(documentId);
+	  if (!doc) return null;
+	  if (doc.type !== "document") return null;
 
-	  // Step 2: Generate a download URL for the file
-	  const fileUrl = await ctx.storage.getUrl(document.fileId);
-	  if (!fileUrl) {
-		throw new Error("Failed to retrieve file URL from storage.");
-	  }
-	  console.log("Got fileUrl:", fileUrl);
-
-	  // Step 3: Load the document using UnstructuredLoader
-	  const loader = new UnstructuredLoader(fileUrl);
-	  const docs = await loader.load();
-	  if (!docs.length) {
-		throw new Error("No content extracted from the document.");
-	  }
-	  console.log("Loaded docs:", docs.length);
-
-	  // Step 4: Split the document into chunks
-	  const textSplitter = new RecursiveCharacterTextSplitter({
-		chunkSize: 1000,
-		chunkOverlap: 200,
-	  });
-	  const splitDocs = await textSplitter.splitDocuments(docs);
-	  const docChunks = splitDocs.map((doc) => doc.pageContent);
-
-	  // Step 5: Initialize embeddings with caching, now `ctx` is ActionCtx
-	  const embeddings = new CacheBackedEmbeddings({
-		underlyingEmbeddings: new OpenAIEmbeddings(),
-		documentEmbeddingStore: new ConvexKVStore({ ctx }), // Allowed in actions
-	  });
-
-	  // Step 6a: Generate embeddings for the chunks
-	  const chunkEmbeddings = await embeddings.embedDocuments(docChunks);
-
-	  // Optionally, average embeddings into one representative vector
-	  const documentEmbedding = chunkEmbeddings[0].map((_, i) =>
-		chunkEmbeddings.reduce((sum, vec) => sum + vec[i], 0) / chunkEmbeddings.length
-	  );
-	  console.log("Computed embeddings");
-
-	  // Step 6b: Store embeddings in the vector index (optional)
-	  await ConvexVectorStore.fromDocuments(splitDocs, embeddings, { ctx });
-
-	  // Update the document embeddings and chunks via a mutation
-	  await ctx.runMutation(api.projects.updateDocumentEmbeddings, {
-		documentId,
-		documentChunks: docChunks,
-		documentEmbeddings: documentEmbedding,
-	  });
-
-	  // Step 7: Update the document entry to mark it as processed
-	  await ctx.runMutation(api.projects.updateDocumentProcessed, {
-		documentId,
-		isProcessed: true,
-	  });
-
-	  return { success: true };
+	  // doc.parentProject is typed as `Id<"projects"> | null`
+	  return doc.parentProject ?? null;
 	},
-  }); */}
-
-// This mutation updates the document's chunks and embeddings
-{/* export const updateDocumentEmbeddings = mutation({
-	args: {
-	  documentId: v.id("projects"),
-	  documentEmbeddings: v.array(v.float64()),
-	},
-	handler: async (ctx, args) => {
-	  await ctx.db.patch(args.documentId, {
-		documentEmbeddings: args.documentEmbeddings,
-	  });
-	},
-  }); */}
+  });
 
 export const createDocument = mutation({
     args: {
@@ -156,6 +45,8 @@ export const createDocument = mutation({
             throw new Error("User not authenticated.");
         }
 
+		const userDoc = await getStableUserDoc(ctx);
+
         // Validate if parentProject exists
         if (args.parentProject) {
             const project = await ctx.db.get(args.parentProject);
@@ -167,10 +58,10 @@ export const createDocument = mutation({
         // Insert the document with userId and other required fields
         const documentId = await ctx.db.insert('projects', {
 			  type: 'document', // Set the type to 'document'
-              userId: identity.subject,
+              userId: userDoc._id,
               isArchived: false,
               isPublished: false,
-              parentProject: args.parentProject,
+              parentProject: args.parentProject ?? null,
 
 			  // Document Fields
 			  documentTitle: args.documentTitle,
@@ -324,12 +215,13 @@ export const getDocumentsByProjectId = query({
 	  if (!identity) {
 		throw new Error("User Not Authenticated.");
 	  }
-	  const userId = identity.subject;
+
+	  const userDoc = await getStableUserDoc(ctx);
 
 	  const documents = await ctx.db
 		.query("projects")
 		.withIndex("by_user_parent", (q) =>
-		  q.eq("userId", userId).eq("parentProject", args.projectId)
+			q.eq("userId", userDoc._id).eq("parentProject", args.projectId)
 		)
 		.filter((q) =>
 		  q.and(
@@ -352,14 +244,14 @@ export const archive = mutation({
 			throw new Error("User Not Authenticated.");
 		}
 
-		const userId = identity.subject;
+		const userDoc = await getStableUserDoc(ctx);
 		const existingProject = await ctx.db.get(args.id);
 
 		if (!existingProject) {
 			throw new Error("No Existing Projects.");
 		}
 
-		if (existingProject.userId !== userId) {
+		if (existingProject.userId !== userDoc._id) {
 			throw new Error("User not Authorized to Modify Projects.");
 		}
 
@@ -368,7 +260,7 @@ export const archive = mutation({
 			.query("projects")
 			.withIndex("by_user_parent", (q) => (
 				q
-				.eq("userId", userId)
+				.eq("userId", userDoc._id)
 				.eq("parentProject", projectId)
 			))
 			.collect();
@@ -392,79 +284,91 @@ export const archive = mutation({
 	}
 })
 
+/**
+ * getSidebar: Return projects for the current user & optional parentProject.
+ * We chain eq() calls inside `withIndex` so that TypeScript knows the fields match the index.
+ */
 export const getSidebar = query({
 	args: {
-	  parentProject: v.optional(v.id("projects")),
+	  parentProject: v.optional(v.id("projects")), // or undefined means top-level
 	},
-	handler: async (ctx, args) => {
+	handler: async (ctx, { parentProject }) => {
 	  const identity = await ctx.auth.getUserIdentity();
-
 	  if (!identity) {
-		throw new Error("User Not Authenticated.");
+		throw new Error("User not authenticated.");
 	  }
-
-	  const userId = identity.subject;
-
-	  const projects = await ctx.db
-		.query("projects")
-		.withIndex("by_user_parent", (q) =>
-		  q.eq("userId", userId).eq("parentProject", args.parentProject)
+  
+	  // stable user ID
+	  const stableUserIdString = identity.subject.split("|")[0];
+	  const userDoc = await ctx.db.get(stableUserIdString as Id<"users">);
+	  if (!userDoc) {
+		console.error(`User doc not found for id=${stableUserIdString}`);
+		return [];
+	  }
+  
+	  // Use withIndex to match userId & parentProject, then order
+	  // Because `by_user_parent` covers both "userId" and "parentProject",
+	  // we do these eq() calls inside the same callback.
+	  let q = ctx.db.query("projects").withIndex("by_user_parent", (q) =>
+		q
+		  .eq("userId", userDoc._id)
+		  .eq("parentProject", parentProject ?? null)
+		  // you can do .order("desc") right here in the callback
+		  // .order("desc")
+	  );
+  
+	  // Now we can chain a filter
+	  q = q.filter((q) =>
+		q.and(
+		  q.eq(q.field("isArchived"), false),
+		  q.eq(q.field("type"), "project")
 		)
-		.filter((q) =>
-		  q.and(
-			q.eq(q.field("isArchived"), false),
-			q.eq(q.field("type"), "project") // Only fetch projects
-		  )
-		)
-		.order("desc")
-		.collect();
-
+	  );
+  
+	  const projects = await q.collect();
+	  console.log("getSidebar returned", projects.length, "projects.");
 	  return projects;
 	},
   });
 
-export const create = mutation({
+  export const create = mutation({
 	args: {
-		// Project Fields
-		title: v.string(),
-		parentProject: v.optional(v.id("projects")),
-		content: v.optional(v.string()),
-		isPublished: v.optional(v.boolean()),
-		embeddings: v.optional(v.array(v.number())),
-
-		// Document Fields
-		documentTitle: v.optional(v.string()),
-		fileId: v.optional(v.string()),
-		documentContent: v.optional(v.string()),
-		documentEmbeddings: v.optional(v.array(v.float64())),
+	  title: v.string(),
+	  parentProject: v.optional(v.id("projects")),
+	  content: v.optional(v.string()),
+	  isPublished: v.optional(v.boolean()),
+	  embeddings: v.optional(v.array(v.number())),
+	  documentTitle: v.optional(v.string()),
+	  fileId: v.optional(v.string()),
+	  documentContent: v.optional(v.string()),
+	  documentEmbeddings: v.optional(v.array(v.float64())),
 	},
 	handler: async (ctx, args) => {
-		const identity = await ctx.auth.getUserIdentity();
-
-		if (!identity) {
-			throw new Error("User Not Authenticated.");
-		}
-
-		const userId = identity.subject;
-
-		const project = await ctx.db.insert("projects", {
-			type: 'project', // Set the type to 'project'
-			// Project Fields
-			title: args.title,
-			parentProject: args.parentProject,
-			userId,
-			isArchived: false,
-			isPublished: args.isPublished ?? false,
-			content: args.content,
-			noteEmbeddings: args.embeddings,
-
-			// Document Fields
-			documentTitle: args.documentTitle,
-			fileId: args.fileId,
-			isProcessed: false,
-		});
-	}
-});
+	  // 1. Get the stable userDoc
+	  const userDoc = await getStableUserDoc(ctx);
+	  const stableUserId = userDoc._id;
+  
+	  // 2. Insert a new "project" doc
+	  const projectPayload = {
+		type: "project",
+		title: args.title,
+		// If no parentProject is provided, store null
+		parentProject: args.parentProject ?? null,
+		userId: stableUserId,
+		isArchived: false,
+		isPublished: args.isPublished ?? false,
+		content: args.content,
+		noteEmbeddings: args.embeddings,
+		documentTitle: args.documentTitle,
+		fileId: args.fileId,
+		isProcessed: false,
+	  };
+  
+	  const projectId = await ctx.db.insert("projects", projectPayload);
+	  return projectId;
+	},
+  });
+  
 
 export const getTrash = query({
 	handler: async (ctx) => {
@@ -474,11 +378,11 @@ export const getTrash = query({
 			throw new Error("User Not Authenticated.");
 		}
 
-		const userId = identity.subject;
+		const userDoc = await getStableUserDoc(ctx);
 
 		const projects = await ctx.db
 		.query("projects")
-		.withIndex("by_user", (q) => q.eq("userId", userId))
+		.withIndex("by_user", (q) => q.eq("userId", userDoc._id))
 		.filter((q) =>
 			q.eq(q.field("isArchived"), true),
 			)
@@ -498,7 +402,7 @@ export const restore = mutation({
 			throw new Error("User Not Authenticated.");
 		}
 
-		const userId = identity.subject;
+		const userDoc = await getStableUserDoc(ctx);
 
 		const existingProject = await ctx.db.get(args.id);
 
@@ -506,7 +410,7 @@ export const restore = mutation({
 			throw new Error("Project Not Found.");
 		}
 
-		if (existingProject.userId !== userId) {
+		if (existingProject.userId !== userDoc._id) {
 			throw new Error("User not Authorized.")
 		}
 
@@ -515,7 +419,7 @@ export const restore = mutation({
 			.query("projects")
 			.withIndex("by_user_parent", (q) => (
 				q
-				.eq("userId", userId)
+				.eq("userId", userDoc._id)
 				.eq("parentProject", projectId)
 			))
 			.collect();
@@ -557,7 +461,7 @@ export const remove = mutation({
 			throw new Error("User Not Authenticated.");
 		}
 
-		const userId = identity.subject;
+		const userDoc = await getStableUserDoc(ctx);
 
 		const existingProject = await ctx.db.get(args.id);
 
@@ -565,7 +469,7 @@ export const remove = mutation({
 			throw new Error("Not Found.");
 		}
 
-		if (existingProject.userId !== userId) {
+		if (existingProject.userId !== userDoc._id) {
 			throw new Error("User not Authorized.");
 		}
 
@@ -583,11 +487,11 @@ export const getSearch = query({
 			throw new Error("User Not Authenticated.");
 		}
 
-		const userId = identity.subject;
+		const userDoc = await getStableUserDoc(ctx);
 
 		const projects = await ctx.db
 		.query("projects")
-		.withIndex("by_user", (q) => q.eq("userId", userId))
+		.withIndex("by_user", (q) => q.eq("userId", userDoc._id))
 		.filter((q) =>
 		q.eq(q.field("isArchived"), false),
 		)
@@ -601,34 +505,26 @@ export const getSearch = query({
 export const getById = query({
 	args: { projectId: v.optional(v.id("projects")) },
 	handler: async (ctx, args) => {
-		if (!args.projectId) {
-			return null;
-		}
-		
-	  const identity = await ctx.auth.getUserIdentity();
-  
+	  if (!args.projectId) {
+		return null;
+	  }
+	  
 	  const project = await ctx.db.get(args.projectId);
-  
 	  if (!project) {
 		throw new Error("Not found");
 	  }
-  
+	  // If published and not archived, no auth check is required.
 	  if (project.isPublished && !project.isArchived) {
 		return project;
 	  }
-  
-	  if (!identity) {
-		throw new Error("Not authenticated");
-	  }
-  
-	  const userId = identity.subject;
-  
-	  if (project.userId !== userId) {
+	  
+	  // Use the stable user doc instead of identity.subject
+	  const userDoc = await getStableUserDoc(ctx);
+	  if (project.userId !== userDoc._id) {
 		throw new Error("Unauthorized");
 	  }
-  
 	  return project;
-	}
+	},
   });
 
   export const update = mutation({
@@ -637,33 +533,29 @@ export const getById = query({
 	  title: v.optional(v.string()),
 	  content: v.optional(v.string()),
 	  icon: v.optional(v.string()),
-	  isPublished: v.optional(v.boolean())
+	  isPublished: v.optional(v.boolean()),
 	},
 	handler: async (ctx, args) => {
-	  const identity = await ctx.auth.getUserIdentity();
+	  // Retrieve the stable user document.
+	  const userDoc = await getStableUserDoc(ctx);
+	  const stableUserId = userDoc._id;
   
-	  if (!identity) {
-		throw new Error("Unauthenticated");
-	  }
-  
-	  const userId = identity.subject;
-  
+	  // Destructure the project id from the rest of the arguments.
 	  const { id, ...rest } = args;
   
-	  const existingProject = await ctx.db.get(args.id);
-  
+	  // Fetch the existing project.
+	  const existingProject = await ctx.db.get(id);
 	  if (!existingProject) {
 		throw new Error("Not found");
 	  }
   
-	  if (existingProject.userId !== userId) {
+	  // Compare using the stable user ID.
+	  if (existingProject.userId !== stableUserId) {
 		throw new Error("Unauthorized");
 	  }
   
-	  const project = await ctx.db.patch(args.id, {
-		...rest,
-	  });
-  
+	  // Update the project.
+	  const project = await ctx.db.patch(id, { ...rest });
 	  return project;
 	},
   });

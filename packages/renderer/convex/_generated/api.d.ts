@@ -20,6 +20,7 @@ import type * as graph from "../graph.js";
 import type * as graphChat from "../graphChat.js";
 import type * as http from "../http.js";
 import type * as langchain_db from "../langchain/db.js";
+import type * as lib_getUserOrThrow from "../lib/getUserOrThrow.js";
 import type * as lib_permissions from "../lib/permissions.js";
 import type * as projects from "../projects.js";
 import type * as search from "../search.js";
@@ -42,6 +43,7 @@ declare const fullApi: ApiFromModules<{
   graphChat: typeof graphChat;
   http: typeof http;
   "langchain/db": typeof langchain_db;
+  "lib/getUserOrThrow": typeof lib_getUserOrThrow;
   "lib/permissions": typeof lib_permissions;
   projects: typeof projects;
   search: typeof search;
