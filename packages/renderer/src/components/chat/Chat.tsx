@@ -9,9 +9,10 @@ import { api } from "../../../convex/_generated/api";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
+import useChatStore from '@/lib/store/chatStore';
 
 // Import the special graph chat constant from your ChatHeader module.
-import { GRAPH_CHAT_ID } from "./Chatheader";
+import ChatHeader, { GRAPH_CHAT_ID } from "./Chatheader";
 
 // Interfaces for chat messages.
 interface ChatEntry {
@@ -30,6 +31,8 @@ interface ChatProps {
 }
 
 export default function Chat({ projectId }: ChatProps) {
+  const { isChatActive, deactivateChat } = useChatStore(); // Access the chat visibility state
+
   // Determine if we're in graph-chat mode.
   const isGraphChat = projectId === GRAPH_CHAT_ID;
 
@@ -48,7 +51,7 @@ export default function Chat({ projectId }: ChatProps) {
 
   // 3. Local states.
   const [message, setMessage] = useState("");
-  const [setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [pendingMessages, setPendingMessages] = useState<PendingMessage[]>([]);
 
   // 4. Refs for scrolling and auto-resize.
@@ -107,8 +110,22 @@ export default function Chat({ projectId }: ChatProps) {
 
   return (
     <div className="relative flex flex-col h-full">
+      <ChatHeader title=""/>
+
+      {/* Header Row */}
+      <div className='flex items-center justify-between text-gray-500 px-4 ml-auto mr-2'>
+        {/* Close Button */}
+        <button
+          className='text-gray-500 hover:text-gray-200'
+          onClick={deactivateChat}
+          aria-label='Closed'
+          >
+            &#x2715; {/* Close Icon */}
+        </button>
+      </div>
+
       {/* Chat Display */}
-      <div className="flex-col rounded-xl h-[635px] border-black overflow-y-auto mt-2 mb-4 pr-2">
+      <div className="flex-1 rounded-xl border-black overflow-y-auto pr-2">
         {mergedEntries.map((entry) => {
           const isEphemeral = !("_id" in entry);
           return (
@@ -150,7 +167,7 @@ export default function Chat({ projectId }: ChatProps) {
 
       {/* Message Input */}
       <form
-        className="absolute bottom-0 left-0 right-0 flex mb-4 z-10"
+        className="flex mb-4 ml-2 mr-2 mt-2 z-10"
         onSubmit={(e) => {
           e.preventDefault();
           onSubmit(message);
@@ -166,7 +183,7 @@ export default function Chat({ projectId }: ChatProps) {
               onSubmit(message);
             }
           }}
-          className="flex-1 form-input px-4 bg-gray-100 border border-black rounded-md focus:outline-none focus:ring-0 resize-none leading-normal"
+          className="flex-1 form-input px-4 pt-3 bg-gray-100 border border-gray-200 rounded-md focus:outline-none focus:ring-0 resize-none leading-normal"
           placeholder="Type your message..."
           style={{ overflow: "auto", maxHeight: "200px" }}
         />

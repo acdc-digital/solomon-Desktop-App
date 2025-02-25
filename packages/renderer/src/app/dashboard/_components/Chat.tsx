@@ -1,12 +1,12 @@
 // Chat.tsx
 import React from 'react';
-import ChatHeader from '@/components/chat/Chatheader';
+// import ChatHeader from '@/components/chat/Chatheader';
 import ChatLayout from '@/components/chat/Chatlayout';
 import useChatStore from '@/lib/store/chatStore';
 import { initResize } from '@/components/chat/Resizer';
 import { GripVertical } from 'lucide-react'; // The "handle" icon
 
-const MIN_WIDTH = 200;
+const MIN_WIDTH = 235;
 const MAX_WIDTH = 600;
 
 const Chat: React.FC = () => {
@@ -41,7 +41,6 @@ const Chat: React.FC = () => {
             maxWidth: `${MAX_WIDTH}px`,
         }}
         >
-        <ChatHeader />
         <ChatLayout />
       </div>
     </div>

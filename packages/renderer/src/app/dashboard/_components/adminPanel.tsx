@@ -18,11 +18,15 @@ import {
 
 import { useSidebar } from "@/components/ui/sidebar";  // For collapse logic
 import { useEditorStore } from "@/lib/store/editorStore";
+import useChatStore from "@/lib/store/chatStore";
 
 const AdminPanel: React.FC = () => {
   const { toggleSidebar } = useSidebar();
 
   const setActiveComponent = useEditorStore((state) => state.setActiveComponent);
+
+    // Destructure the activateChat function from the chat store
+    const activateChat = useChatStore((state) => state.activateChat);
 
   // Handlers
   function handleCollapseClick() {
@@ -31,12 +35,12 @@ const AdminPanel: React.FC = () => {
 
   // New chat placeholder
   function handleChatClick() {
-    // Placeholder - e.g., setActiveComponent("Chat") or open a chat panel, etc.
+    activateChat();
     console.log("Chat button clicked!");
   }
 
   function handleGraphViewClick() {
-    setActiveComponent("Admin");  // "GraphView"
+    setActiveComponent("Admin");
   }
 
   function handleFilesClick() {

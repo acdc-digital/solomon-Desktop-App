@@ -13,22 +13,11 @@ export default function ChatLayout() {
     const { projectId } = useEditorStore();
 
     return (
-        <div className='flex flex-col items-center h-full w-full mt-2'>
+        <div className='flex flex-col items-center h-full w-full'>
             {isChatActive && projectId ? (
                 <div className='flex flex-col h-full w-full'>
-                    {/* Header Row */}
-                    <div className='flex items-center justify-between text-gray-500 px-4 ml-auto mr-2'>
-                        {/* Close Button */}
-                        <button 
-                            className='text-gray-500 hover:text-gray-200'
-                            onClick={deactivateChat}
-                            aria-label='Closed'
-                            >
-                            &#x2715; {/* Close Icon */}
-                        </button>
-                    </div>
                     {/* Chat Content */}
-                    <div className='flex-1 overflow-auto ml-4 mr-4'>
+                    <div className='flex-1 overflow-y-auto'>
                         <Chat projectId={projectId} />
                     </div>
                 </div>
