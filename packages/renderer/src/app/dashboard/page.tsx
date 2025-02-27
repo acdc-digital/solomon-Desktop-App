@@ -65,7 +65,8 @@ export default function DashboardPage() {
 
       {/* Right: The main Canvas plus optional Chat */}
       <div className="flex flex-1">
-        <Canvas activeProjectId={activeProjectId} />
+        <Canvas 
+        activeProjectId={activeProjectId} />
         {isChatActive && <Chat />}
       </div>
     </div>

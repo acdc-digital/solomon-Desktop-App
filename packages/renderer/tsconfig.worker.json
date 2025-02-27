@@ -1,0 +1,14 @@
+{
+    "compilerOptions": {
+      "target": "esnext",
+      "module": "esnext",
+      "lib": ["webworker", "dom", "esnext"],
+      "strict": true,
+      "outDir": "public", 
+      "rootDir": "src/components/canvas/(Admin)/_components",
+      "esModuleInterop": true
+    },
+    "include": [
+      "src/components/canvas/(Admin)/_components/graph.worker.ts"
+    ]
+  }

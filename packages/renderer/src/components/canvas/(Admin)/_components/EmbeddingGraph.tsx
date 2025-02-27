@@ -1,15 +1,24 @@
 // Graph-UI
 // /Users/matthewsimon/Documents/Github/solomon-desktop/solomon-Desktop/next/src/components/canvas/(Admin)/_components/EmbeddingGraph.tsx
 
+'use client';
+
 import React, { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../../convex/_generated/api";
-import { cosineSimilarity } from "@/lib/similarity";
-import { GraphData, GraphLink, GraphNode } from "@/types/graph";
-import pLimit from "p-limit";
-import { refineNodeLabel, refineEdgeRelationship } from "./nodeRefiner";
-import { useWindowSize } from '@react-hook/window-size'; // Import
+import { useWindowSize } from "@react-hook/window-size";
+import { 
+  useGraphStore, 
+  EmbeddingChunk, 
+  GraphData, 
+  GraphLink 
+} from "@/lib/store/useGraphStore";
+
+const ForceGraph2D = dynamic(
+  () => import("react-force-graph-2d"),
+  { ssr: false }
+);
 
 interface CameraState {
   x: number;
@@ -20,7 +29,6 @@ interface CameraState {
 interface ForceGraph2DInstance {
   refresh?: () => void;
   zoomToFit?: (ms?: number, padding?: number, nodeFilterFn?: (node: any) => boolean) => void;
-    d3Force?: (forceName: string, forceFn?: any) => any; // If you use d3Force
   camera: {
     (state: CameraState, transitionDuration?: number): void;
     (): CameraState;
@@ -28,250 +36,125 @@ interface ForceGraph2DInstance {
   _renderer?: { domElement?: HTMLCanvasElement };
 }
 
-interface ForceGraph2DProps { // Add width and height
-    graphData: GraphData;
-    nodeLabel: string;
-    linkLabel: string;
-    nodeAutoColorBy: string;
-    linkWidth: (link: GraphLink) => number;
-    linkDirectionalParticles: number;
-    linkDirectionalParticleWidth: (link: GraphLink) => number;
-    backgroundColor: string;
-    onEngineStop: () => void;
-    nodeCanvasObject: (
-        node: GraphNode,
-        ctx: CanvasRenderingContext2D,
-        globalScale: number
-    ) => void;
-    width: number; // Add width
-    height: number; // Add height
-}
+const topK = 5;
+const INITIAL_LIMIT = 100;
 
-const ForceGraph2D = dynamic(
-  () => import("react-force-graph-2d") as any, { ssr: false }
-);
+const EmbeddingGraph: React.FC = () => {
+  // Get store methods and state (make sure your store exports updateGraphNodes)
+  const {
+    embeddings,
+    updateEmbeddings,
+    graphData,
+    setGraphData,
+    updateGraphLinks,
+    updateGraphNodes,
+  } = useGraphStore();
+  
+  const [width, height] = useWindowSize();
+  const instanceRef = useRef<ForceGraph2DInstance | null>(null);
+  const workerRef = useRef<Worker | null>(null);
 
-interface EmbeddingChunk {
-  id: string;
-  pageContent: string;
-  embedding: number[];
-  metadata?: {
-    keywords?: string[];
-    topics?: string[];
-    module?: string | null;
-  };
-}
-
-const EmbeddingGraph: React.FC = () => { //No longer accepting size.
-  // State
-  const INITIAL_LIMIT = 100;
+  // Pagination state
   const [limit, setLimit] = useState<number>(INITIAL_LIMIT);
   const [cursor, setCursor] = useState<string | null>(null);
-  const [allEmbeddings, setAllEmbeddings] = useState<EmbeddingChunk[]>([]);
-  const [graphData, setGraphData] = useState<GraphData>({ nodes: [], links: [] });
-  const [linkStrength, setLinkStrength] = useState<number>(1);
-  const [cursorHistory, setCursorHistory] = useState<(string | null)[]>([null]);
-  const [isEngineRunning, setIsEngineRunning] = useState(true); // New state
-  const topK = 5;
 
-  // Refs
-    const instanceRef = useRef<ForceGraph2DInstance | null>(null); //Ref for instance
-
-  // Convex mutations
-  const batchUpsertGraphNodes = useMutation(api.graph.batchUpsertGraphNodes);
-  const batchUpsertGraphLinks = useMutation(api.graph.batchUpsertGraphLinks);
-
-    const [width, height] = useWindowSize(); // Get window size
-
-  // Convex query
+  // Fetch embeddings from Convex
   const data = useQuery(api.chunks.getAllEmbeddings, { limit, cursor });
-  const isLoading = data === undefined;
+  const batchUpsertGraphNodes = useMutation(api.graph.batchUpsertGraphNodes);
 
-  // Load from sessionStorage on mount
+  // Log Convex data and update embeddings state
   useEffect(() => {
-    const savedEmbeddings = sessionStorage.getItem("allEmbeddings");
-    const savedGraphData = sessionStorage.getItem("graphData");
-
-    if (savedEmbeddings && savedGraphData) {
-      setAllEmbeddings(JSON.parse(savedEmbeddings));
-      setGraphData(JSON.parse(savedGraphData));
-    }
-  }, []);
-
-  // Debug-log fetched data
-  useEffect(() => {
-    console.log("Fetched Data:", data);
-  }, [data]);
-
-  // Update embeddings on data change
-  useEffect(() => {
-    if (allEmbeddings.length === 0 && data?.chunks && data.chunks.length > 0) {
-      console.log("Fetched Chunks:", data.chunks);
-      setAllEmbeddings((prev) => [...prev, ...data.chunks]);
+    console.log("Convex data:", data);
+    if (data && data.chunks && data.chunks.length > 0) {
+      updateEmbeddings(data.chunks as EmbeddingChunk[]);
       setCursor(data.nextCursor);
-      setCursorHistory((prev) => [...prev, data.nextCursor]);
-        setIsEngineRunning(true);
     }
-  }, [data, allEmbeddings.length]);
+  }, [data, updateEmbeddings]);
 
-  // Build or rebuild the graph whenever allEmbeddings changes
-    useEffect(() => {
-        if (allEmbeddings.length === 0) return;
+  // Log the current embeddings in the store for debugging
+  useEffect(() => {
+    console.log("Embeddings in store:", embeddings);
+  }, [embeddings]);
 
-        async function buildGraph() {
-          const limitLLM = pLimit(5);
-
-          // Build nodes with refined labels
-          const nodePromises = allEmbeddings.map((chunk) =>
-            limitLLM(async () => {
-              const kw = chunk.metadata?.keywords || [];
-              const tp = chunk.metadata?.topics || [];
-              const fallbackLabel = chunk.id.slice(0, 8);
-              const { label, group } = await refineNodeLabel(kw, tp, fallbackLabel);
-              return { id: chunk.id, label, group } as GraphNode;
-            })
-          );
-          const nodes: GraphNode[] = await Promise.all(nodePromises);
-
-          // Build links based on cosine similarity
-          const linkPromises: Promise<GraphLink>[] = [];
-          allEmbeddings.forEach((chunkA, indexA) => {
-            const similarities = allEmbeddings.map((chunkB, indexB) => {
-              if (indexA === indexB) return { id: chunkB.id, similarity: -1 }; // Avoid self-links
-              const sim = cosineSimilarity(chunkA.embedding, chunkB.embedding); // Calculate similarity
-              return { id: chunkB.id, similarity: sim };
-            });
-            // Get top similar chunks
-            const topSimilar = similarities
-              .filter((sim) => sim.similarity > 0)
-              .sort((a, b) => b.similarity - a.similarity)
-              .slice(0, topK);
-
-            // Create links for top similar chunks
-            topSimilar.forEach((sim) => {
-              const chunkB = allEmbeddings.find((c) => c.id === sim.id);
-              if (!chunkB) return; // Ensure chunkB exists
-
-              const linkP = limitLLM(async () => {
-                const snippetA = chunkA.pageContent.slice(0, 300);
-                const snippetB = chunkB.pageContent.slice(0, 300);
-                const relationship = await refineEdgeRelationship(snippetA, snippetB); // Refine edge
-                return {
-                  source: chunkA.id,
-                  target: chunkB.id,
-                  similarity: sim.similarity,
-                  relationship,
-                } as GraphLink;
-              });
-              linkPromises.push(linkP);
-            });
-          });
-          const links = await Promise.all(linkPromises);
-
-          console.log("Generated Links with Relationships:", links);
-          setGraphData({ nodes, links }); // Update graph data
-
-          // Batch update database
-          try {
-            const nodesForBatch = nodes.map((node) => ({
-              documentChunkId: node.id,
-              label: node.label,
-              group: node.group,
-              significance: node.significance ?? 0, // Handle optional significance
-            }));
-            const linksForBatch = links.map((link) => ({
-              source: link.source,
-              target: link.target,
-              similarity: link.similarity,
-              relationship: link.relationship,
-            }));
-            await batchUpsertGraphNodes({ nodes: nodesForBatch });
-            await batchUpsertGraphLinks({ links: linksForBatch });
-          } catch (error) {
-            console.error("Error with batched graph updates:", error);
-          }
+  // Instantiate the WebWorker
+  useEffect(() => {
+    workerRef.current = new Worker("/graph.worker.js");
+    const worker = workerRef.current;
+  
+    worker.onmessage = (event: MessageEvent) => {
+      console.log("Received worker message:", event.data);
+      const { type, data } = event.data;
+      if (type === "SIMILARITIES_CALCULATED") {
+        if (Array.isArray(data)) {
+          updateGraphLinks(data as GraphLink[]);
+        } else {
+          console.error("SIMILARITIES_CALCULATED returned invalid data", data);
+          updateGraphLinks([]);
         }
-
-        buildGraph();
-    }, [allEmbeddings, batchUpsertGraphNodes, batchUpsertGraphLinks]);
-
-    // Persist data to sessionStorage
-    useEffect(() => {
-        if (allEmbeddings.length > 0) {
-            sessionStorage.setItem("allEmbeddings", JSON.stringify(allEmbeddings));
-            sessionStorage.setItem("graphData", JSON.stringify(graphData));
+      } else if (type === "NODES_BUILT") {
+        if (data && Array.isArray(data.nodes)) {
+          // Use dedicated updater for nodes
+          updateGraphNodes(data.nodes);
+        } else {
+          console.error("NODES_BUILT returned invalid data", data);
+          updateGraphNodes([]);
         }
-    }, [allEmbeddings, graphData]);
-
-  // Handle engine stop
-    const handleEngineStop = () => {
-        console.warn("Engine stopped");
-        setIsEngineRunning(false); // Engine is stopped
-        if (instanceRef.current && instanceRef.current.zoomToFit) {
-            instanceRef.current.zoomToFit(0, 20); // 0ms transition, 20px padding
-          }
+      }
     };
+  
+    return () => {
+      worker.terminate();
+    };
+  }, [updateGraphLinks, updateGraphNodes]);
 
-    useEffect(() => {
-        const handleBeforeUnload = () => {
-          handleEngineStop();
-        };
-        window.addEventListener("beforeunload", handleBeforeUnload);
+  // Trigger worker processing when embeddings change
+  useEffect(() => {
+    if (workerRef.current && embeddings.length > 0) {
+      workerRef.current.postMessage({
+        type: "CALCULATE_SIMILARITIES",
+        data: { embeddings, topK },
+      });
+      workerRef.current.postMessage({
+        type: "BUILD_GRAPH",
+        data: { embeddings },
+      });
+    }
+  }, [embeddings]);
 
-        return () => {
-          window.removeEventListener("beforeunload", handleBeforeUnload);
-        }
-    }, []);
+  // Optional: Temporarily inject dummy graph data to test rendering
+  // Uncomment to test static graph rendering:
+  /*
+  useEffect(() => {
+    const dummyGraph: GraphData = {
+      nodes: [
+        { id: "node1", label: "Node 1", group: "A", version: 1 },
+        { id: "node2", label: "Node 2", group: "B", version: 1 },
+      ],
+      links: [
+        { source: "node1", target: "node2", similarity: 1, relationship: "related" }
+      ],
+    };
+    console.log("Setting dummy graph data", dummyGraph);
+    setGraphData(dummyGraph);
+  }, [setGraphData]);
+  */
 
-
-  const loadMore = () => {
-    const latestCursor = cursorHistory[cursorHistory.length - 1];
-    if (latestCursor) {
-      setLimit((prev) => prev + 100);
+  const handleEngineStop = () => {
+    if (instanceRef.current?.zoomToFit) {
+      instanceRef.current.zoomToFit(0, 20);
     }
   };
 
-  const loadLess = () => {
-    if (cursorHistory.length > 1) {
-      setCursorHistory((prev) => prev.slice(0, prev.length - 1));
-      setAllEmbeddings((prev) => prev.slice(0, prev.length - 100));
-      setLimit((prev) => Math.max(prev - 100, INITIAL_LIMIT));
-      setCursor(cursorHistory[cursorHistory.length - 2]);
-    }
-  };
+  // Log current graph data
+  useEffect(() => {
+    console.log("Graph Data:", graphData);
+  }, [graphData]);
 
-  const handleRefresh = () => {
-    sessionStorage.removeItem("allEmbeddings");
-    sessionStorage.removeItem("graphData");
-    sessionStorage.removeItem("camera");
-    setAllEmbeddings([]);
-    setGraphData({ nodes: [], links: [] });
-    setCursor(null);
-    setLimit(INITIAL_LIMIT);
-    setCursorHistory([null]);
-    setIsEngineRunning(true); // Reset engine running state
-  };
-
-  const isNoData = (isLoading || !data) && allEmbeddings.length === 0;
-  const isNoEmbeddings =
-    !isLoading && data && data.chunks.length === 0 && allEmbeddings.length === 0;
-
-    // Call zoomToFit AFTER data update and engine stop
-    useEffect(() => {
-    // Ensure graphData and instanceRef are valid
-        if (!isEngineRunning && graphData.nodes.length > 0 && instanceRef.current) {
-                if (instanceRef.current.zoomToFit) {
-                    console.log("Calling zoomToFit after data update and engine stop");
-                    instanceRef.current.zoomToFit(0, 20); // 0ms transition, 20px padding
-                }
-        }
-    }, [graphData, isEngineRunning]); // Dependency on graphData and isEngine running
-
-
-  if (isNoData) {
+  // Render loading state if no embeddings are available
+  if ((!data || !data.chunks) && embeddings.length === 0) {
     return <div>Loading...</div>;
   }
-  if (isNoEmbeddings) {
+  if (!data?.chunks && embeddings.length === 0) {
     return <div>No embeddings available.</div>;
   }
 
@@ -283,18 +166,17 @@ const EmbeddingGraph: React.FC = () => { //No longer accepting size.
         nodeLabel="label"
         linkLabel="relationship"
         nodeAutoColorBy="group"
-        linkWidth={(link) => link.similarity * linkStrength}
+        linkWidth={(link: GraphLink) => link.similarity}
         linkDirectionalParticles={1}
-        linkDirectionalParticleWidth={(link) => link.similarity * linkStrength}
+        linkDirectionalParticleWidth={(link: GraphLink) => link.similarity}
         backgroundColor="#f9fafb"
         onEngineStop={handleEngineStop}
-        nodeCanvasObject={(node: GraphNode, ctx, globalScale) => {
-          const nodeWithColor = node as GraphNode & { color?: string };
+        nodeCanvasObject={(node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
           const fontSize = 12 / globalScale;
           ctx.font = `${fontSize}px Sans-Serif`;
-          ctx.fillStyle = nodeWithColor.color || "#000";
+          ctx.fillStyle = node.color || "#000";
           ctx.beginPath();
-          ctx.arc(node.x!, node.y!, 8, 0, 2 * Math.PI, false);
+          ctx.arc(node.x, node.y, 8, 0, 2 * Math.PI, false);
           ctx.fill();
         }}
         width={width}
