@@ -33,6 +33,8 @@ const schema = defineSchema({
     // Document Fields
     documentTitle: v.optional(v.string()),
     fileId: v.optional(v.string()),
+    contentType: v.optional(v.string()),
+    fileName: v.optional(v.string()),
     isProcessed: v.optional(v.boolean()),
     processedAt: v.optional(v.string()),
     isProcessing: v.optional(v.boolean()),

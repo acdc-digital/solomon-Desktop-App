@@ -5,25 +5,18 @@ import convexClient from "@/lib/convexClient";
 import { Id } from "@/convex/_generated/dataModel";
 
 /**
- * Fetches a signed file URL from Convex storage for a given fileId.
- * Typically used to download the PDF prior to parsing.
+ * Fetches a signed file URL from Convex storage.
  */
 export async function getFileUrl(fileId: Id<"_storage">) {
   return await convexClient.mutation("projects:getFileUrl", { fileId });
 }
 
 /**
- * Updates the "processing status" fields on a given document in `projects`.
- * You can pass partial fields (e.g. just `progress` or just `isProcessing`) or all at once.
+ * Updates the processing status for a given document.
  */
 export async function updateProcessingStatus(
   documentId: Id<"projects">,
-  {
-    progress,
-    isProcessing,
-    isProcessed,
-    processedAt,
-  }: {
+  { progress, isProcessing, isProcessed, processedAt }: {
     progress?: number;
     isProcessing?: boolean;
     isProcessed?: boolean;
@@ -40,18 +33,14 @@ export async function updateProcessingStatus(
 }
 
 /**
- * Retrieves the parentProjectId for a given document ID (if any).
- * Useful for linking newly created chunks to their parent project.
+ * Retrieves the parentProjectId for a document.
  */
 export async function getParentProjectId(documentId: Id<"projects">) {
-  return await convexClient.query("projects:getParentProjectId", {
-    documentId,
-  });
+  return await convexClient.query("projects:getParentProjectId", { documentId });
 }
 
 /**
- * Inserts multiple chunks (pageContent + metadata) into the "chunks" table
- * for a given parentProject. Typically used in a batch insertion loop.
+ * Inserts multiple chunks into the database.
  */
 export async function insertChunks(
   parentProjectId: Id<"projects">,
@@ -66,7 +55,6 @@ export async function insertChunks(
       headings?: string[];
       numTokens?: number;
       snippet?: string;
-      // New fields:
       keywords?: string[];
       entities?: string[];
       topics?: string[];
@@ -80,8 +68,7 @@ export async function insertChunks(
 }
 
 /**
- * Updates a single chunk's embedding vector in the "chunks" table,
- * located by its uniqueChunkId.
+ * Updates a single chunk's embedding in the database.
  */
 export async function updateChunkEmbedding(
   uniqueChunkId: string,

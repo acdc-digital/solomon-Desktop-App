@@ -170,7 +170,7 @@ const Projects: React.FC<{ projectId: string }> = ({ projectId }) => {
         </Tabs>
 
         {activeView === "preview" && selectedFile && (
-          <div className="border-l border-r border-b border-gray-200 p-4">
+          <div className="border border-gray-200 mt-2">
             <FilePreviewNoSSR />
           </div>
         )}

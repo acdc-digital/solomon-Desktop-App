@@ -8,94 +8,79 @@ import convex from "@/lib/convexClient";
 import { retryWithBackoff } from "./utils";
 
 /**
- * Download the PDF from a Convex storage URL and convert to a Buffer.
- *
- * @param fileId The Convex file ID
- * @returns Buffer of PDF Data
- *
- * Throws an error if the file cannot be retrieved.
+ * Download the file from a Convex storage URL and convert to a Buffer.
+ * Although this function is named downloadPdfToBuffer for testing purposes,
+ * it now supports all file types that LlamaParse can handle.
  */
 export async function downloadPdfToBuffer(fileId: string): Promise<Buffer> {
-    // 1. Get signed URL from Convex for the given fileId
-    console.log("Invoking Convex mutation: projects:getFileUrl with fileId =", fileId);
-    const response = await retryWithBackoff(
-        () => convex.mutation("projects:getFileUrl", { fileId }),
-        5,
-        1000
-    );
+  console.log("Invoking Convex mutation: projects:getFileUrl with fileId =", fileId);
+  const response = await retryWithBackoff(
+    () => convex.mutation("projects:getFileUrl", { fileId }),
+    5,
+    1000
+  );
 
-    if (!response || !response.url) {
-        console.error("No URL returned for PDF");
-        throw new Error("No URL returned for PDF");
-    }
+  if (!response || !response.url) {
+    console.error("No URL returned for file");
+    throw new Error("No URL returned for file");
+  }
 
-    const pdfUrl = response.url;
-    console.log("PDF URL:", pdfUrl);
+  const fileUrl = response.url;
+  console.log("File URL:", fileUrl);
+  console.log("Fetching the file from the URL");
+  const fileResponse = await fetch(fileUrl, { timeout: 120000 });
+  if (!fileResponse.ok) {
+    console.error("Failed to fetch file:", fileResponse.statusText);
+    throw new Error(`Failed to fetch file: ${fileResponse.statusText}`);
+  }
 
-    // 2. Fetch the PDF bytes
-    console.log("Fetching the PDF from the URL");
-    const pdfResponse = await fetch(pdfUrl, { timeout: 120000 });
-    if (!pdfResponse.ok) {
-        console.error("Failed to fetch PDF:", pdfResponse.statusText);
-        throw new Error(`Failed to fetch PDF: ${pdfResponse.statusText}`);
-    }
-
-    // 3. Convert to buffer
-    const arrayBuffer = await pdfResponse.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
-    return buffer;
+  const arrayBuffer = await fileResponse.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+  return buffer;
 }
 
 /**
- * Loads the PDF data directly from the Buffer using LlamaParseReader.
- *
- * @param pdfBuffer Buffer of the PDF data
- * @returns An array of Document objects from LlamaIndex
+ * Loads the file data directly from the Buffer using LlamaParseReader.
+ * This function now handles any supported document type, not just PDFs.
  */
-export async function loadPdfWithLlamaParseReader(pdfBuffer: Buffer): Promise<Document[]> {
-    try {
-        const apiKey = process.env.LLAMA_CLOUD_API_KEY; // Access env variable
-        const reader = new LlamaParseReader({
-            apiKey,
-            resultType: "json",
-           verbose: false
-        });
-      
-        // Convert buffer to Uint8Array for loadJson
-        const uint8Array = new Uint8Array(pdfBuffer);
-        const jsonResult = await reader.loadJson(uint8Array);
+export async function loadPdfWithLlamaParseReader(fileBuffer: Buffer): Promise<Document[]> {
+  try {
+    const apiKey = process.env.LLAMA_CLOUD_API_KEY;
+    const reader = new LlamaParseReader({
+      apiKey,
+      resultType: "json",
+      verbose: false,
+    });
 
-        const documents = jsonResult.map(result => {
-            return new Document({
-                text: JSON.stringify(result),
-                metadata: {}
-            });
-        })
-        console.log("PDF parsing completed");
-        return documents;
+    // Convert the Buffer to Uint8Array and load with LlamaParseReader
+    const uint8Array = new Uint8Array(fileBuffer);
+    const jsonResult = await reader.loadJson(uint8Array);
 
-    }
-    catch (error) {
-        console.error("Error during LlamaParse processing:", error);
-        throw new Error(`Error during LlamaParse processing: ${error}`);
-    }
+    const documents = jsonResult.map(result => {
+      return new Document({
+        text: JSON.stringify(result),
+        metadata: {}
+      });
+    });
+    console.log("Document parsing completed with LlamaParseReader");
+    return documents;
+  } catch (error) {
+    console.error("Error during LlamaParse processing:", error);
+    throw new Error(`Error during LlamaParse processing: ${error}`);
+  }
 }
 
-
 /**
- * High-level function to download and load the PDF with LlamaParse
- *
- * @param fileId The Convex file ID
- * @returns An array of Document objects
+ * High-level function to download and load the file with LlamaParse.
+ * Function name remains downloadAndLoadPdf for testing, even though it now handles multiple types.
  */
 export async function downloadAndLoadPdf(fileId: string): Promise<Document[]> {
-    try {
-        const pdfBuffer = await downloadPdfToBuffer(fileId);
-        const documents = await loadPdfWithLlamaParseReader(pdfBuffer);
-        return documents;
-    } catch (error) {
-        console.error("Error in downloadAndLoadPdf:", error);
-        throw error;
-    }
+  try {
+    const fileBuffer = await downloadPdfToBuffer(fileId);
+    const documents = await loadPdfWithLlamaParseReader(fileBuffer);
+    return documents;
+  } catch (error) {
+    console.error("Error in downloadAndLoadPdf:", error);
+    throw error;
+  }
 }

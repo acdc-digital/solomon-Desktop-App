@@ -23,6 +23,41 @@ interface FileListProps {
   projectId: string;
 }
 
+/**
+ * Helper function to extract file extension.
+ * If the input looks like a MIME type (contains a "/"), we use a mapping.
+ * Otherwise, we assume it's a file name and extract the extension using regex.
+ */
+function extractFileExtension(input: string | undefined): string {
+  if (!input) return "Unknown";
+
+  // Check if the input looks like a MIME type.
+  if (input.includes("/")) {
+    const mimeToExt: Record<string, string> = {
+      "application/pdf": ".pdf",
+      "application/msword": ".doc",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ".docx",
+      "application/vnd.ms-excel": ".xls",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": ".xlsx",
+      "text/plain": ".txt",
+      "text/html": ".html",
+      "image/jpeg": ".jpg",
+      "image/png": ".png",
+      "image/gif": ".gif",
+      "image/bmp": ".bmp",
+      "image/svg+xml": ".svg",
+      "image/tiff": ".tiff",
+      "image/webp": ".webp",
+      // Add more mappings as needed.
+    };
+    return mimeToExt[input] || input;
+  }
+
+  // Otherwise, assume it's a file name and extract the extension.
+  const match = input.match(/\.(\w+)$/);
+  return match ? match[0].toLowerCase() : "Unknown";
+}
+
 export const FileList: React.FC<FileListProps> = ({ projectId }) => {
   const documents = useQuery(api.projects.getDocumentsByProjectId, { projectId });
   const {
@@ -30,7 +65,7 @@ export const FileList: React.FC<FileListProps> = ({ projectId }) => {
     setSelectedFile,
     pendingFiles,
     removePendingFile,
-    sortOrder, // Access sortOrder from the store
+    sortOrder,
   } = useEditorStore();
 
   useEffect(() => {
@@ -46,8 +81,18 @@ export const FileList: React.FC<FileListProps> = ({ projectId }) => {
     if (!documents) return [];
 
     const docs = documents.map((doc) => {
-      const fileTypeMatch = doc.documentTitle?.match(/\.(\w+)$/i);
-      const fileType = fileTypeMatch ? `.${fileTypeMatch[1].toLowerCase()}` : "FileType";
+      console.log("Document metadata:", {
+        contentType: doc.contentType,
+        fileName: doc.fileName,
+        documentTitle: doc.documentTitle,
+      });
+      // Use the stored metadata to determine the file extension:
+      // Prefer contentType if available, otherwise use fileName (or documentTitle as fallback).
+      const fileType =
+        doc.contentType
+          ? extractFileExtension(doc.contentType)
+          : extractFileExtension(doc.fileName || doc.documentTitle);
+
       const createdAt = new Date(doc._creationTime);
       const formattedCreatedAt = createdAt.toLocaleString();
       const processingDuration = Date.now() - createdAt.getTime();
@@ -65,7 +110,7 @@ export const FileList: React.FC<FileListProps> = ({ projectId }) => {
     return docs.sort((a, b) => {
       const dateA = new Date(a._creationTime).getTime();
       const dateB = new Date(b._creationTime).getTime();
-      return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+      return sortOrder === "asc" ? dateA - dateB : dateB - dateA;
     });
   }, [documents, sortOrder]);
 
@@ -97,7 +142,7 @@ export const FileList: React.FC<FileListProps> = ({ projectId }) => {
 
   return (
     <div className="relative overflow-x-auto">
-      <div className="max-h-[560px] overflow-y-auto">
+      <div className="h-full overflow-y-auto">
         <Table className="table-fixed w-full min-w-full">
           <TableHeader className="border-t">
             <TableRow className="cursor-default hover:bg-transparent">
@@ -115,8 +160,8 @@ export const FileList: React.FC<FileListProps> = ({ projectId }) => {
                 <TableHead key="4" className="w-56 text-left font-semibold">
                   Progress
                 </TableHead>,
-                <TableHead key="5" className="w-12 text-left font-semibold" />, // Progress Spinner
-                <TableHead key="6" className="w-12 text-left font-semibold" />, // Delete
+                <TableHead key="5" className="w-12 text-left font-semibold" />,
+                <TableHead key="6" className="w-12 text-left font-semibold" />,
               ]}
             </TableRow>
           </TableHeader>
@@ -127,9 +172,7 @@ export const FileList: React.FC<FileListProps> = ({ projectId }) => {
                 className="group cursor-pointer hover:bg-gray-100 bg-gray-50 animate-pulse"
               >
                 {[
-                  <TableCell key="cell1" className="px-4 py-2 text-sm text-left">
-                    {/* Placeholder or icon if needed */}
-                  </TableCell>,
+                  <TableCell key="cell1" className="px-4 py-2 text-sm text-left" />,
                   <TableCell key="cell2" className="px-1 py-1 text-sm text-left">
                     <div className="pr-2">
                       <Skeleton className="h-4 w-[180px]" />
@@ -161,9 +204,7 @@ export const FileList: React.FC<FileListProps> = ({ projectId }) => {
                 className={`group cursor-pointer hover:bg-gray-100 ${doc.isProcessing ? "bg-gray-50" : ""}`}
               >
                 {[
-                  <TableCell key="cell1" className="px-4 py-2 text-sm text-left">
-                    {/* Placeholder or icon if needed */}
-                  </TableCell>,
+                  <TableCell key="cell1" className="px-4 py-2 text-sm text-left" />,
                   <TableCell key="cell2" className="px-4 py-2 text-sm text-left">
                     <div className="pr-2">{doc.documentTitle}</div>
                   </TableCell>,

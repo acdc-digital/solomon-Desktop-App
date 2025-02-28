@@ -30,10 +30,12 @@ export const getParentProjectId = query({
 	},
   });
 
-export const createDocument = mutation({
+  export const createDocument = mutation({
     args: {
         documentTitle: v.string(),
         fileId: v.optional(v.string()),
+		contentType: v.optional(v.string()), 
+    	fileName: v.optional(v.string()),    
         documentContent: v.optional(v.string()),
         documentEmbeddings: v.optional(v.array(v.float64())),
         parentProject: v.optional(v.id("projects")),
@@ -66,6 +68,8 @@ export const createDocument = mutation({
 			  // Document Fields
 			  documentTitle: args.documentTitle,
 			  fileId: args.fileId,
+			  contentType: args.contentType, // Storing the MIME type
+      		  fileName: args.fileName,  
 			  isProcessing: true, // Start processing
 			  progress: 0,        // Initial progress
 
