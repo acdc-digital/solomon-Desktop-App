@@ -11,6 +11,7 @@ import { api } from "../../../convex/_generated/api";
 import { ProjectItem } from "./ProjectItem";
 import { cn } from "@/lib/utils";
 import { FolderIcon } from "lucide-react";
+import { useEditorStore } from "@/lib/store/editorStore";
 
 interface ProjectListProps {
 	parentProjectId?: Id<"projects">;
@@ -28,6 +29,9 @@ export const ProjectList = ({
 	// const router = useRouter();
 	const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
+	// Get the setActiveComponent function from the store
+	const setActiveComponent = useEditorStore((state) => state.setActiveComponent);
+
 	const onExpand = (documentId: string) => {
 		setExpanded(prevExpanded => ({
 			...prevExpanded,
@@ -42,8 +46,9 @@ export const ProjectList = ({
 	const onProjectSelection = (projectId: string) => {
 		// Call the handler with the project ID
 	 	onProjectSelect(projectId);
-
-		 console.log(onProjectSelect);
+		// Set the active component to "Projects" to open the projects view in the canvas
+		setActiveComponent("Projects");
+		console.log(onProjectSelect);
 	  };
 
 	if (projects === undefined) {
