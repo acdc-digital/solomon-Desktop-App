@@ -12,7 +12,7 @@ import {
   AlarmClockCheck,   // Tasks
   CalendarDays,      // Calendar
   BookOpenCheck,     // Docs
-  PanelLeftDashed,        // Collapse
+  PanelLeftDashed,   // Collapse
   BotMessageSquare   // New Chat placeholder icon
 } from "lucide-react";
 
@@ -22,18 +22,14 @@ import useChatStore from "@/lib/store/chatStore";
 
 const AdminPanel: React.FC = () => {
   const { toggleSidebar } = useSidebar();
-
   const setActiveComponent = useEditorStore((state) => state.setActiveComponent);
-
-    // Destructure the activateChat function from the chat store
-    const activateChat = useChatStore((state) => state.activateChat);
+  const activateChat = useChatStore((state) => state.activateChat);
 
   // Handlers
   function handleCollapseClick() {
     toggleSidebar();
   }
 
-  // New chat placeholder
   function handleChatClick() {
     activateChat();
     console.log("Chat button clicked!");
@@ -64,44 +60,76 @@ const AdminPanel: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col items-center bg-gray-100 border-r p-0.75 space-y-2 pt-3">
+    <div className="w-14 flex flex-col items-center bg-gray-100 border-r p-0.75 space-y-2 pt-3">
       {/* 1) Collapse Button */}
-      <Button variant="ghost" onClick={handleCollapseClick}>
+      <Button
+        variant="ghost"
+        onClick={handleCollapseClick}
+        className="p-0 w-9 h-9 hover:bg-gray-200 transition-colors duration-150"
+      >
         <PanelLeftDashed className="w-5 h-5" />
       </Button>
 
       {/* 2) Chat placeholder (new) */}
-      <Button variant="ghost" onClick={handleChatClick}>
+      <Button
+        variant="ghost"
+        onClick={handleChatClick}
+        className="p-0 w-9 h-9 hover:bg-gray-200 transition-colors duration-150"
+      >
         <BotMessageSquare className="w-5 h-5" />
       </Button>
 
       {/* 3) Graphview (old 'Admin') */}
-      <Button variant="ghost" onClick={handleGraphViewClick}>
+      <Button
+        variant="ghost"
+        onClick={handleGraphViewClick}
+        className="p-0 w-9 h-9 hover:bg-gray-200 transition-colors duration-150"
+      >
         <BrainCircuit className="w-5 h-5" />
       </Button>
 
       {/* 4) Projects */}
-      <Button variant="ghost" onClick={handleProjectsClick}>
+      <Button
+        variant="ghost"
+        onClick={handleProjectsClick}
+        className="p-0 w-9 h-9 hover:bg-gray-200 transition-colors duration-150"
+      >
         <FolderGit2 className="w-5 h-5" />
       </Button>
 
       {/* 5) Files */}
-      <Button variant="ghost" onClick={handleFilesClick}>
+      <Button
+        variant="ghost"
+        onClick={handleFilesClick}
+        className="p-0 w-9 h-9 hover:bg-gray-200 transition-colors duration-150"
+      >
         <FilesIcon className="w-5 h-5" />
       </Button>
 
       {/* 6) Tasks */}
-      <Button variant="ghost" onClick={handleTasksClick}>
+      <Button
+        variant="ghost"
+        onClick={handleTasksClick}
+        className="p-0 w-9 h-9 hover:bg-gray-200 transition-colors duration-150"
+      >
         <AlarmClockCheck className="w-5 h-5" />
       </Button>
 
       {/* 7) Calendar */}
-      <Button variant="ghost" onClick={handleCalendarClick}>
+      <Button
+        variant="ghost"
+        onClick={handleCalendarClick}
+        className="p-0 w-9 h-9 hover:bg-gray-200 transition-colors duration-150"
+      >
         <CalendarDays className="w-5 h-5" />
       </Button>
 
       {/* 8) Docs */}
-      <Button variant="ghost" onClick={handleDocsClick}>
+      <Button
+        variant="ghost"
+        onClick={handleDocsClick}
+        className="p-0 w-9 h-9 hover:bg-gray-200 transition-colors duration-150"
+      >
         <BookOpenCheck className="w-5 h-5" />
       </Button>
     </div>

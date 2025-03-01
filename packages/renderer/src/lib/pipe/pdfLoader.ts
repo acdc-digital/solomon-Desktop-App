@@ -50,6 +50,8 @@ export async function loadPdfWithLlamaParseReader(fileBuffer: Buffer): Promise<D
       apiKey,
       resultType: "json",
       verbose: false,
+      // Enable auto mode and set your triggers:
+      auto_mode: true,
     });
 
     // Convert the Buffer to Uint8Array and load with LlamaParseReader
