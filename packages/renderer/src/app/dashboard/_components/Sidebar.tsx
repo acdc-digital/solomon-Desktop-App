@@ -74,7 +74,7 @@ export function AppSidebar({ onProjectSelect }: SidebarProps) {
       // Remove collapsible="icon" so it won't show a slim icon column
       side="left"
       variant="sidebar"
-      className="relative border-r border-gray-200 bg-white"
+      className="relative border-r border-gray-200 bg-white shrink-0"
     >
       {/* <SidebarHeader> ... your old toggle code (commented out) ... </SidebarHeader> */}
 

@@ -23,8 +23,12 @@ electron_updater_1.autoUpdater.logger.transports.file.level = 'info';
 const isDev = process.env.NODE_ENV === 'development';
 const createWindow = () => {
     const mainWindow = new electron_1.BrowserWindow({
-        width: 1024,
-        height: 768,
+        // Start dimensions
+        width: 1400,
+        height: 800,
+        // Minimum dimensions
+        minWidth: 1200,
+        minHeight: 600,
         webPreferences: {
             preload: node_path_1.default.join(__dirname, 'preload.js'),
             // If you eventually want more security:

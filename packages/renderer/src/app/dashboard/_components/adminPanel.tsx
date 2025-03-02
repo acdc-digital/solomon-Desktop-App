@@ -64,7 +64,7 @@ const AdminPanel: React.FC = () => {
   const activeOutline = "ring-1 ring-gray-200";
 
   return (
-    <div className="w-14 flex flex-col items-center bg-gray-100 border-r p-0.75 space-y-2 pt-3">
+    <div className="w-14 flex-shrink-0 flex flex-col items-center bg-gray-100 border-r p-0.75 space-y-2 pt-3">
       {/* Collapse Button: outlined only when sidebar is expanded */}
       <Button
         variant="ghost"

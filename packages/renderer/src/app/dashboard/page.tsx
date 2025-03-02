@@ -49,8 +49,8 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="flex h-screen w-screen">
-      {/* Slim admin panel with icon buttons */}
+    <div className="flex h-screen max-h-screen w-screen max-w-screen overflow-hidden">
+      {/* Slim adminPanel */}
       <AdminPanel
         onCollapseClick={handleCollapseClick}
         onGraphViewClick={handleGraphViewClick}
@@ -60,13 +60,15 @@ export default function DashboardPage() {
         onCalendarClick={handleCalendarClick}
       />
 
-      {/* Existing bigger Sidebar */}
+      {/* Sidebar */}
       <SidebarWrapper onProjectSelect={handleProjectSelection} />
 
-      {/* Right: The main Canvas plus optional Chat */}
-      <div className="flex flex-1">
+      {/* Chat */}
+      <div className="flex flex-1 overflow-hidden">
         <Canvas 
-        activeProjectId={activeProjectId} />
+          activeProjectId={activeProjectId}
+          className="flex-1 min-w-[300px] overflow-hidden"
+        />
         {isChatActive && <Chat />}
       </div>
     </div>

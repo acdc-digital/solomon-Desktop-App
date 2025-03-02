@@ -22,8 +22,14 @@ const isDev = process.env.NODE_ENV === 'development';
 
 const createWindow = () => {
   const mainWindow = new BrowserWindow({
-    width: 1024,
-    height: 768,
+    // Start dimensions
+    width: 1400,
+    height: 800,
+
+    // Minimum dimensions
+    minWidth: 1200,
+    minHeight: 600,
+
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       // If you eventually want more security:

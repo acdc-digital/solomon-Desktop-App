@@ -19,9 +19,10 @@ import { useEditorStore } from "@/lib/store/editorStore";
 
 interface CanvasProps {
   activeProjectId: string | null;
+  className?: string;
 }
 
-const Canvas: React.FC<CanvasProps> = ({ activeProjectId }) => {
+const Canvas: React.FC<CanvasProps> = ({ activeProjectId, className }) => {
   // Access activeComponent from Zustand store
   const activeComponent = useEditorStore((state) => state.activeComponent);
 
@@ -43,8 +44,7 @@ const Canvas: React.FC<CanvasProps> = ({ activeProjectId }) => {
   };
 
   return (
-    <div className="flex flex-col flex-grow bg-[#FFF] overflow-hidden dark:bg-neutral-200">
-      {/* Removed CanvasHeader. The AdminPanel now replaces that functionality */}
+    <div className={`flex flex-col bg-[#FFF] overflow-hidden dark:bg-neutral-200 ${className || ''}`}>
       {renderComponent()}
     </div>
   );

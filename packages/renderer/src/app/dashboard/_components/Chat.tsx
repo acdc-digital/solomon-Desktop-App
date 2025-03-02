@@ -6,14 +6,14 @@ import useChatStore from '@/lib/store/chatStore';
 import { initResize } from '@/components/chat/Resizer';
 import { GripVertical } from 'lucide-react'; // The "handle" icon
 
-const MIN_WIDTH = 235;
-const MAX_WIDTH = 600;
+const MIN_WIDTH = 300;
+const MAX_WIDTH = 475;
 
 const Chat: React.FC = () => {
   const { chatWidth, setChatWidth } = useChatStore();
 
   return (
-    <div className="flex h-full">
+    <div className="flex h-full shrink-0">
       {/* Resizer Container */}
       <div className="relative flex items-stretch">
         {/* Thin Vertical Line */}
@@ -34,7 +34,7 @@ const Chat: React.FC = () => {
       {/* Chat Panel */}
       <div
         id="chatPanel"
-        className="flex flex-col border-l bg-white"
+        className="flex flex-col border-l bg-white shrink-0"
         style={{
             width: `${chatWidth}px`,
             minWidth: `${MIN_WIDTH}px`,
