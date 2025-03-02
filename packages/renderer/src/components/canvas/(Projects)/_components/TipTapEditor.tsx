@@ -705,301 +705,304 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
   // Example menubar layout using shadcn/ui dropdowns
   // ----------------------------------------------------------------------------
   return (
-    <div className="h-full overflow-hidden">
-      {/* 
-        1) FIRST ROW (Menubar with dropdowns):
-           FILE, EDIT, FORMAT, LISTS, INSERT, VIEW
-      */}
-      <div className="flex items-center border-b bg-gray-50 p-2 gap-x-2">
-        {/* FILE MENU */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm">
-              File
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuLabel>File Actions</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => console.log('Save clicked!')}>
-              <Save className="mr-2 h-4 w-4" />
-              Save
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => editor.chain().focus().undo().run()}>
-              <UndoIcon className="mr-2 h-4 w-4" />
-              Undo
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => editor.chain().focus().redo().run()}>
-              <RedoIcon className="mr-2 h-4 w-4" />
-              Redo
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-  
-        {/* EDIT MENU */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm">
-              Edit
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuLabel>Text &amp; Font</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            {/* Font Family */}
-            <DropdownMenuItem asChild>
-              <div>
-                <FontFamilyButton />
-              </div>
-            </DropdownMenuItem>
-            {/* Font Size */}
-            <DropdownMenuItem asChild>
-              <div>
-                <FontSizeButton />
-              </div>
-            </DropdownMenuItem>
-            {/* Text Color */}
-            <DropdownMenuItem asChild>
-              <div>
-                <TextColorButton />
-              </div>
-            </DropdownMenuItem>
-            {/* Highlight */}
-            <DropdownMenuItem asChild>
-              <div>
-                <HighlightColorButton />
-              </div>
-            </DropdownMenuItem>
-            {/* Line Height */}
-            <DropdownMenuItem asChild>
-              <div>
-                <LineHeightButton />
-              </div>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-  
-        {/* FORMAT MENU */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm">
-              Format
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuLabel>Styling &amp; Alignment</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={() => editor.chain().focus().toggleBold().run()}
-              className={buttonClass(editor.isActive("bold"))}
-            >
-              <BoldIcon className="mr-2 h-4 w-4" />
-              Bold
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => editor.chain().focus().toggleItalic().run()}
-              className={buttonClass(editor.isActive("italic"))}
-            >
-              <ItalicIcon className="mr-2 h-4 w-4" />
-              Italic
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => editor.chain().focus().toggleUnderline().run()}
-              className={buttonClass(editor.isActive("underline"))}
-            >
-              <UnderlineIcon className="mr-2 h-4 w-4" />
-              Underline
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => editor.chain().focus().toggleStrike().run()}
-              className={buttonClass(editor.isActive("strike"))}
-            >
-              <Strikethrough className="mr-2 h-4 w-4" />
-              Strike
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            {/* Alignment */}
-            <DropdownMenuItem
-              onClick={() => editor.chain().focus().setTextAlign("left").run()}
-              className={buttonClass(editor.isActive({ textAlign: "left" }) as boolean)}
-            >
-              <AlignLeftIcon className="mr-2 h-4 w-4" />
-              Align Left
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => editor.chain().focus().setTextAlign("center").run()}
-              className={buttonClass(editor.isActive({ textAlign: "center" }) as boolean)}
-            >
-              <AlignCenterIcon className="mr-2 h-4 w-4" />
-              Align Center
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => editor.chain().focus().setTextAlign("right").run()}
-              className={buttonClass(editor.isActive({ textAlign: "right" }) as boolean)}
-            >
-              <AlignRightIcon className="mr-2 h-4 w-4" />
-              Align Right
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            {/* Headings */}
-            <DropdownMenuItem
-              onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-              className={buttonClass(editor.isActive("heading", { level: 1 }))}
-            >
-              <Heading1Icon className="mr-2 h-4 w-4" />
-              H1
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-              className={buttonClass(editor.isActive("heading", { level: 2 }))}
-            >
-              <Heading2Icon className="mr-2 h-4 w-4" />
-              H2
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-              className={buttonClass(editor.isActive("heading", { level: 3 }))}
-            >
-              <Heading3Icon className="mr-2 h-4 w-4" />
-              H3
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            {/* Code Block */}
-            <DropdownMenuItem
-              onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-              className={buttonClass(editor.isActive("codeBlock"))}
-            >
-              <CodeIcon className="mr-2 h-4 w-4" />
-              Code Block
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-  
-        {/* LISTS MENU */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm">
-              Lists
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuLabel>List Types</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={() => editor.chain().focus().toggleBulletList().run()}
-              className={buttonClass(editor.isActive("bulletList"))}
-            >
-              <ListIcon className="mr-2 h-4 w-4" />
-              Bullet List
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => editor.chain().focus().toggleOrderedList().run()}
-              className={buttonClass(editor.isActive("orderedList"))}
-            >
-              <ListOrderedIcon className="mr-2 h-4 w-4" />
-              Ordered List
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => editor.chain().focus().toggleTaskList().run()}
-              className={buttonClass(editor.isActive("taskList"))}
-            >
-              <SquareCheck className="mr-2 h-4 w-4" />
-              Task List
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-  
-        {/* INSERT MENU */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm">
-              Insert
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuLabel>Insert Elements</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <div>
-                <LinkButton />
-              </div>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <div>
-                <ImageButton />
-              </div>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-  
-        {/* VIEW MENU */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm">
-              View
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuLabel>Zoom Controls</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleZoomOut}>
-              <MinusCircle className="mr-2 h-4 w-4" />
-              Zoom Out
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleZoomIn}>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Zoom In
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem disabled>
-              {Math.round(zoom * 100)}%
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-  
-      {/* 
-        2) SECOND ROW:
-           Duplicate some functions for quick access:
-           - Font family
-           - Page size (and other related buttons)
-           - Zoom in/out
-      */}
-      <div className="flex items-center border-b bg-gray-50 p-2 gap-x-2">
-        {/* Duplicate: Font Family */}
-        <FontFamilyButton />
-        {/* Page Size Selector */}
-        <PageSizeSelector pageSize={pageSize} setPageSize={setPageSize} />
-        {/* Zoom Controls (duplicated) */}
-        <div className="flex items-center gap-x-2">
-          <button
-            onClick={handleZoomOut}
-            className="p-1 rounded hover:bg-gray-200 flex items-center gap-x-1"
+  <div className="h-full overflow-hidden">
+    {/* 
+      1) FIRST ROW (Menubar with dropdowns):
+         FILE, EDIT, FORMAT, LISTS, INSERT, VIEW
+    */}
+    <div className="flex items-center border-b bg-white p-2 gap-x-2">
+      {/* FILE MENU */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="sm">
+            File
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <DropdownMenuLabel>File Actions</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => console.log('Save clicked!')}>
+            <Save className="mr-2 h-4 w-4" />
+            Save
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => editor.chain().focus().undo().run()}>
+            <UndoIcon className="mr-2 h-4 w-4" />
+            Undo
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => editor.chain().focus().redo().run()}>
+            <RedoIcon className="mr-2 h-4 w-4" />
+            Redo
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* EDIT MENU */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="sm">
+            Edit
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <DropdownMenuLabel>Text &amp; Font</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          {/* Font Family */}
+          <DropdownMenuItem asChild>
+            <div>
+              <FontFamilyButton />
+            </div>
+          </DropdownMenuItem>
+          {/* Font Size */}
+          <DropdownMenuItem asChild>
+            <div>
+              <FontSizeButton />
+            </div>
+          </DropdownMenuItem>
+          {/* Text Color */}
+          <DropdownMenuItem asChild>
+            <div>
+              <TextColorButton />
+            </div>
+          </DropdownMenuItem>
+          {/* Highlight */}
+          <DropdownMenuItem asChild>
+            <div>
+              <HighlightColorButton />
+            </div>
+          </DropdownMenuItem>
+          {/* Line Height */}
+          <DropdownMenuItem asChild>
+            <div>
+              <LineHeightButton />
+            </div>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* FORMAT MENU */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="sm">
+            Format
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <DropdownMenuLabel>Styling &amp; Alignment</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onClick={() => editor.chain().focus().toggleBold().run()}
+            className={buttonClass(editor.isActive("bold"))}
           >
-            <MinusCircle size={18} />
-          </button>
-          <span className="w-12 text-center">{Math.round(zoom * 100)}%</span>
-          <button
-            onClick={handleZoomIn}
-            className="p-1 rounded hover:bg-gray-200 flex items-center gap-x-1"
+            <BoldIcon className="mr-2 h-4 w-4" />
+            Bold
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => editor.chain().focus().toggleItalic().run()}
+            className={buttonClass(editor.isActive("italic"))}
           >
-            <PlusCircle size={18} />
-          </button>
-        </div>
-      </div>
-  
-      {/* EDITOR CONTENT */}
-      <div className="flex-grow bg-gray-200 p-2 h-full">
-        <PageVisualization pageSize={pageSize} zoom={zoom}>
-          <EditorContent
-            editor={editor}
-            className="h-full w-full"
-            style={{ caretColor: "black" }}
-          />
-        </PageVisualization>
+            <ItalicIcon className="mr-2 h-4 w-4" />
+            Italic
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => editor.chain().focus().toggleUnderline().run()}
+            className={buttonClass(editor.isActive("underline"))}
+          >
+            <UnderlineIcon className="mr-2 h-4 w-4" />
+            Underline
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => editor.chain().focus().toggleStrike().run()}
+            className={buttonClass(editor.isActive("strike"))}
+          >
+            <Strikethrough className="mr-2 h-4 w-4" />
+            Strike
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          {/* Alignment */}
+          <DropdownMenuItem
+            onClick={() => editor.chain().focus().setTextAlign("left").run()}
+            className={buttonClass(editor.isActive({ textAlign: "left" }) as boolean)}
+          >
+            <AlignLeftIcon className="mr-2 h-4 w-4" />
+            Align Left
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => editor.chain().focus().setTextAlign("center").run()}
+            className={buttonClass(editor.isActive({ textAlign: "center" }) as boolean)}
+          >
+            <AlignCenterIcon className="mr-2 h-4 w-4" />
+            Align Center
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => editor.chain().focus().setTextAlign("right").run()}
+            className={buttonClass(editor.isActive({ textAlign: "right" }) as boolean)}
+          >
+            <AlignRightIcon className="mr-2 h-4 w-4" />
+            Align Right
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          {/* Headings */}
+          <DropdownMenuItem
+            onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+            className={buttonClass(editor.isActive("heading", { level: 1 }))}
+          >
+            <Heading1Icon className="mr-2 h-4 w-4" />
+            H1
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+            className={buttonClass(editor.isActive("heading", { level: 2 }))}
+          >
+            <Heading2Icon className="mr-2 h-4 w-4" />
+            H2
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+            className={buttonClass(editor.isActive("heading", { level: 3 }))}
+          >
+            <Heading3Icon className="mr-2 h-4 w-4" />
+            H3
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          {/* Code Block */}
+          <DropdownMenuItem
+            onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+            className={buttonClass(editor.isActive("codeBlock"))}
+          >
+            <CodeIcon className="mr-2 h-4 w-4" />
+            Code Block
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* LISTS MENU */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="sm">
+            Lists
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <DropdownMenuLabel>List Types</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onClick={() => editor.chain().focus().toggleBulletList().run()}
+            className={buttonClass(editor.isActive("bulletList"))}
+          >
+            <ListIcon className="mr-2 h-4 w-4" />
+            Bullet List
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => editor.chain().focus().toggleOrderedList().run()}
+            className={buttonClass(editor.isActive("orderedList"))}
+          >
+            <ListOrderedIcon className="mr-2 h-4 w-4" />
+            Ordered List
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => editor.chain().focus().toggleTaskList().run()}
+            className={buttonClass(editor.isActive("taskList"))}
+          >
+            <SquareCheck className="mr-2 h-4 w-4" />
+            Task List
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* INSERT MENU */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="sm">
+            Insert
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <DropdownMenuLabel>Insert Elements</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem asChild>
+            <div>
+              <LinkButton />
+            </div>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <div>
+              <ImageButton />
+            </div>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* VIEW MENU */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="sm">
+            View
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <DropdownMenuLabel>Zoom Controls</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={handleZoomOut}>
+            <MinusCircle className="mr-2 h-4 w-4" />
+            Zoom Out
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={handleZoomIn}>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Zoom In
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem disabled>
+            {Math.round(zoom * 100)}%
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+
+    {/* 
+      2) SECOND ROW:
+         Duplicate some functions for quick access:
+         - Save
+         - Font family
+         - Page size (and other related buttons)
+         - Zoom in/out
+    */}
+    <div className="flex items-center border-b bg-gray-50 p-2 gap-x-2">
+      {/* Save */}
+      {/* <Save /> */}
+      {/* Duplicate: Font Family */}
+      <FontFamilyButton />
+      {/* Page Size Selector */}
+      <PageSizeSelector pageSize={pageSize} setPageSize={setPageSize} />
+      {/* Zoom Controls (duplicated) */}
+      <div className="flex items-center gap-x-2">
+        <button
+          onClick={handleZoomOut}
+          className="p-1 rounded hover:bg-gray-200 flex items-center gap-x-1"
+        >
+          <MinusCircle size={18} />
+        </button>
+        <span className="w-12 text-center">{Math.round(zoom * 100)}%</span>
+        <button
+          onClick={handleZoomIn}
+          className="p-1 rounded hover:bg-gray-200 flex items-center gap-x-1"
+        >
+          <PlusCircle size={18} />
+        </button>
       </div>
     </div>
-  );
+
+    {/* EDITOR CONTENT */}
+    <div className="flex-grow bg-gray-200 p-2 h-full">
+      <PageVisualization pageSize={pageSize} zoom={zoom}>
+        <EditorContent
+          editor={editor}
+          className="h-full w-full"
+          style={{ caretColor: "black" }}
+        />
+      </PageVisualization>
+    </div>
+  </div>
+);
 };
 
 export default TipTapEditor;

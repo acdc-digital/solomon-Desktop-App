@@ -31,14 +31,15 @@ const AdminPanel: React.FC = () => {
 
   // Retrieve chat state.
   const isChatActive = useChatStore((state) => state.isChatActive);
-  const activateChat = useChatStore((state) => state.activateChat);
+  // const activateChat = useChatStore((state) => state.activateChat);
+  const toggleChat = useChatStore((state) => state.toggleChat);
 
   // Handlers.
   function handleCollapseClick() {
     toggleSidebar();
   }
   function handleChatClick() {
-    activateChat();
+    toggleChat();
     console.log("Chat button clicked!");
   }
   function handleGraphViewClick() {
