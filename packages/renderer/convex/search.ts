@@ -114,16 +114,23 @@ export const getSimilarChunks = action({
       });
       const queryEmbedding: number[] = embeddingResponse.data[0].embedding;
 
-      // 2) Perform vector search using Convex's vector index
+      // 2) Vector search with filter
       const vectorSearchResults = await ctx.vectorSearch("chunks", "byEmbedding", {
         vector: queryEmbedding,
         limit: topK,
         filter: (q) => q.eq("projectId", projectId),
       });
 
-      // 3) Fetch actual chunks
-      const chunkIds = vectorSearchResults.map((res) => res._id);
+      // 3) Filter out results below your similarity threshold
+      const threshold = 0.8;  // pick a value that works for you
+      const filteredResults = vectorSearchResults.filter(
+        (item) => item._score >= threshold
+      );
+
+      // 4) Fetch the actual chunk documents for the filtered IDs
+      const chunkIds = filteredResults.map((res) => res._id);
       const similarChunks = await ctx.runQuery(internal.search.fetchChunks, { ids: chunkIds });
+
       return similarChunks;
     } catch (error) {
       console.error("Error during getSimilarChunks action:", error);

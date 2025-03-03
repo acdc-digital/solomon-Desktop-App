@@ -62,7 +62,7 @@ const AdminPanel: React.FC = () => {
   }
 
   // Outline style for active state.
-  const activeOutline = "ring-1 ring-gray-200";
+  const activeOutline = "ring-1 ring-gray-400";
 
   return (
     <div className="w-14 flex-shrink-0 flex flex-col items-center bg-gray-100 border-r p-0.75 space-y-2 pt-3">
