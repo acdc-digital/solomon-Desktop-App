@@ -4,17 +4,19 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { useAction, useQuery } from "convex/react";
+import { useAction, useQuery, ConvexProvider, ConvexReactClient } from "convex/react";
+import { ConvexAuthProvider } from "@convex-dev/auth/react";
 import { api } from "../../../convex/_generated/api";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 import useChatStore from '@/lib/store/chatStore';
-
-// Import the special graph chat constant from your ChatHeader module.
 import ChatHeader, { GRAPH_CHAT_ID } from "./Chatheader";
+import { ArrowUp, X, ThumbsUp, ThumbsDown, Copy, Check } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
-// Interfaces for chat messages.
+// Interfaces
 interface ChatEntry {
   _id: string;
   input: string;
@@ -22,48 +24,59 @@ interface ChatEntry {
 }
 
 interface PendingMessage {
-  id: string;      // Local-only ID (e.g. "pending-1685647384")
-  input: string;   // User’s typed text
+  id: string;
+  input: string;
 }
 
 interface ChatProps {
   projectId: string; // Either a regular project id or "graph-chat"
 }
 
-export default function Chat({ projectId }: ChatProps) {
-  const { isChatActive, deactivateChat } = useChatStore(); // Access the chat visibility state
+const MAX_CHAR_COUNT = 1000;
 
-  // Determine if we're in graph-chat mode.
+// Initialize the client outside the component
+const convex = new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+
+// Inner component that uses Convex hooks
+function ChatInner({ projectId }: ChatProps) {
+  const { isChatActive, deactivateChat } = useChatStore();
   const isGraphChat = projectId === GRAPH_CHAT_ID;
 
-  // 1. Query messages.
-  // If graph chat, use our dedicated graph chat query (which does not require a projectId parameter).
-  // Otherwise, use the project-specific query.
+  // Queries & Actions
   const entries = useQuery(
     isGraphChat ? api.graphChat.getAllGraphChatEntries : api.chat.getAllEntries,
     isGraphChat ? {} : { projectId }
   );
-
-  // 2. Select the appropriate action/mutation for sending messages.
+  
   const handleUserAction = useAction(
     isGraphChat ? api.graphChat.handleGraphUserAction : api.chat.handleUserAction
   );
 
-  // 3. Local states.
+  // Local states
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [pendingMessages, setPendingMessages] = useState<PendingMessage[]>([]);
+  const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
 
-  // 4. Refs for scrolling and auto-resize.
+  // Refs
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
-  // Scroll to bottom whenever messages or pending messages change.
+  // Auto-scroll to bottom on new messages
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const scrollToBottom = () => {
+      if (messagesEndRef.current) {
+        messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+      }
+    };
+    
+    // Small delay to ensure content is rendered
+    const timeoutId = setTimeout(scrollToBottom, 100);
+    return () => clearTimeout(timeoutId);
   }, [entries, pendingMessages]);
 
-  // Auto-resize the textarea as you type.
+  // Auto-resize textarea
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
@@ -71,18 +84,18 @@ export default function Chat({ projectId }: ChatProps) {
     }
   }, [message]);
 
-  // 5. Handle user submission.
+  // Handle message submission
   const onSubmit = async (msg: string) => {
     if (msg.trim() === "") return;
+    
     setMessage("");
     setIsLoading(true);
-
+    
     const pendingId = `pending-${Date.now()}`;
     setPendingMessages((prev) => [...prev, { id: pendingId, input: msg }]);
 
     try {
       if (isGraphChat) {
-        // Graph chat does not require a projectId.
         await handleUserAction({ message: msg });
       } else {
         await handleUserAction({ message: msg, projectId });
@@ -94,7 +107,7 @@ export default function Chat({ projectId }: ChatProps) {
     }
   };
 
-  // 6. Remove ephemeral messages once the server includes them.
+  // Remove pending messages once they appear in server response
   useEffect(() => {
     if (!entries || entries.length === 0) return;
     setPendingMessages((prev) =>
@@ -102,92 +115,215 @@ export default function Chat({ projectId }: ChatProps) {
     );
   }, [entries]);
 
-  // 7. Merge pending and server messages.
+  // Copy message to clipboard
+  const copyToClipboard = (text: string, id: string) => {
+    navigator.clipboard.writeText(text).then(
+      () => {
+        setCopiedMessageId(id);
+        setTimeout(() => {
+          setCopiedMessageId(null);
+        }, 2000);
+      },
+      (err) => {
+        console.error('Could not copy text: ', err);
+      }
+    );
+  };
+
+  // Merge pending and server messages
   const mergedEntries: Array<ChatEntry | PendingMessage> = [
     ...(entries || []),
     ...pendingMessages,
   ];
 
-  return (
-    <div className="relative flex flex-col h-full">
-      <ChatHeader title=""/>
+  const charCount = message.length;
+  const isOverLimit = charCount > MAX_CHAR_COUNT;
 
-      {/* Header Row */}
-      <div className='flex items-center justify-between text-gray-500 px-4 ml-auto mr-2'>
-        {/* Close Button */}
-        <button
-          className='text-gray-500 hover:text-gray-200'
+  return (
+    <div className="relative flex flex-col h-full bg-white">
+      <ChatHeader title="" />
+
+      {/* Close Button Row */}
+      <div className="flex items-center justify-end px-4">
+        <Button 
+          variant="ghost" 
+          size="icon" 
           onClick={deactivateChat}
-          aria-label='Closed'
-          >
-            &#x2715; {/* Close Icon */}
-        </button>
+          className="h-8 w-8"
+        >
+          <X className="w-4 h-4" />
+        </Button>
       </div>
 
-      {/* Chat Display */}
-      <div className="flex-1 rounded-xl border-black overflow-y-auto pr-2">
-        {mergedEntries.map((entry) => {
-          const isEphemeral = !("_id" in entry);
-          return (
-            <div
-              key={isEphemeral ? entry.id : entry._id}
-              className="flex flex-col gap-2 text-black p-2"
-            >
-              {/* "You:" label */}
-              <div className="text-sm text-right text-gray-500">You:</div>
-
-              {/* Display user message */}
-              <div className="text-right">
-                <div className="inline-block bg-gray-100 text-black px-3 py-2 rounded-md text-left max-w-[85%] break-words">
-                  {entry.input}
+      {/* Chat Messages */}
+      <div 
+        ref={chatContainerRef}
+        className="flex-1 overflow-y-auto px-4 py-2 space-y-6"
+      >
+        {mergedEntries.length === 0 ? (
+          <div className="flex items-center justify-center h-full text-gray-500">
+            <p>Ask Solomon a question to begin.</p>
+          </div>
+        ) : (
+          mergedEntries.map((entry) => {
+            const isEphemeral = !("_id" in entry);
+            const messageId = isEphemeral ? entry.id : entry._id;
+            
+            return (
+              <div
+                key={messageId}
+                className="flex flex-col gap-4"
+              >
+                {/* User Message */}
+                <div className="flex flex-col items-end">
+                  <div className="text-sm text-gray-500 mb-1">You:</div>
+                  <div className="bg-gray-100 text-gray-800 px-4 py-2 rounded-md max-w-[85%] break-words self-end">
+                    {entry.input}
+                  </div>
                 </div>
-              </div>
 
-              {/* Display "Thinking..." for pending messages or show response */}
-              {isEphemeral ? (
-                <div className="text-xs text-gray-500 ml-2 text-right">(Thinking...)</div>
-              ) : (
-                "response" in entry &&
-                entry.response && (
-                  <>
-                    <div className="text-sm mt-2 text-gray-500">Solomon:</div>
-                    <div className="ml-2">
-                      <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
-                        {entry.response}
-                      </ReactMarkdown>
+                {/* Assistant Response */}
+                {isEphemeral ? (
+                  <div className="flex flex-col mt-2">
+                    <div className="text-sm text-gray-500 mb-1">Solomon:</div>
+                    <div className="text-gray-400 ml-2">Thinking...</div>
+                  </div>
+                ) : (
+                  "response" in entry && entry.response && (
+                    <div className="flex flex-col mt-2">
+                      <div className="text-sm text-gray-500 mb-1">Solomon:</div>
+                      <div className="ml-2 text-gray-800 prose prose-sm max-w-none">
+                        <ReactMarkdown
+                          remarkPlugins={[remarkGfm]}
+                          rehypePlugins={[rehypeHighlight]}
+                        >
+                          {entry.response}
+                        </ReactMarkdown>
+                      </div>
+                      
+                      {/* Feedback and Copy Buttons */}
+                      <div className="flex mt-2 ml-2 gap-2">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
+                              <ThumbsUp className="h-4 w-4 text-gray-500" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Helpful</TooltipContent>
+                        </Tooltip>
+                        
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
+                              <ThumbsDown className="h-4 w-4 text-gray-500" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Not helpful</TooltipContent>
+                        </Tooltip>
+                        
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 rounded-full"
+                              onClick={() => copyToClipboard(entry.response, messageId)}
+                            >
+                              {copiedMessageId === messageId ? (
+                                <Check className="h-4 w-4 text-green-500" />
+                              ) : (
+                                <Copy className="h-4 w-4 text-gray-500" />
+                              )}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            {copiedMessageId === messageId ? "Copied!" : "Copy to clipboard"}
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
                     </div>
-                  </>
-                )
-              )}
-            </div>
-          );
-        })}
+                  )
+                )}
+              </div>
+            );
+          })
+        )}
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Message Input */}
-      <form
-        className="flex mb-4 ml-2 mr-2 mt-2 z-10"
-        onSubmit={(e) => {
-          e.preventDefault();
-          onSubmit(message);
-        }}
-      >
-        <textarea
-          ref={textareaRef}
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
+      {/* Message Input Area */}
+      <div className="border-t border-gray-200 bg-gray-50 p-3">
+        <form
+          className="flex flex-col gap-1"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!isOverLimit && message.trim() !== "") {
               onSubmit(message);
             }
           }}
-          className="flex-1 form-input px-4 pt-3 bg-gray-100 border border-gray-200 rounded-md focus:outline-none focus:ring-0 resize-none leading-normal"
-          placeholder="Type your message..."
-          style={{ overflow: "auto", maxHeight: "200px" }}
-        />
-      </form>
+        >
+          {/* Character Count */}
+          <div className="flex justify-end text-xs">
+            <span className={isOverLimit ? "text-red-500" : "text-gray-500"}>
+              {charCount}/{MAX_CHAR_COUNT}
+            </span>
+          </div>
+          
+          {/* Textarea Container with integrated button */}
+          <div className="relative">
+            <textarea
+              ref={textareaRef}
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  if (!isOverLimit && message.trim() !== "") {
+                    onSubmit(message);
+                  }
+                }
+              }}
+              className={`w-full px-4 py-3 pr-12 bg-white border rounded-md focus:outline-none resize-none leading-normal ${
+                isOverLimit ? "border-red-500 focus:ring-red-500" : "border-gray-200 focus:ring-gray-300"
+              }`}
+              placeholder="Type your message..."
+              style={{ overflow: "auto", maxHeight: "120px", minHeight: "44px" }}
+              disabled={isLoading}
+            />
+            
+            {/* Integrated Send Button - Now vertically centered */}
+            <Button
+              type="submit"
+              size="icon"
+              disabled={message.trim() === "" || isLoading || isOverLimit}
+              className={`absolute right-2 top-1/2 transform -translate-y-1/2 h-8 w-8 rounded-md ${
+                message.trim() === "" || isLoading || isOverLimit
+                  ? "bg-gray-200 text-gray-400"
+                  : "bg-gray-700 text-white hover:bg-gray-800"
+              }`}
+            >
+              <ArrowUp className="h-4 w-4" />
+            </Button>
+          </div>
+        </form>
+      </div>
+      
+      {/* Full-width visible resizer */}
+      <div className="h-1.5 w-full bg-gray-200 hover:bg-gray-300 cursor-ns-resize" />
     </div>
+  );
+}
+
+// Wrapper component that provides Convex context
+export default function Chat(props: ChatProps) {
+  // Debug to help identify what's happening
+  console.log("Chat component rendering with Convex provider, projectId:", props.projectId);
+  
+  return (
+    <ConvexProvider client={convex}>
+      <ConvexAuthProvider client={convex}>
+        <ChatInner {...props} />
+      </ConvexAuthProvider>
+    </ConvexProvider>
   );
 }
