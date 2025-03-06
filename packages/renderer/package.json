@@ -72,6 +72,7 @@
     "cmdk": "^1.0.0",
     "convex": "^1.19.0",
     "dat.gui": "^0.7.9",
+    "date-fns": "^4.1.0",
     "dependency-cruiser": "^16.9.0",
     "dotenv": "^16.4.5",
     "emoji-mart": "^5.5.2",

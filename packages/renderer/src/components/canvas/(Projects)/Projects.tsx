@@ -114,7 +114,7 @@ const Projects: React.FC<ProjectsProps> = ({ projectId }) => {
           <div className="relative flex items-center justify-between h-5 w-full">
             {/* Left: Title - only shown when container is wide enough */}
             {showTitle && (
-              <div className="flex-1 px-4 py-2 text-sm font-semibold">
+              <div className="flex-1 px-4 text-sm">
                 <Title initialData={project} />
               </div>
             )}

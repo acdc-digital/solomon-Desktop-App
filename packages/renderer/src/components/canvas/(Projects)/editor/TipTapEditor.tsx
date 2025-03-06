@@ -1,8 +1,5 @@
 // TipTapEditor.tsx
 // File Location: /Users/matthewsimon/Documents/Github/solomon-electron/next/src/components/canvas/(Projects)/_components/TipTapEditor.tsx
-
-// TipTapEditor.tsx
-// File Location: /Users/matthewsimon/Documents/Github/solomon-electron/next/src/components/canvas/(Projects)/_components/TipTapEditor.tsx
 // TipTapEditor.tsx with fixed headers but compatible with parent container
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -106,28 +103,32 @@ interface TipTapEditorProps {
 function PageSizeSelector({
   pageSize,
   setPageSize,
+  className = "",
 }: {
   pageSize: string;
   setPageSize: (size: string) => void;
+  className?: string;
 }) {
   const sizes = ['A4', 'Letter', 'Legal', 'A3', 'Tabloid'];
 
   return (
-    <Select value={pageSize} onValueChange={setPageSize}>
-      <SelectTrigger className="w-[100px] h-8">
-        <SelectValue placeholder="Page Size" />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectGroup>
-          <SelectLabel>Page Sizes</SelectLabel>
-          {sizes.map((size) => (
-            <SelectItem key={size} value={size}>
-              {size}
-            </SelectItem>
-          ))}
-        </SelectGroup>
-      </SelectContent>
-    </Select>
+    <div className={className}>
+      <Select value={pageSize} onValueChange={setPageSize}>
+        <SelectTrigger className="w-[100px] h-8">
+          <SelectValue placeholder="Page Size" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectGroup>
+            <SelectLabel>Page Sizes</SelectLabel>
+            {sizes.map((size) => (
+              <SelectItem key={size} value={size}>
+                {size}
+              </SelectItem>
+            ))}
+          </SelectGroup>
+        </SelectContent>
+      </Select>
+    </div>
   );
 }
 
@@ -138,13 +139,15 @@ function ZoomControl({
   zoom,
   handleZoomIn,
   handleZoomOut,
+  className = "",
 }: {
   zoom: number;
   handleZoomIn: () => void;
   handleZoomOut: () => void;
+  className?: string;
 }) {
   return (
-    <div className="flex items-center gap-x-1">
+    <div className={`flex items-center gap-x-1 ${className}`}>
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
@@ -370,59 +373,71 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
         />
         
         {/* Combined row with Save button, Formatting Controls, and Page controls */}
-        <div className="flex items-center justify-between border-b bg-muted/10 px-1.5 py-1">
-          <div className="flex items-center gap-1">
-            {/* Save Button */}
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    size="icon"
-                    onClick={handleSave}
-                    disabled={isSaving}
-                    className="h-8 w-8 mr-1"
-                  >
-                    <Save className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom">
-                  <p>Save Document (⌘S)</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+        <div className="border-b bg-muted/10">
+          <div className="flex items-center justify-between px-1.5 py-1 overflow-hidden">
+            {/* Left group - save, page break and formatting */}
+            <div className="flex items-center gap-1 overflow-x-auto min-w-0 scrollbar-hide">
+              {/* Save Button - always visible */}
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      onClick={handleSave}
+                      disabled={isSaving}
+                      className="h-8 w-8 shrink-0"
+                    >
+                      <Save className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    <p>Save Document (⌘S)</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              
+              {/* Insert Page Break Button - hidden on small screens */}
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      onClick={insertPageBreak}
+                      className="h-8 w-8 shrink-0 hidden sm:flex"
+                    >
+                      <ChevronDown className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    <p>Insert Page Break</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              
+              <div className="h-8 border-r mx-1 shrink-0 hidden sm:block" />
+              
+              {/* Formatting Controls - will scroll horizontally if needed */}
+              <div className="flex items-center overflow-x-auto scrollbar-hide min-w-0">
+                <FormattingControls editor={editor} />
+              </div>
+            </div>
             
-            {/* Insert Page Break Button */}
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    size="icon"
-                    onClick={insertPageBreak}
-                    className="h-8 w-8 mr-1"
-                  >
-                    <ChevronDown className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom">
-                  <p>Insert Page Break</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            
-            {/* Formatting Controls */}
-            <FormattingControls editor={editor} />
-          </div>
-          
-          {/* Page Size and Zoom */}
-          <div className="flex items-center gap-1">
-            <PageSizeSelector pageSize={pageSize} setPageSize={setPageSize} />
-            <ZoomControl 
-              zoom={zoom} 
-              handleZoomIn={handleZoomIn} 
-              handleZoomOut={handleZoomOut} 
-            />
+            {/* Page Size and Zoom - rightmost elements hide first */}
+            <div className="flex items-center gap-2 shrink-0 ml-2">
+              <PageSizeSelector 
+                pageSize={pageSize} 
+                setPageSize={setPageSize} 
+                className="hidden md:block" 
+              />
+              <ZoomControl 
+                zoom={zoom} 
+                handleZoomIn={handleZoomIn} 
+                handleZoomOut={handleZoomOut} 
+                className="hidden sm:flex" 
+              />
+            </div>
           </div>
         </div>
       </div>
