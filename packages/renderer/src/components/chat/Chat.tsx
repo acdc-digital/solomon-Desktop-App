@@ -309,7 +309,7 @@ function ChatInner({ projectId }: ChatProps) {
       </div>
       
       {/* Full-width visible resizer */}
-      <div className="h-1.5 w-full bg-gray-200 hover:bg-gray-300 cursor-ns-resize" />
+      {/* <div className="h-1.5 w-full bg-gray-200 hover:bg-gray-300 cursor-ns-resize" /> */}
     </div>
   );
 }

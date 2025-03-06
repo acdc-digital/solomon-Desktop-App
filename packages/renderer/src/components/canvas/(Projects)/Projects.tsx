@@ -10,7 +10,7 @@ import { Id } from "../../../../convex/_generated/dataModel";
 import { Title } from "./_components/Title";
 import { UploadDocumentButton } from "./_components/FileTable";
 import { FileList } from "./_components/FileList";
-import TipTapEditor from "./_components/TipTapEditor";
+import TipTapEditor from "./editor/TipTapEditor";
 import dynamic from "next/dynamic";
 import { useEditorStore } from "@/lib/store/editorStore";
 
@@ -104,8 +104,8 @@ const Projects: React.FC<ProjectsProps> = ({ projectId }) => {
   }
 
   return (
-    <div id="project-container" className="flex flex-col bg-gray-100 h-full w-full p-1">
-      <div className="flex flex-col flex-1 mx-3 pt-4">
+    <div id="project-container" className="flex flex-col bg-gray-100 h-full w-full">
+      <div className="flex flex-col flex-1 pt-4">
         <Tabs
           value={activeView}
           onValueChange={(value) => setActiveView(value as "editor" | "files" | "tasks" | "preview")}
