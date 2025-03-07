@@ -2,7 +2,7 @@
 import { useAuthToken } from "@convex-dev/auth/react";
 import { useQuery } from "convex/react";
 import { useMutation } from "convex/react";
-import jwtDecode from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 import { api } from "../../convex/_generated/api";
 import { useEffect } from "react"; // Import useEffect
 
