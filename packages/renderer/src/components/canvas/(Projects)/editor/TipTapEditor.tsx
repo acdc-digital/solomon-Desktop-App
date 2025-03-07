@@ -60,33 +60,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 // Custom extensions
 import { FontSizeExtension } from '@/extensions/fontsize';
 import { lineHeightExtension } from '@/extensions/lineheight';
+import { Pagination } from 'tiptap-pagination-breaks';
 
 // Custom Node extension for page breaks
 import { Node, mergeAttributes } from '@tiptap/core';
-
-// Define a custom Page Break extension
-const PageBreak = Node.create({
-  name: 'pageBreak',
-  group: 'block',
-  selectable: true,
-  parseHTML() {
-    return [
-      { tag: 'div.tiptap-page-break' },
-    ]
-  },
-  renderHTML({ HTMLAttributes }) {
-    return ['div', mergeAttributes(HTMLAttributes, { class: 'tiptap-page-break' }), '']
-  },
-  addCommands() {
-    return {
-      setPageBreak: () => ({ chain }) => {
-        return chain()
-          .insertContent({ type: this.name })
-          .run()
-      },
-    }
-  },
-});
 
 /**
  * TipTapEditor Props Interface
@@ -214,8 +191,8 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
   const editor = useEditor({
     editorProps: {
       attributes: {
-        style: "padding-left: 56px; padding-right: 56px;",
-        class: 'prose prose-slate max-w-none focus:outline-none cursor-text pt-10 tiptap-pagination',
+        style: "padding: 56px;",
+        class: 'prose prose-slate max-w-none focus:outline-none cursor-text pt-0 tiptap-pagination',
         'data-page-size': pageSize,
       },
     },
@@ -262,7 +239,11 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
         placeholder: 'Start typing here...',
       }),
       // Add our custom PageBreak extension
-      PageBreak,
+      Pagination.configure({
+        pageHeight: 842,
+        pageWidth: 595,
+        pageMargin: 0,
+      }),
     ],
     content: initialContent,
     onUpdate: ({ editor }) => {
@@ -287,6 +268,21 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
           },
         },
       });
+
+      // Dynamically update pagination options based on the pageSize state:
+    if (pageSize === 'A4') {
+      editor.commands.setPaginationOptions({
+        pageHeight: 842,
+        pageWidth: 595,
+        pageMargin: 50,
+      });
+    } else if (pageSize === 'Letter') {
+      editor.commands.setPaginationOptions({
+        pageHeight: 792,
+        pageWidth: 612,
+        pageMargin: 50,
+      });
+    }
       
       // Re-estimate page count when page size changes
       estimatePageCount();
@@ -353,13 +349,6 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
     }, 1000);
   };
 
-  /**
-   * Insert a page break at cursor position
-   */
-  const insertPageBreak = () => {
-    editor.chain().focus().setPageBreak().run();
-  };
-
   return (
     <div className="flex flex-col h-full bg-background">
       {/* Header Section - not sticky, part of the flow */}
@@ -398,7 +387,7 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
               </TooltipProvider>
               
               {/* Insert Page Break Button - hidden on small screens */}
-              <TooltipProvider>
+              {/* <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button 
@@ -414,7 +403,7 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
                     <p>Insert Page Break</p>
                   </TooltipContent>
                 </Tooltip>
-              </TooltipProvider>
+              </TooltipProvider> */}
               
               <div className="h-8 border-r mx-1 shrink-0 hidden sm:block" />
               

@@ -12,7 +12,7 @@ interface PageVisualizationProps {
 
 const PageVisualization = ({
   pageSize,
-  pageMargin = '15px',
+  pageMargin = '0px',
   zoom,
   children,
 }: PageVisualizationProps) => {
