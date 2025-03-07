@@ -1,20 +1,10 @@
-// Convex Projects 
+// PROJECTS
 // /Users/matthewsimon/Documents/GitHub/solomon-electron/solomon-electron/next/convex/projects.ts
 
 import { v } from "convex/values";
 import { getStableUserDoc } from "./lib/getUserOrThrow";
-import { mutation, MutationCtx, query, internalAction, ActionCtx, action } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
-import { api } from "./_generated/api";
-import { UnstructuredLoader } from "@langchain/community/document_loaders/fs/unstructured";
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
-import { CacheBackedEmbeddings } from "langchain/embeddings/cache_backed";
-import { OpenAIEmbeddings } from "@langchain/openai";
-import { ConvexKVStore } from "@langchain/community/storage/convex";
-import { ConvexVectorStore } from "@langchain/community/vectorstores/convex";
-import fetch from "node-fetch";
-// import pdfParse from 'pdf-parse';
-// import OpenAI from "openai";
 
 export const getParentProjectId = query({
 	args: {
@@ -561,5 +551,125 @@ export const getById = query({
 	  // Update the project.
 	  const project = await ctx.db.patch(id, { ...rest });
 	  return project;
+	},
+  });
+
+  export const createTask = mutation({
+	args: {
+	  taskTitle: v.string(),
+	  taskDescription: v.optional(v.string()),
+	  taskStatus: v.optional(v.union(v.literal("pending"), v.literal("in_progress"), v.literal("completed"))),
+	  taskPriority: v.optional(v.union(v.literal("low"), v.literal("medium"), v.literal("high"))),
+	  taskDueDate: v.optional(v.string()),
+	  taskEmbeddings: v.optional(v.array(v.float64())),
+	  parentProject: v.id("projects"),  
+	},
+	async handler(ctx, args) {
+	  const identity = await ctx.auth.getUserIdentity();
+	  if (!identity) throw new Error("User not authenticated.");
+
+	  const userDoc = await getStableUserDoc(ctx);
+
+	  const project = await ctx.db.get(args.parentProject);
+	  if (!project || project.type !== "project") {
+		throw new Error("Invalid or missing parent project.");
+	  }
+
+	  const taskId = await ctx.db.insert("projects", {
+		type: "task",
+		userId: userDoc._id,
+		isArchived: false,
+		parentProject: args.parentProject,
+		isPublished: false,
+
+		taskTitle: args.taskTitle,
+		taskDescription: args.taskDescription,
+		taskStatus: args.taskStatus ?? "pending",
+		taskPriority: args.taskPriority ?? "medium",
+		taskDueDate: args.taskDueDate,
+		taskEmbeddings: args.taskEmbeddings,
+
+		documentTitle: undefined,
+		fileId: undefined,
+		contentType: undefined,
+		fileName: undefined,
+		isProcessing: undefined,
+		progress: undefined,
+		title: undefined,
+		content: undefined,
+		noteEmbeddings: undefined,
+		isProcessed: undefined,
+	  });
+
+	  return { taskId };
+	},
+  });
+
+  export const updateTask = mutation({
+	args: {
+	  id: v.id("projects"),
+	  taskTitle: v.optional(v.string()),
+	  taskDescription: v.optional(v.string()),
+	  taskStatus: v.optional(
+		v.union(v.literal("pending"), v.literal("in_progress"), v.literal("completed"))
+	  ),
+	},
+	async handler(ctx, args) {
+	  const existingProject = await ctx.db.get(args.id);
+	  if (!existingProject) {
+		throw new Error("Task not found.");
+	  }
+
+	  const userDoc = await getStableUserDoc(ctx);
+
+	  if (existingProject.userId !== userDoc._id) {
+		throw new Error("Unauthorized.");
+	  }
+
+	  await ctx.db.patch(args.id, {
+		...(args.taskTitle !== undefined && { taskTitle: args.taskTitle }),
+		...(args.taskDescription !== undefined && { taskDescription: args.taskDescription }),
+		...(args.taskStatus !== undefined && { taskStatus: args.taskStatus }),
+	  });
+
+	  return { success: true };
+	},
+  });
+
+  export const getTasksByProjectId = query({
+	args: { projectId: v.id("projects") },
+	async handler(ctx, args) {
+	  const userDoc = await getStableUserDoc(ctx);
+
+	  return await ctx.db
+		.query("projects")
+		.withIndex("by_user_parent", (q) =>
+		  q.eq("userId", userDoc._id).eq("parentProject", args.projectId)
+		)
+		.filter((q) => q.eq("type", "task"))
+		.collect();
+	},
+  });
+
+  export const getTasksByStatus = query({
+	args: {
+	  taskStatus: v.union(
+		v.literal("pending"),
+		v.literal("in_progress"),
+		v.literal("completed")
+	  )
+	},
+	handler: async (ctx, args) => {
+	  const userDoc = await getStableUserDoc(ctx);
+
+	  const tasks = await ctx.db
+		.query("projects")
+		.withIndex("by_user_taskStatus", (q) =>
+		  q.eq("userId", userDoc._id).eq("taskStatus", args.taskStatus)
+		)
+		.filter(q => q.eq(q.field("isArchived"), false))
+		.collect();
+
+	  return tasks;
 	},
   });

@@ -10,9 +10,13 @@ import { Id } from "../../../../convex/_generated/dataModel";
 import { Title } from "./_components/Title";
 import { UploadDocumentButton } from "./_components/FileTable";
 import { FileList } from "./_components/FileList";
-import TipTapEditor from "./editor/TipTapEditor";
-import dynamic from "next/dynamic";
 import { useEditorStore } from "@/lib/store/editorStore";
+
+import TipTapEditor from "./editor/TipTapEditor";
+import Tasks from "./tasks/Tasks";
+import dynamic from "next/dynamic";
+
+
 
 import {
   Tabs,
@@ -213,10 +217,8 @@ const Projects: React.FC<ProjectsProps> = ({ projectId }) => {
             </div>
           </TabsContent>
 
-          <TabsContent value="tasks" className="bg-white p-4 rounded-b-lg">
-            <div className="p-3 border border-gray-200 rounded-md bg-gray-50">
-              <p className="text-sm text-gray-600">This is a placeholder for tasks.</p>
-            </div>
+          <TabsContent value="tasks" className="bg-white flex-1 rounded-b-lg overflow-auto">
+            <Tasks projectId={projectId as Id<"projects">} />
           </TabsContent>
         </Tabs>
 

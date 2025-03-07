@@ -13,7 +13,9 @@ import {
   CalendarDays,      // Calendar
   BookOpenCheck,     // Docs
   PanelLeftDashed,   // Collapse
-  BotMessageSquare   // New Chat placeholder icon
+  BotMessageSquare,   // New Chat placeholder icon
+  ClipboardPlusIcon,
+  BookmarkCheckIcon
 } from "lucide-react";
 
 import { useSidebar } from "@/components/ui/sidebar";
@@ -65,7 +67,7 @@ const AdminPanel: React.FC = () => {
   const activeOutline = "ring-1 ring-gray-400";
 
   return (
-    <div className="w-14 flex-shrink-0 flex flex-col items-center bg-gray-100 border-r p-0.75 space-y-2 pt-3">
+    <div className="w-14 flex-shrink-0 flex flex-col items-center bg-gray-100 border-r p-0.75 space-y-2 pt-6">
       {/* Collapse Button: outlined only when sidebar is expanded */}
       <Button
         variant="ghost"
@@ -129,7 +131,7 @@ const AdminPanel: React.FC = () => {
           activeComponent === "Tasks" ? activeOutline : ""
         }`}
       >
-        <AlarmClockCheck className="w-5 h-5" />
+        <BookmarkCheckIcon className="w-5 h-5" />
       </Button>
 
       {/* Calendar Button */}
@@ -151,7 +153,7 @@ const AdminPanel: React.FC = () => {
           activeComponent === "Docs" ? activeOutline : ""
         }`}
       >
-        <BookOpenCheck className="w-5 h-5" />
+        <ClipboardPlusIcon className="w-5 h-5" />
       </Button>
     </div>
   );

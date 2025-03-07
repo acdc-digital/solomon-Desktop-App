@@ -1,4 +1,6 @@
-// unified/schema.ts
+// SCHEMA
+// /Users/matthewsimon/Documents/Github/solomon-Desktop-App/packages/renderer/convex/schema.ts
+
 import { defineSchema, defineTable } from "convex/server";
 import { authTables } from "@convex-dev/auth/server";
 import { v } from "convex/values";
@@ -20,9 +22,9 @@ const schema = defineSchema({
     .index("phone", ["phone"])
     .index("authId", ["authId"]),
 
-  // Schema for Projects and Documents
+  // Schema for Projects, Documents & Tasks
   projects: defineTable({
-    type: v.string(), // 'project' or 'document'
+    type: v.string(), // 'project', 'document', or 'task'
     title: v.optional(v.string()),
     userId: v.id("users"),
     isArchived: v.boolean(),
@@ -30,7 +32,8 @@ const schema = defineSchema({
     content: v.optional(v.string()),
     isPublished: v.optional(v.boolean()),
     noteEmbeddings: v.optional(v.array(v.float64())),
-    // Document Fields
+
+    // Document-specific fields
     documentTitle: v.optional(v.string()),
     fileId: v.optional(v.string()),
     contentType: v.optional(v.string()),
@@ -39,9 +42,33 @@ const schema = defineSchema({
     processedAt: v.optional(v.string()),
     isProcessing: v.optional(v.boolean()),
     progress: v.optional(v.number()),
+
+    // Task-specific fields
+    taskTitle: v.optional(v.string()),
+    taskDescription: v.optional(v.string()),
+    taskStatus: v.optional(
+      v.union(v.literal("pending"), v.literal("in_progress"), v.literal("completed"))
+    ),
+    taskPriority: v.optional(
+      v.union(v.literal("low"), v.literal("medium"), v.literal("high"))
+    ),
+    taskDueDate: v.optional(v.string()), // ISO date
+    taskComments: v.optional(v.string()),
+    taskEmbeddings: v.optional(v.array(v.float64())),
   })
     .index("by_user", ["userId"])
-    .index("by_user_parent", ["userId", "parentProject"]),
+    .index("by_user_parent", ["userId", "parentProject"])
+    .index("by_user_taskStatus", ["userId", "taskStatus"]) // Task-specific index
+    .searchIndex("search_taskTitle", {
+      searchField: "taskTitle",
+      filterFields: ["userId", "taskStatus", "parentProject"],
+    })
+    .vectorIndex("byTaskEmbedding", {
+      vectorField: "taskEmbeddings",
+      dimensions: 1536,
+      filterFields: ["userId", "taskStatus"],
+    }),
+
 
   // Schema for Chunks
   chunks: defineTable({

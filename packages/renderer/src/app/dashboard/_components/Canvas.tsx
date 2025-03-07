@@ -16,6 +16,8 @@ import Docs from "@/components/canvas/(Docs)/Docs";
 import Users from "@/components/canvas/(User)/Users";
 
 import { useEditorStore } from "@/lib/store/editorStore";
+import Tasks from "@/components/canvas/(Tasks)/Tasks";
+
 
 interface CanvasProps {
   activeProjectId: string | null;
@@ -38,6 +40,8 @@ const Canvas: React.FC<CanvasProps> = ({ activeProjectId, className }) => {
         return <Docs />;
       case "Users":
         return <Users />;
+      case "Tasks":
+        return <Tasks/>;
       default:
         return <Admin />;
     }
