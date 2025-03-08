@@ -57,6 +57,10 @@ Our Nextjs front end is hosted on Vercel. The Apple .dmg has been corrected, but
 3. git tag vx.x.x
 4. git push origin main vx.x.x
 5. (optional) git reset --hard vx.x.x
+---
+development:
+6. git checkout -b *new-branch*
+7. git add ./ commit/ push as usual
 
 If you follow these steps, you’ll have a smooth, automated release process.
 

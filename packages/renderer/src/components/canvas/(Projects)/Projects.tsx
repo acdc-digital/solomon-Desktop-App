@@ -200,17 +200,15 @@ const Projects: React.FC<ProjectsProps> = ({ projectId }) => {
           {/* <div className="h-px bg-gray-200 -mt-px relative z-0"></div> */}
 
           {/* Content Area */}
-          <TabsContent value="editor" className="bg-white flex-1 rounded-b-lg">
-            <div className="p-0 h-full flex flex-col">
-              <TipTapEditor
-                initialContent={project.content}
-                onChange={handleContentChange}
-                immediatelyRender={false}
-              />
-            </div>
+          <TabsContent value="editor" className="bg-white flex-1 rounded-b-lg flex flex-col h-full">
+            <TipTapEditor
+              initialContent={project.content}
+              onChange={handleContentChange}
+              immediatelyRender={false}
+            />
           </TabsContent>
 
-          <TabsContent value="files" className="bg-white p-4 rounded-b-lg">
+          <TabsContent value="files" className="bg-white p-4 rounded-b-lg flex-1 overflow-auto">
             <div className="space-y-4">
               <UploadDocumentButton projectId={projectId} />
               <FileList projectId={projectId} />

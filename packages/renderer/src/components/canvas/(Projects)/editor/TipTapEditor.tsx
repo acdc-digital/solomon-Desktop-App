@@ -62,9 +62,6 @@ import { FontSizeExtension } from '@/extensions/fontsize';
 import { lineHeightExtension } from '@/extensions/lineheight';
 import { Pagination } from 'tiptap-pagination-breaks';
 
-// Custom Node extension for page breaks
-import { Node, mergeAttributes } from '@tiptap/core';
-
 /**
  * TipTapEditor Props Interface
  */
@@ -192,7 +189,7 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
     editorProps: {
       attributes: {
         style: "padding: 56px;",
-        class: 'prose prose-slate max-w-none focus:outline-none cursor-text pt-0 tiptap-pagination',
+        class: 'prose prose-slate max-w-none focus:outline-none cursor-text pt-00 tiptap-pagination',
         'data-page-size': pageSize,
       },
     },
@@ -271,13 +268,13 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
 
       // Dynamically update pagination options based on the pageSize state:
     if (pageSize === 'A4') {
-      editor.commands.setPaginationOptions({
+      (editor.commands as any).setPaginationOptions({
         pageHeight: 842,
         pageWidth: 595,
         pageMargin: 50,
       });
     } else if (pageSize === 'Letter') {
-      editor.commands.setPaginationOptions({
+      (editor.commands as any).setPaginationOptions({
         pageHeight: 792,
         pageWidth: 612,
         pageMargin: 50,
@@ -349,10 +346,14 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
     }, 1000);
   };
 
+  // Calculate the approximate header height
+  const headerHeight = 120; // Adjust this value based on your actual header height
+  const footerHeight = 30;  // Fixed footer height
+
   return (
     <div className="flex flex-col h-full bg-background">
       {/* Header Section - not sticky, part of the flow */}
-      <div className="bg-background z-10">
+      <div className="bg-background z-10 flex-shrink-0">
         {/* Main Menubar */}
         <Menubar 
           editor={editor} 
@@ -432,9 +433,14 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
       </div>
 
       {/* Scrollable Content Area */}
-      <div className="flex-1 overflow-auto bg-muted/20" id="editor-scrollable-content">
-        <div className="h-full p-4">
-          <div className="mx-auto h-full">
+      <div className="overflow-auto bg-muted/20"
+           id="editor-scrollable-content"
+           style={{
+            height: `calc(100vh - ${headerHeight + footerHeight}px)`,
+            maxHeight: `calc(100% - ${footerHeight}px)` // Fallback if 100vh doesn't work
+            }}
+           >
+        <div className="p-4">
             <PageVisualization 
               ref={editorRef}
               pageSize={pageSize} 
@@ -444,18 +450,28 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
             >
               <EditorContent
                 editor={editor}
-                className="h-full w-full bg-background"
+                className="w-full bg-background"
                 style={{ caretColor: "black" }}
               />
             </PageVisualization>
-          </div>
         </div>
       </div>
 
       {/* Footer with Word Count */}
-      <div className="flex items-center justify-between px-3 py-1 border-t bg-muted/20 text-xs text-muted-foreground">
-        <div className="flex items-center gap-x-3">
+      <div className="flex-shrink-0 border-t bg-gray-100 text-xs text-muted-foreground"
+            style={{
+              height: `${footerHeight}px`,
+              position: 'sticky',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              zIndex: 10
+            }}
+          >
+        <div className="flex items-center justify-between h-full px-3">
+          <div className='flex items-center gap-x-3'>
           <span className="font-medium">Pages: {pageCount}</span>
+          </div>
         </div>
         <div className="flex items-center gap-x-3">
           <span className="font-medium">Words: {editor.storage.characterCount?.words() || 0}</span>
