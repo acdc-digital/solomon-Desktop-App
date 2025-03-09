@@ -14,62 +14,45 @@ import useChatStore from "@/lib/store/chatStore";
 export default function DashboardPage() {
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
   const isChatActive = useChatStore((state) => state.isChatActive);
-
-  // Now safe to call useSidebar() because layout wraps us in <SidebarProvider>
   const { toggleSidebar } = useSidebar();
 
-  // Example onClick handlers (adapt to your logic)
   function handleProjectSelection(projectId: string) {
     setActiveProjectId(projectId);
   }
-
   function handleCollapseClick() {
-    // We call toggleSidebar() to expand/collapse the main sidebar
     toggleSidebar();
   }
-
-  function handleGraphViewClick() {
-    // Was "Admin" in your old CanvasHeader
-  }
-
-  function handleFilesClick() {
-    // Same as your old 'Files' button logic
-  }
-
-  function handleProjectsClick() {
-    // Same as your old 'Projects' button logic
-  }
-
-  function handleTasksClick() {
-    // Placeholder: do something or set up a route
-  }
-
-  function handleCalendarClick() {
-    // Placeholder: do something or set up a route
-  }
+  function handleGraphViewClick() {}
+  function handleFilesClick() {}
+  function handleProjectsClick() {}
+  function handleTasksClick() {}
+  function handleCalendarClick() {}
 
   return (
-    <div className="flex h-screen max-h-screen w-screen max-w-screen overflow-hidden">
-      {/* Slim adminPanel */}
-      <AdminPanel
-        onCollapseClick={handleCollapseClick}
-        onGraphViewClick={handleGraphViewClick}
-        onFilesClick={handleFilesClick}
-        onProjectsClick={handleProjectsClick}
-        onTasksClick={handleTasksClick}
-        onCalendarClick={handleCalendarClick}
-      />
-
-      {/* Sidebar */}
-      <SidebarWrapper onProjectSelect={handleProjectSelection} />
-
-      {/* Chat */}
-      <div className="flex flex-1 overflow-hidden">
-        <Canvas 
-          activeProjectId={activeProjectId}
-          className="flex-1 min-w-[300px] overflow-hidden"
+    <div className="flex flex-col w-screen h-screen overflow-hidden pt-9 draggable">
+      {/*
+        The first 9px (the padding-top) is effectively your draggable "title bar."
+        Everything else is wrapped in "no-drag," so it won't move the window when clicked or dragged.
+      */}
+      <div className="flex flex-1 overflow-hidden no-drag">
+        <AdminPanel
+          onCollapseClick={handleCollapseClick}
+          onGraphViewClick={handleGraphViewClick}
+          onFilesClick={handleFilesClick}
+          onProjectsClick={handleProjectsClick}
+          onTasksClick={handleTasksClick}
+          onCalendarClick={handleCalendarClick}
         />
-        {isChatActive && <Chat />}
+
+        <SidebarWrapper onProjectSelect={handleProjectSelection} />
+
+        <div className="flex flex-1 overflow-hidden">
+          <Canvas
+            activeProjectId={activeProjectId}
+            className="flex-1 min-w-[300px] overflow-visible"
+          />
+          {isChatActive && <Chat />}
+        </div>
       </div>
     </div>
   );

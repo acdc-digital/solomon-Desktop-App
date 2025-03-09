@@ -11,7 +11,6 @@ import { api } from "../../../../../convex/_generated/api"
 import { Separator } from "@/components/ui/separator"
 import { Button } from "@/components/ui/button"
 import { Loader2, PlusCircle } from "lucide-react"
-import Image from "next/image"
 import KanbanBoard from "./_components/KanbanBoard"
 import TaskForm from "./_components/TaskForm"
 
@@ -29,7 +28,7 @@ const Tasks: React.FC<TasksProps> = ({ projectId }) => {
   // Check if project exists
   if (!project) {
     return (
-      <div className="flex items-center justify-center h-full p-6">
+      <div className="flex items-center justify-center h-full">
         <Loader2 className="h-6 w-6 animate-spin mr-2" />
         <span>Loading project...</span>
       </div>
@@ -37,33 +36,39 @@ const Tasks: React.FC<TasksProps> = ({ projectId }) => {
   }
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
-      <div className="flex flex-col p-5">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-4">
+    // Modified to take full height and use flex properly
+    <div className="flex flex-col h-full">
+      {/* Header - use flex-shrink-0 to prevent it from shrinking */}
+      <div className="flex-shrink-0">
+        <div className="flex items-center justify-between p-4">
           <h1 className="text-2xl font-bold tracking-tight">
             {project.title ? `${project.title} Tasks` : 'Tasks'}
           </h1>
-          <Button onClick={() => setTaskFormOpen(true)}>
+          <Button
+            onClick={() => setTaskFormOpen(true)}
+            className="text-gray-600 border-b border-gray-500 ml-2 mt-0 mb-0 mr-2"
+            variant="outline"
+            size="sm"
+            >
             <PlusCircle className="h-4 w-4 mr-2" />
             Add Task
           </Button>
         </div>
         
-        <Separator className="mb-6" />
-        
-        {/* Kanban Board */}
-        <div className="flex-1 overflow-hidden min-h-[500px]">
-          <KanbanBoard projectId={projectId} />
-        </div>
-        
-        {/* Task Form */}
-        <TaskForm
-          open={taskFormOpen}
-          onOpenChange={setTaskFormOpen}
-          projectId={projectId}
-        />
+        <Separator />
       </div>
+
+      {/* Kanban Board container - flex-grow with min-h-0 is crucial */}
+      <div className="flex-grow min-h-0 px-4 pt-4 pb-4">
+        <KanbanBoard projectId={projectId} />
+      </div>
+
+      {/* Task Form */}
+      <TaskForm
+        open={taskFormOpen}
+        onOpenChange={setTaskFormOpen}
+        projectId={projectId}
+      />
     </div>
   )
 }

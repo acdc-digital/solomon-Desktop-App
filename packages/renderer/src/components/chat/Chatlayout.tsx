@@ -9,15 +9,15 @@ import Chat from './Chat';
 import { useEditorStore } from '@/lib/store/editorStore';
 
 export default function ChatLayout() {
-    const { isChatActive, deactivateChat } = useChatStore(); // Access the chat visibility state
+    const { isChatActive } = useChatStore(); // Access the chat visibility state
     const { projectId } = useEditorStore();
 
     return (
         <div className='flex flex-col items-center h-full w-full'>
             {isChatActive && projectId ? (
                 <div className='flex flex-col h-full w-full'>
-                    {/* Chat Content */}
-                    <div className='flex-1 overflow-y-auto'>
+                    {/* Chat Content - Modified to control its own scrolling */}
+                    <div className='flex-1 overflow-y-auto' style={{ maxHeight: '100%' }}>
                         <Chat projectId={projectId} />
                     </div>
                 </div>

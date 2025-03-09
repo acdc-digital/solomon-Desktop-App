@@ -74,7 +74,7 @@ export function AppSidebar({ onProjectSelect }: SidebarProps) {
       // Remove collapsible="icon" so it won't show a slim icon column
       side="left"
       variant="sidebar"
-      className="relative border-r border-gray-200 bg-white shrink-0"
+      className="relative border-r border-t border-gray-200 bg-white shrink-0"
     >
       {/* <SidebarHeader> ... your old toggle code (commented out) ... </SidebarHeader> */}
 
@@ -83,7 +83,7 @@ export function AppSidebar({ onProjectSelect }: SidebarProps) {
       {/* MAIN SCROLLABLE CONTENT */}
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel className="text-xs text-gray-400 px-3 mt-1">
+          <SidebarGroupLabel className="text-xs text-gray-500 px-3 mt-1">
             Tools
           </SidebarGroupLabel>
           <SidebarGroupContent className="mt-0.5">
@@ -129,7 +129,7 @@ export function AppSidebar({ onProjectSelect }: SidebarProps) {
         </SidebarGroup>
 
         <SidebarGroup className="mt-2">
-          <SidebarGroupLabel className="text-xs text-gray-400 px-3 mb-0.5">
+          <SidebarGroupLabel className="text-xs text-gray-500 px-3 mb-0.5">
             Projects
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -143,7 +143,7 @@ export function AppSidebar({ onProjectSelect }: SidebarProps) {
       {/* FOOTER: Trash + Settings */}
       <SidebarFooter className="px-2 pb-1">
         <SidebarGroup>
-          <SidebarGroupLabel className="text-xs text-gray-400 px-1 mb-0.5">
+          <SidebarGroupLabel className="text-xs text-gray-500 px-1 mb-0.5">
             Utilities
           </SidebarGroupLabel>
           <SidebarGroupContent>

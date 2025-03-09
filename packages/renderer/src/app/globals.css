@@ -114,3 +114,14 @@ html, body {
   border-top: 1px dashed #ccc;
   margin: 40px;
 }
+
+/* Draggable region */
+.draggable {
+  -webkit-app-region: drag;
+  user-select: none; /* optional, so you can't select text in the drag bar */
+}
+
+/* If you have buttons or links in the bar, mark them with .no-drag */
+.no-drag {
+  -webkit-app-region: no-drag;
+}

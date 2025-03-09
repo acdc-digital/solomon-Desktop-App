@@ -108,14 +108,14 @@ const Projects: React.FC<ProjectsProps> = ({ projectId }) => {
   }
 
   return (
-    <div id="project-container" className="flex flex-col bg-gray-100 h-full w-full">
-      <div className="flex flex-col flex-1 pt-4">
+    <div id="project-container" className="flex flex-col bg-gray-50 h-full w-full">
+      <div className="flex flex-col pt-5">
         <Tabs
           value={activeView}
           onValueChange={(value) => setActiveView(value as "editor" | "files" | "tasks" | "preview")}
           className="flex flex-col h-full"
         >
-          <div className="relative flex items-center justify-between h-5 w-full">
+          <div className="relative flex items-center justify-between w-full border-b border-gray-200">
             {/* Left: Title - only shown when container is wide enough */}
             {showTitle && (
               <div className="flex-1 px-4 text-sm">
@@ -124,18 +124,18 @@ const Projects: React.FC<ProjectsProps> = ({ projectId }) => {
             )}
             
             {/* Right: Folder-style Tabs - adjust spacing based on title visibility */}
-            <TabsList className={`relative flex items-center gap-2 ${showTitle ? 'pr-4' : 'flex-1 justify-center'} bg-transparent`}>
+            <TabsList className={`flex gap-2 ${showTitle ? 'pr-4' : 'flex-1'} bg-transparent`}>
               <TabsTrigger
                 value="editor"
                 className="
                   w-36
-                  h-9
+                  h-10
                   relative overflow-visible
-                  px-3 py-1.5 text-sm font-medium flex items-center gap-1.5
+                  px-3 text-sm font-medium flex items-center
                   border border-gray-200 border-b-0
                   rounded-t-lg
                   transition-all
-                  data-[state=active]:rounded-out-b-xl
+                  data-[state=active]:rounded-out-b-lg
                   data-[state=active]:bg-white
                   data-[state=active]:z-10
                   data-[state=active]:text-gray-700
@@ -152,13 +152,13 @@ const Projects: React.FC<ProjectsProps> = ({ projectId }) => {
                 value="files"
                 className="
                   w-36
-                  h-9
+                  h-10
                   relative overflow-visible
-                  px-3 py-1.5 text-sm font-medium flex items-center gap-1.5
+                  px-3 text-sm font-medium flex items-center
                   border border-gray-200 border-b-0
                   rounded-t-lg
                   transition-all
-                  data-[state=active]:rounded-out-b-xl
+                  data-[state=active]:rounded-out-b-lg
                   data-[state=active]:bg-white
                   data-[state=active]:z-10
                   data-[state=active]:text-gray-700
@@ -175,13 +175,13 @@ const Projects: React.FC<ProjectsProps> = ({ projectId }) => {
                 value="tasks"
                 className="
                   w-36
-                  h-9
+                  h-10
                   relative overflow-visible
-                  px-3 py-1.5 text-sm font-medium flex items-center gap-1.5
+                  px-3 text-sm font-medium flex items-center
                   border border-gray-200 border-b-0
                   rounded-t-lg
                   transition-all
-                  data-[state=active]:rounded-out-b-xl
+                  data-[state=active]:rounded-out-b-lg
                   data-[state=active]:bg-white
                   data-[state=active]:z-10
                   data-[state=active]:text-gray-700
@@ -200,7 +200,7 @@ const Projects: React.FC<ProjectsProps> = ({ projectId }) => {
           {/* <div className="h-px bg-gray-200 -mt-px relative z-0"></div> */}
 
           {/* Content Area */}
-          <TabsContent value="editor" className="bg-white flex-1 rounded-b-lg flex flex-col h-full">
+          <TabsContent value="editor" className="bg-white flex flex-col h-full m-0">
             <TipTapEditor
               initialContent={project.content}
               onChange={handleContentChange}
@@ -208,15 +208,18 @@ const Projects: React.FC<ProjectsProps> = ({ projectId }) => {
             />
           </TabsContent>
 
-          <TabsContent value="files" className="bg-white p-4 rounded-b-lg flex-1 overflow-auto">
+          <TabsContent value="files" className="bg-white flex flex-col h-full m-0">
             <div className="space-y-4">
               <UploadDocumentButton projectId={projectId} />
               <FileList projectId={projectId} />
             </div>
           </TabsContent>
 
-          <TabsContent value="tasks" className="bg-white flex-1 rounded-b-lg overflow-auto">
-            <Tasks projectId={projectId as Id<"projects">} />
+          <TabsContent
+            value="tasks"
+            className="bg-white flex flex-col h-full m-0"
+            >
+              <Tasks projectId={projectId as Id<"projects">} />
           </TabsContent>
         </Tabs>
 

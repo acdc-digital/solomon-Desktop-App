@@ -401,7 +401,7 @@ export function FormattingControls({ editor }: FormattingControlsProps) {
   // Return the grouped UI with modern ShadCN styling
   // ---------------------------------------------------------------------------
   return (
-    <div className="flex flex-wrap items-center px-1.5 py-1 gap-1">
+    <div className="flex items-center whitespace-nowrap overflow-hidden px-1.5 py-1 gap-1">
       <FontFamilyButton />
       <Separator orientation="vertical" className="mx-0.5 h-6" />
       <FontSizeButton />

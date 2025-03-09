@@ -17,7 +17,7 @@ autoUpdater.logger = log;
 // Cast to 'any' to bypass the type-check for transports property
 ;(autoUpdater.logger as any).transports.file.level = 'info';
 
-// Check if we’re in development mode:
+// Check if we're in development mode:
 const isDev = process.env.NODE_ENV === 'development';
 
 const createWindow = () => {
@@ -30,12 +30,28 @@ const createWindow = () => {
     minWidth: 1200,
     minHeight: 600,
 
+    // Remove the native frame
+    titleBarStyle: 'hiddenInset',
+    // or 'hidden' if you prefer
+    // backgroundColor to match your app, e.g. gray-100:
+    backgroundColor: '#f3f4f6',
+    // This will remove the standard system-drawn title bar so you can drag a custom region
+    titleBarOverlay: {
+      color: '#f3f4f6',
+      symbolColor: '#000000',
+    },
+
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       // If you eventually want more security:
       // contextIsolation: true,
       // nodeIntegration: false,
     },
+  });
+
+  // Prevent the title from being changed by the renderer
+  mainWindow.on('page-title-updated', (event) => {
+    event.preventDefault();
   });
 
   if (isDev) {
@@ -52,6 +68,13 @@ const createWindow = () => {
     });
     mainWindow.loadURL(indexUrl);
   }
+  
+  // Force set the title again after content loads
+  mainWindow.webContents.on('did-finish-load', () => {
+    mainWindow.setTitle(" ");
+  });
+
+  return mainWindow;
 };
 
 app.whenReady().then(() => {

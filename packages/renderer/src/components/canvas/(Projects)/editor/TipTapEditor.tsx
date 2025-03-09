@@ -433,7 +433,7 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
       </div>
 
       {/* Scrollable Content Area */}
-      <div className="overflow-auto bg-muted/20"
+      <div className="overflow-auto bg-muted/20 scrollbar-hide"
            id="editor-scrollable-content"
            style={{
             height: `calc(100vh - ${headerHeight + footerHeight}px)`,
@@ -471,11 +471,9 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
         <div className="flex items-center justify-between h-full px-3">
           <div className='flex items-center gap-x-3'>
           <span className="font-medium">Pages: {pageCount}</span>
-          </div>
-        </div>
-        <div className="flex items-center gap-x-3">
           <span className="font-medium">Words: {editor.storage.characterCount?.words() || 0}</span>
           <span className="font-medium">Characters: {editor.storage.characterCount?.characters() || 0}</span>
+          </div>
         </div>
       </div>
     </div>

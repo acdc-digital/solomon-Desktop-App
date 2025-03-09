@@ -52,7 +52,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({ title }) => {
   };
 
   return (
-    <div className="px-4 py-3 border-b flex items-center justify-between bg-slate-50/80 backdrop-blur-sm sticky top-0 z-10">
+    <div className="no-drag px-4 py-2.5 border-b flex items-center justify-between bg-slate-50/80 backdrop-blur-sm sticky top-0 z-10">
       {/* Title on the left */}
       <h1 className="text-lg font-semibold tracking-tight">{title}</h1>
 
@@ -69,7 +69,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({ title }) => {
             <ChevronDown className="h-4 w-4 opacity-50" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-56" align="end">
+        <DropdownMenuContent className="w-56 no-drag" align="end">
           {/* Dedicated Graph Chat Item */}
           <DropdownMenuGroup>
             <DropdownMenuItem 

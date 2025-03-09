@@ -18,6 +18,7 @@ interface KanbanColumnProps {
   projectId: Id<"projects">
   onAddTask: () => void
   className?: string
+  children: React.ReactNode
 }
 
 const KanbanColumn: React.FC<KanbanColumnProps> = ({
@@ -59,11 +60,12 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
 
   return (
     <div 
-      className={`flex flex-col h-full border rounded-lg overflow-hidden ${getColumnStyles()} ${className}`}
+      className={`flex flex-col h-full border rounded-lg overflow-hidden ${getColumnStyles()} ${className || ''}`}
       onDragOver={handleDragOver}
       onDrop={handleDrop}
     >
-      <div className="flex items-center justify-between p-3 bg-white/60 backdrop-blur-sm border-b">
+      {/* Header section - fixed height with flex-shrink-0 */}
+      <div className="flex-shrink-0 flex items-center justify-between p-3 bg-white/60 backdrop-blur-sm border-b">
         <div className="flex items-center">
           <h3 className="font-medium">{title}</h3>
           <span className="text-xs px-2 py-1 bg-white rounded-full ml-2 border">
@@ -81,14 +83,18 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
         </Button>
       </div>
       
-      <ScrollArea 
-        className="flex-1 p-2"
-        onDragOver={handleDragOver}
-        onDrop={handleDrop}
-        style={{ height: 'calc(100vh - 250px)' }}
-      >
-        {children}
-      </ScrollArea>
+      {/* Content section - flexible height with flex-grow */}
+      <div className="flex-grow min-h-0 overflow-hidden">
+        <ScrollArea
+          className="h-full p-2"
+          onDragOver={handleDragOver}
+          onDrop={handleDrop}
+        >
+          <div className="space-y-2">
+            {children}
+          </div>
+        </ScrollArea>
+      </div>
     </div>
   )
 }

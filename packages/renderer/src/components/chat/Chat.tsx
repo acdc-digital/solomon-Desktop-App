@@ -252,7 +252,7 @@ function ChatInner({ projectId }: ChatProps) {
       </div>
 
       {/* Message Input Area */}
-      <div className="border-t border-gray-200 bg-gray-50 p-3">
+      <div className="border-t border-gray-200 bg-gray-50 p-2">
         <form
           className="flex flex-col gap-1"
           onSubmit={(e) => {
@@ -283,7 +283,7 @@ function ChatInner({ projectId }: ChatProps) {
                   }
                 }
               }}
-              className={`w-full px-4 py-3 pr-12 bg-white border rounded-md focus:outline-none resize-none leading-normal ${
+              className={`w-full px-4 py-4 pr-12 bg-white border rounded-md focus:outline-none resize-none leading-normal ${
                 isOverLimit ? "border-red-500 focus:ring-red-500" : "border-gray-200 focus:ring-gray-300"
               }`}
               placeholder="Type your message..."
@@ -298,8 +298,8 @@ function ChatInner({ projectId }: ChatProps) {
               disabled={message.trim() === "" || isLoading || isOverLimit}
               className={`absolute right-2 top-1/2 transform -translate-y-1/2 h-8 w-8 rounded-md ${
                 message.trim() === "" || isLoading || isOverLimit
-                  ? "bg-gray-200 text-gray-400"
-                  : "bg-gray-700 text-white hover:bg-gray-800"
+                  ? "bg-indigo-300 text-white"
+                  : "bg-indigo-500 text-white hover:bg-indigo-600"
               }`}
             >
               <ArrowUp className="h-4 w-4" />

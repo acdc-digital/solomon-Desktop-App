@@ -22,9 +22,9 @@ export function UploadDocumentButton({ projectId }) {
   const toggleSortOrder = useEditorStore((state) => state.toggleSortOrder);
 
   return (
-    <div className="flex-grow p-4">
+    <div className="flex-grow">
       {/* Upload File Button and Sort Button */}
-      <div className="flex flex-row justify-end mr-1">
+      <div className="flex flex-row justify-end mr-1 mt-4">
         {/* Sort Button */}
         <Button
           onClick={toggleSortOrder}

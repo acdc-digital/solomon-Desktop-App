@@ -4,20 +4,14 @@
 "use client";
 
 import React from "react";
-
-// Remove CanvasHeader import
-// import CanvasHeader from '@/components/canvas/Canvasheader';
-
 import Admin from "@/components/canvas/(Admin)/Admin";
 import Projects from "@/components/canvas/(Projects)/Projects";
 import Files from "@/components/canvas/(Files)/Files";
-// import Tasks from '@/components/canvas/(Tasks)/Tasks';
 import Docs from "@/components/canvas/(Docs)/Docs";
 import Users from "@/components/canvas/(User)/Users";
-
-import { useEditorStore } from "@/lib/store/editorStore";
 import Tasks from "@/components/canvas/(Tasks)/Tasks";
-
+import { useEditorStore } from "@/lib/store/editorStore";
+import useChatStore from "@/lib/store/chatStore"; // Import chatStore
 
 interface CanvasProps {
   activeProjectId: string | null;
@@ -27,6 +21,7 @@ interface CanvasProps {
 const Canvas: React.FC<CanvasProps> = ({ activeProjectId, className }) => {
   // Access activeComponent from Zustand store
   const activeComponent = useEditorStore((state) => state.activeComponent);
+  const { isChatActive, chatWidth } = useChatStore(); // Get chat state
 
   const renderComponent = () => {
     switch (activeComponent) {
@@ -48,7 +43,13 @@ const Canvas: React.FC<CanvasProps> = ({ activeProjectId, className }) => {
   };
 
   return (
-    <div className={`flex flex-col bg-[#FFF] overflow-hidden dark:bg-neutral-200 ${className || ''}`}>
+    <div 
+      className={`flex flex-col bg-[#FFF] overflow-hidden dark:bg-neutral-200 border-t border-gray-200 ${className || ''}`}
+      style={{
+        // Add right padding when chat is active to prevent content from being hidden
+        paddingRight: isChatActive ? `${chatWidth}px` : '0'
+      }}
+    >
       {renderComponent()}
     </div>
   );

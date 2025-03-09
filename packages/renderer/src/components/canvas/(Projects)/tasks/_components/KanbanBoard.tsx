@@ -113,8 +113,8 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ projectId }) => {
         </div>
       )}
 
-      {/* Kanban board */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 flex-1">
+      {/* Kanban board - ensure full height and proper overflow */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-full min-h-0">
         <KanbanColumn
           title="To Do"
           status="pending"
