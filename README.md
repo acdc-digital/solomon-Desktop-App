@@ -1,4 +1,4 @@
-<div style="display: flex; align-items: left;">
+<div style="display: flex;">
   <pre>
      ____        _                             
     / ___|  ___ | | ___  _ __ ___   ___  _ __  
