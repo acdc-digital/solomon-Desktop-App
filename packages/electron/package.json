@@ -10,6 +10,7 @@
     "dev": "concurrently \"tsc --watch\" \"wait-on http://localhost:3000 && cross-env NODE_ENV=development electron .\"",
     "package": "electron-builder --dir",
     "dist": "npm run build && electron-builder --publish always",
+    "dist:mac": "npm run build && electron-builder --mac",
     "lint": "eslint 'src/**/*.{ts,tsx}'"
   },
   "build": {
@@ -29,7 +30,8 @@
       "target": ["dmg"],
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
-      "notarize": false
+      "notarize": false,
+      "icon": "../renderer/public/solomon-logo-clean.icns"
     },
     "win": {
       "target": [

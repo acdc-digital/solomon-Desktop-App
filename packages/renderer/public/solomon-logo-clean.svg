@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- Background -->
+  <rect width="200" height="200" rx="40" ry="40" fill="#2b3a67"/>
+  
+  <!-- Central Hub -->
+  <circle cx="100" cy="100" r="16" fill="#FFFFFF"/>
+  
+  <!-- Curved Arms - similar to original but with slight variation -->
+  <path d="M100,100 Q117,70 100,45" stroke="#FFFFFF" stroke-width="10" fill="none" stroke-linecap="round"/>
+  <path d="M100,100 Q135,85 155,65" stroke="#FFFFFF" stroke-width="10" fill="none" stroke-linecap="round"/>
+  <path d="M100,100 Q140,125 155,135" stroke="#FFFFFF" stroke-width="10" fill="none" stroke-linecap="round"/>
+  <path d="M100,100 Q117,130 100,155" stroke="#FFFFFF" stroke-width="10" fill="none" stroke-linecap="round"/>
+  <path d="M100,100 Q65,125 45,135" stroke="#FFFFFF" stroke-width="10" fill="none" stroke-linecap="round"/>
+  <path d="M100,100 Q60,85 45,65" stroke="#FFFFFF" stroke-width="10" fill="none" stroke-linecap="round"/>
+  
+  <!-- Node Points -->
+  <circle cx="100" cy="45" r="8" fill="#FFFFFF"/>
+  <circle cx="155" cy="65" r="8" fill="#FFFFFF"/>
+  <circle cx="155" cy="135" r="8" fill="#FFFFFF"/>
+  <circle cx="100" cy="155" r="8" fill="#FFFFFF"/>
+  <circle cx="45" cy="135" r="8" fill="#FFFFFF"/>
+  <circle cx="45" cy="65" r="8" fill="#FFFFFF"/>
+</svg>
