@@ -1,10 +1,10 @@
   <pre>
+  <img src="./packages/renderer/public/solomonsm.png" height="100px" alt="Solomon Logo">
      ____        _                             
     / ___|  ___ | | ___  _ __ ___   ___  _ __  
     \___ \ / _ \| |/ _ \| '_ ` _ \ / _ \| '_ \ 
      ___) | (_) | | (_) | | | | | | (_) | | | |
     |____/ \___/|_|\___/|_| |_| |_|\___/|_| |_|
-    <img src="./packages/renderer/public/solomonsm.png" height="100px" alt="Solomon Logo">
   </pre>
   Welcome!   
   
