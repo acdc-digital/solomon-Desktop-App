@@ -27,11 +27,11 @@ https://solomon-desktop-app.vercel.app/
 Once cloned ensure you have pnpm installed (if not already): npm install -g pnpm
 
 1. pnpm install
-2. spinup Convex backend prior to rundev:
-2.1. cd /Users/matthewsimon/Documents/Github/solomon-Desktop-App/packages/renderer
-2.2. npx convex dev : install missing dependencies
-2.2. [optional/ if necessary] next/ uuid/ node-fetch recurring missing modules**
-2.3. [optional/ if necessary]JWT token bug, sometimes need the curlies sometimes not.... ie; import '{' jwtDecode '}' from "jwt-decode";
+2. spinup Convex backend prior to rundev   
+2.1. cd /Users/matthewsimon/Documents/Github/solomon-Desktop-App/packages/renderer   
+2.2. npx convex dev : install missing dependencies   
+2.3. [optional/ if necessary] next/ uuid/ node-fetch recurring missing modules**   
+2.4. [optional/ if necessary]JWT token bug, sometimes need the curlies sometimes not.... ie; import '{' jwtDecode '}' from "jwt-decode";
 3. **Optional development mode:** pnpm run dev
 4. pnpm run build
 5. pnpm run start
@@ -39,8 +39,11 @@ Once cloned ensure you have pnpm installed (if not already): npm install -g pnpm
 
 #### Bug Installation Notes
 **Note:** currently we're using 'electron-builder' which provides some advanced functionality that will be more important later on during development. electron-builder is a popular alternative for generating more advanced binaries/installers (like .dmg, .exe/NSIS, .AppImage, .deb etc.). The pitfall is that the builder takes a little longer.
+
 **Note2:** I've temporarilty disabled the "prestart": "npm run build" to avoid generating a completely fresh build every time simply to expedite the above concern.   
+
 **Note3:** Occassionally, you may need to manually delete the electron/ dist directory, whereas it could potentially try to load previous 'versions' when updating the version in the package.json - otherwise, I've noted the bugs identified above in the Installation steps.
+
 **Note4:** By restricting the Linux build target to something like "AppImage", electron-builder won’t attempt to create or publish a .snap file, thus avoiding errors about “snapcraft is not installed.”
 
 ## Release Notes (development logs)
@@ -60,9 +63,9 @@ Our Nextjs front end is hosted on Vercel. The Apple .dmg has been corrected, but
 3. git tag vx.x.x
 4. git push origin main vx.x.x
 5. (optional) git reset --hard vx.x.x
----
-development:
-6. git checkout -b *new-branch*
+
+**development instructions:**   
+6. git checkout -b *new-branch*   
 7. git add ./ commit/ push as usual
 
 If you follow these steps, you’ll have a smooth, automated release process.
