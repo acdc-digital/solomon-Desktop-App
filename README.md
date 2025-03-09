@@ -1,4 +1,3 @@
-<div style="display: flex;">
   <pre>
      ____        _                             
     / ___|  ___ | | ___  _ __ ___   ___  _ __  
@@ -8,9 +7,9 @@
   </pre>
   <img src="./packages/renderer/public/solomonsm.png" height="100px" alt="Solomon Logo">
   Welcome!    
-  Our Goal at ACDC.digital is to create a Full-Service workstation which enables ERP (enterprise resource planning) with integrated artificial intellgent assistants. To be a part of our journey, you can begin by following any of the below steps to be a part of our ongoing development:
-  </div>
+  Our Goal at ACDC.digital is to create a Full-Service workstation which enables ERP (enterprise resource planning) with integrated artificial intellgent assistants. To be a part of our journey, you can begin by following any of the below steps to be a part of our ongoing development.
 
+--- 
 ![Alt Text](./packages/renderer/public/solomon-screenshot.png)
 
 ## Download the App
