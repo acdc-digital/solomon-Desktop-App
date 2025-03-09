@@ -1,5 +1,5 @@
 <div style="display: flex; align-items: center;">
-  <img src="./packages/renderer/public/solomon-prominent_s-logo.png" height="100px" alt="Solomon Logo">
+  <img src="./packages/renderer/public/solomonsm.png" height="100px" alt="Solomon Logo">
   <pre>
      ____        _                             
     / ___|  ___ | | ___  _ __ ___   ___  _ __  
