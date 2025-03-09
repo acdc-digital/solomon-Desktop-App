@@ -1,11 +1,18 @@
-  <pre>
-  <img src="./packages/renderer/public/solomonsm.png" height="100px" alt="Solomon Logo">
+<table>
+  <tr>
+    <td><img src="./packages/renderer/public/solomonsm.png" height="100px" alt="Solomon Logo"></td>
+    <td>
+      <pre>
      ____        _                             
     / ___|  ___ | | ___  _ __ ___   ___  _ __  
     \___ \ / _ \| |/ _ \| '_ ` _ \ / _ \| '_ \ 
      ___) | (_) | | (_) | | | | | | (_) | | | |
     |____/ \___/|_|\___/|_| |_| |_|\___/|_| |_|
-  </pre>
+      </pre>
+    </td>
+  </tr>
+</table>
+
   Welcome!   
   
   Our Goal at ACDC.digital is to create a Full-Service workstation which enables ERP (enterprise resource planning) with integrated artificial intellgent assistants. To be a part of our journey, you can begin by following any of the below steps to be a part of our ongoing development.
