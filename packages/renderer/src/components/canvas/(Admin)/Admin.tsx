@@ -5,7 +5,7 @@
 
 // next/src/components/canvas/Admin.tsx
 import React from "react";
-import EmbeddingGraph from "./_components/EmbeddingGraph";
+import GraphPage from "./_components/graph";
 
 const Admin = () => {
   return (
@@ -14,7 +14,7 @@ const Admin = () => {
       <div className="flex-grow overflow-auto bg-white border border-gray-200 rounded-md shadow-md relative">
         {/* Absolute positioning to contain the graph */}
         <div className="absolute inset-0">
-            <EmbeddingGraph/>
+            <GraphPage />
         </div>
       </div>
     </div>

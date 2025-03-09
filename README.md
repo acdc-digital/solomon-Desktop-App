@@ -50,7 +50,7 @@ Once cloned ensure you have pnpm installed (if not already): npm install -g pnpm
 Our Front-End application is currently being hosted on Vercel, free tier as noted in the domain above.
 
 **Latest Release:**   
-v1.2.79   
+v1.2.80   
 
 **Stable Version:**   
 v1.1.51   
@@ -73,7 +73,7 @@ If you follow these steps, you’ll have a smooth, automated release process.
 ## Roadmap:
 1. [In-Progress] Editor Templates: Note/ Report style templates would allow for easy access to consistent and structured information which could be used for specific chat functions, or training later 
 2. Optimized processing for multi-document and Large/Gigantic File-uploads and transfers (currently limited to 25mb/ upload)
-3. Tasks: Kanban style task management boards for project specific notes w/ Calendar views
+3. [In-Progress] Tasks: Kanban style task management boards for project specific notes w/ Calendar views
 4. Tags: N.E.R (named entity recognition) tagging and highlight tags for in-application File Preview, adding additional context to enhance chat functionality and contextual awareness
 5. Browser: In-App Browser Extension for web-browsing and research oriented context scraping
 6. R.A.G (retrieval augmented generation) API for external use of proprietary unstructured content processing

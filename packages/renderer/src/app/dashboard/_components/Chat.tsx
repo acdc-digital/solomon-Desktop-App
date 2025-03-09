@@ -5,7 +5,7 @@ import { initResize } from '@/components/chat/Resizer';
 import { GripVertical } from 'lucide-react';
 
 const MIN_WIDTH = 300;
-const MAX_WIDTH = 460;
+const MAX_WIDTH = 550;
 
 const Chat: React.FC = () => {
   const { chatWidth, setChatWidth } = useChatStore();
@@ -26,7 +26,7 @@ const Chat: React.FC = () => {
           bottom: 0,
           height: '100%',
           overflowY: 'visible', // Add overflow control
-          boxShadow: '-1px 0 8px rgba(0, 0, 0, 0.1)'
+          boxShadow: '-0.5px 0 8px rgba(0, 0, 0, 0.1)'
         }}
       >
         {/* Full-height resizer that extends to both sides of the border */}

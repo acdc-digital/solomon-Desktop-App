@@ -141,7 +141,7 @@ export function AppSidebar({ onProjectSelect }: SidebarProps) {
       <SidebarSeparator />
 
       {/* FOOTER: Trash + Settings */}
-      <SidebarFooter className="px-2 pb-1">
+      <SidebarFooter className="px-2">
         <SidebarGroup>
           <SidebarGroupLabel className="text-xs text-gray-500 px-1 mb-0.5">
             Utilities
