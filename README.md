@@ -1,5 +1,4 @@
-<div style="display: flex; align-items: center;">
-  <img src="./packages/renderer/public/solomonsm.png" height="100px" alt="Solomon Logo">
+<div style="display: flex; align-items: left;">
   <pre>
      ____        _                             
     / ___|  ___ | | ___  _ __ ___   ___  _ __  
@@ -7,6 +6,7 @@
      ___) | (_) | | (_) | | | | | | (_) | | | |
     |____/ \___/|_|\___/|_| |_| |_|\___/|_| |_|
   </pre>
+  <img src="./packages/renderer/public/solomonsm.png" height="100px" alt="Solomon Logo">
 </div>
 
 Welcome!
