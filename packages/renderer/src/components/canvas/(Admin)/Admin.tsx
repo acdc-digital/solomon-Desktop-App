@@ -11,7 +11,7 @@ const Admin = () => {
   return (
     <div className="flex flex-col h-full w-full p-4">
       {/* Main Content Area with Padding and Scroll Handling */}
-      <div className="flex-grow overflow-auto bg-white border border-gray-200 rounded-md shadow-md relative">
+      <div className="flex-grow overflow-auto bg-white relative">
         {/* Absolute positioning to contain the graph */}
         <div className="absolute inset-0">
             <GraphPage />

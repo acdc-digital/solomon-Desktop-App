@@ -16,7 +16,9 @@ const schema = defineSchema({
     phone: v.optional(v.string()),
     phoneVerificationTime: v.optional(v.float64()),
     isAnonymous: v.optional(v.boolean()),
-    role: v.optional(v.union(v.literal("read"), v.literal("write"), v.literal("admin"))),
+    role: v.optional(
+      v.union(v.literal("read"), v.literal("write"), v.literal("admin"))
+    ),
   })
     .index("email", ["email"])
     .index("phone", ["phone"])
@@ -55,10 +57,28 @@ const schema = defineSchema({
     taskDueDate: v.optional(v.string()), // ISO date
     taskComments: v.optional(v.string()),
     taskEmbeddings: v.optional(v.array(v.float64())),
+
+    // New Task Time, Recurrence, and Calendar Display Fields
+    taskStartTime: v.optional(v.string()), // Format "HH:MM", e.g., "09:30"
+    taskEndTime: v.optional(v.string()),   // Format "HH:MM", e.g., "10:30"
+    taskAllDay: v.optional(v.boolean()),     // Flag to indicate an all-day task
+    taskRecurring: v.optional(v.boolean()),    // Flag to indicate recurring task
+    taskRecurrencePattern: v.optional(
+      v.union(
+        v.literal("daily"),
+        v.literal("weekly"),
+        v.literal("monthly"),
+        v.literal("yearly")
+      )
+    ),
+    taskRecurrenceEnd: v.optional(v.string()), // Date format "YYYY-MM-DD"
+    taskColor: v.optional(v.string()),         // Custom color code for calendar view
+    taskReminder: v.optional(v.number()),        // Minutes before task to trigger reminder
   })
     .index("by_user", ["userId"])
     .index("by_user_parent", ["userId", "parentProject"])
-    .index("by_user_taskStatus", ["userId", "taskStatus"]) // Task-specific index
+    .index("by_user_taskStatus", ["userId", "taskStatus"])
+    .index("by_user_due_date", ["userId", "taskDueDate"])
     .searchIndex("search_taskTitle", {
       searchField: "taskTitle",
       filterFields: ["userId", "taskStatus", "parentProject"],
@@ -68,7 +88,6 @@ const schema = defineSchema({
       dimensions: 1536,
       filterFields: ["userId", "taskStatus"],
     }),
-
 
   // Schema for Chunks
   chunks: defineTable({

@@ -558,11 +558,26 @@ export const getById = query({
 	args: {
 	  taskTitle: v.string(),
 	  taskDescription: v.optional(v.string()),
-	  taskStatus: v.optional(v.union(v.literal("pending"), v.literal("in_progress"), v.literal("completed"))),
-	  taskPriority: v.optional(v.union(v.literal("low"), v.literal("medium"), v.literal("high"))),
+	  taskStatus: v.optional(
+		v.union(v.literal("pending"), v.literal("in_progress"), v.literal("completed"))
+	  ),
+	  taskPriority: v.optional(
+		v.union(v.literal("low"), v.literal("medium"), v.literal("high"))
+	  ),
 	  taskDueDate: v.optional(v.string()),
 	  taskEmbeddings: v.optional(v.array(v.float64())),
-	  parentProject: v.id("projects"),  
+	  // New fields for time, recurrence, and calendar display
+	  taskStartTime: v.optional(v.string()),
+	  taskEndTime: v.optional(v.string()),
+	  taskAllDay: v.optional(v.boolean()),
+	  taskRecurring: v.optional(v.boolean()),
+	  taskRecurrencePattern: v.optional(
+		v.union(v.literal("daily"), v.literal("weekly"), v.literal("monthly"), v.literal("yearly"))
+	  ),
+	  taskRecurrenceEnd: v.optional(v.string()),
+	  taskColor: v.optional(v.string()),
+	  taskReminder: v.optional(v.number()),
+	  parentProject: v.id("projects"),
 	},
 	async handler(ctx, args) {
 	  const identity = await ctx.auth.getUserIdentity();
@@ -589,6 +604,17 @@ export const getById = query({
 		taskDueDate: args.taskDueDate,
 		taskEmbeddings: args.taskEmbeddings,
 
+		// New task fields for calendar functionality
+		taskStartTime: args.taskStartTime,
+		taskEndTime: args.taskEndTime,
+		taskAllDay: args.taskAllDay,
+		taskRecurring: args.taskRecurring,
+		taskRecurrencePattern: args.taskRecurrencePattern,
+		taskRecurrenceEnd: args.taskRecurrenceEnd,
+		taskColor: args.taskColor,
+		taskReminder: args.taskReminder,
+
+		// Document-specific fields (left undefined for tasks)
 		documentTitle: undefined,
 		fileId: undefined,
 		contentType: undefined,
@@ -613,6 +639,17 @@ export const getById = query({
 	  taskStatus: v.optional(
 		v.union(v.literal("pending"), v.literal("in_progress"), v.literal("completed"))
 	  ),
+	  // New fields for updating calendar-specific details
+	  taskStartTime: v.optional(v.string()),
+	  taskEndTime: v.optional(v.string()),
+	  taskAllDay: v.optional(v.boolean()),
+	  taskRecurring: v.optional(v.boolean()),
+	  taskRecurrencePattern: v.optional(
+		v.union(v.literal("daily"), v.literal("weekly"), v.literal("monthly"), v.literal("yearly"))
+	  ),
+	  taskRecurrenceEnd: v.optional(v.string()),
+	  taskColor: v.optional(v.string()),
+	  taskReminder: v.optional(v.number()),
 	},
 	async handler(ctx, args) {
 	  const existingProject = await ctx.db.get(args.id);
@@ -630,24 +667,17 @@ export const getById = query({
 		...(args.taskTitle !== undefined && { taskTitle: args.taskTitle }),
 		...(args.taskDescription !== undefined && { taskDescription: args.taskDescription }),
 		...(args.taskStatus !== undefined && { taskStatus: args.taskStatus }),
+		...(args.taskStartTime !== undefined && { taskStartTime: args.taskStartTime }),
+		...(args.taskEndTime !== undefined && { taskEndTime: args.taskEndTime }),
+		...(args.taskAllDay !== undefined && { taskAllDay: args.taskAllDay }),
+		...(args.taskRecurring !== undefined && { taskRecurring: args.taskRecurring }),
+		...(args.taskRecurrencePattern !== undefined && { taskRecurrencePattern: args.taskRecurrencePattern }),
+		...(args.taskRecurrenceEnd !== undefined && { taskRecurrenceEnd: args.taskRecurrenceEnd }),
+		...(args.taskColor !== undefined && { taskColor: args.taskColor }),
+		...(args.taskReminder !== undefined && { taskReminder: args.taskReminder }),
 	  });
 
 	  return { success: true };
-	},
-  });
-
-  export const getTasksByProjectId = query({
-	args: { projectId: v.id("projects") },
-	async handler(ctx, args) {
-	  const userDoc = await getStableUserDoc(ctx);
-
-	  return await ctx.db
-		.query("projects")
-		.withIndex("by_user_parent", (q) =>
-		  q.eq("userId", userDoc._id).eq("parentProject", args.projectId)
-		)
-		.filter((q) => q.eq("type", "task"))
-		.collect();
 	},
   });
 
@@ -659,16 +689,110 @@ export const getById = query({
 		v.literal("completed")
 	  )
 	},
-	handler: async (ctx, args) => {
+	async handler(ctx, args) {
 	  const userDoc = await getStableUserDoc(ctx);
-
 	  const tasks = await ctx.db
 		.query("projects")
 		.withIndex("by_user_taskStatus", (q) =>
 		  q.eq("userId", userDoc._id).eq("taskStatus", args.taskStatus)
 		)
-		.filter(q => q.eq(q.field("isArchived"), false))
+		.filter((q) => q.eq(q.field("isArchived"), false))
 		.collect();
+	  return tasks;
+	},
+  });
+
+  export const getTasksByProjectId = query({
+	args: { parentProject: v.id("projects") },
+	async handler(ctx, args) {
+	  const userDoc = await getStableUserDoc(ctx);
+	  return await ctx.db
+		.query("projects")
+		.withIndex("by_user_parent", (q) =>
+		  q.eq("userId", userDoc._id).eq("parentProject", args.parentProject)
+		)
+		.filter((q) => q.eq("type", "task"))
+		.collect();
+	},
+  });
+
+  export const getTasksByParentProject = query({
+	args: { parentProject: v.id("projects") },
+	async handler(ctx, args) {
+	  const userDoc = await getStableUserDoc(ctx);
+	  return await ctx.db
+		.query("projects")
+		.withIndex("by_user_parent", (q) =>
+		  q.eq("userId", userDoc._id).eq("parentProject", args.parentProject)
+		)
+		.filter((q) => q.eq("type", "task"))
+		.collect();
+	},
+  });
+
+  export const getUpcomingTasks = query({
+	args: {
+	  projectId: v.id("projects"),
+	  limit: v.number(),
+	},
+	async handler(ctx, args) {
+	  const userDoc = await getStableUserDoc(ctx);
+	  const todayStr = new Date().toISOString().slice(0, 10); // "YYYY-MM-DD"
+
+	  // Query tasks for the given project and user,
+	  // filter to tasks that have a due date on or after today and are not archived.
+	  let tasks = await ctx.db
+		.query("projects")
+		.withIndex("by_user_parent", (q) =>
+		  q.eq("userId", userDoc._id).eq("parentProject", args.projectId)
+		)
+		.filter((q) =>
+		  q.and(
+			q.eq("type", "task"),
+			q.neq("taskDueDate", null),
+			q.gte("taskDueDate", todayStr),
+			q.eq(q.field("isArchived"), false)
+		  )
+		)
+		.collect();
+
+	  // Sort tasks by due date in ascending order.
+	  tasks.sort((a, b) =>
+		(a.taskDueDate || "").localeCompare(b.taskDueDate || "")
+	  );
+
+	  // Return the tasks up to the provided limit.
+	  return tasks.slice(0, args.limit);
+	},
+  });
+
+  export const getOverdueTasks = query({
+	args: {
+	  projectId: v.id("projects"),
+	},
+	async handler(ctx, args) {
+	  const userDoc = await getStableUserDoc(ctx);
+	  const todayStr = new Date().toISOString().slice(0, 10); // "YYYY-MM-DD"
+
+	  let tasks = await ctx.db
+		.query("projects")
+		.withIndex("by_user_parent", (q) =>
+		  q.eq("userId", userDoc._id).eq("parentProject", args.projectId)
+		)
+		.filter((q) =>
+		  q.and(
+			q.eq("type", "task"),
+			q.neq("taskDueDate", null),
+			q.lt("taskDueDate", todayStr),
+			q.eq(q.field("isArchived"), false)
+		  )
+		)
+		.collect();
+
+	  // Sort tasks by due date in ascending order
+	  tasks.sort((a, b) =>
+		(a.taskDueDate || "").localeCompare(b.taskDueDate || "")
+	  );
 
 	  return tasks;
 	},

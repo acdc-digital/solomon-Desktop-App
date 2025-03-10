@@ -88,7 +88,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ projectId }) => {
   // Show loading state if data is still loading
   if (!pendingTasks || !inProgressTasks || !completedTasks) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex items-center justify-center h-full">
         <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
         <span className="ml-2 text-gray-500">Loading tasks...</span>
       </div>
@@ -113,77 +113,79 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ projectId }) => {
         </div>
       )}
 
-      {/* Kanban board - ensure full height and proper overflow */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-full min-h-0">
-        <KanbanColumn
-          title="To Do"
-          status="pending"
-          tasks={filteredPendingTasks}
-          onDrop={handleDrop}
-          projectId={projectId}
-          onAddTask={handleAddTask}
-        >
-          {filteredPendingTasks.map((task) => (
-            <TaskCard
-              key={task._id}
-              task={task}
-              onDragStart={handleDragStart}
-              onEdit={handleEditTask}
-            />
-          ))}
-          {filteredPendingTasks.length === 0 && (
-            <div className="text-center py-4 text-sm text-gray-500">
-              No tasks to do
-            </div>
-          )}
-        </KanbanColumn>
+      {/* Kanban board - take up all available height */}
+      {!hasNoTasks && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-full">
+          <KanbanColumn
+            title="To Do"
+            status="pending"
+            tasks={filteredPendingTasks}
+            onDrop={handleDrop}
+            projectId={projectId}
+            onAddTask={handleAddTask}
+          >
+            {filteredPendingTasks.map((task) => (
+              <TaskCard
+                key={task._id}
+                task={task}
+                onDragStart={handleDragStart}
+                onEdit={handleEditTask}
+              />
+            ))}
+            {filteredPendingTasks.length === 0 && (
+              <div className="text-center py-4 text-sm text-gray-500">
+                No tasks to do
+              </div>
+            )}
+          </KanbanColumn>
 
-        <KanbanColumn
-          title="In Progress"
-          status="in_progress"
-          tasks={filteredInProgressTasks}
-          onDrop={handleDrop}
-          projectId={projectId}
-          onAddTask={handleAddTask}
-        >
-          {filteredInProgressTasks.map((task) => (
-            <TaskCard
-              key={task._id}
-              task={task}
-              onDragStart={handleDragStart}
-              onEdit={handleEditTask}
-            />
-          ))}
-          {filteredInProgressTasks.length === 0 && (
-            <div className="text-center py-4 text-sm text-gray-500">
-              No tasks in progress
-            </div>
-          )}
-        </KanbanColumn>
+          <KanbanColumn
+            title="In Progress"
+            status="in_progress"
+            tasks={filteredInProgressTasks}
+            onDrop={handleDrop}
+            projectId={projectId}
+            onAddTask={handleAddTask}
+          >
+            {filteredInProgressTasks.map((task) => (
+              <TaskCard
+                key={task._id}
+                task={task}
+                onDragStart={handleDragStart}
+                onEdit={handleEditTask}
+              />
+            ))}
+            {filteredInProgressTasks.length === 0 && (
+              <div className="text-center py-4 text-sm text-gray-500">
+                No tasks in progress
+              </div>
+            )}
+          </KanbanColumn>
 
-        <KanbanColumn
-          title="Done"
-          status="completed"
-          tasks={filteredCompletedTasks}
-          onDrop={handleDrop}
-          projectId={projectId}
-          onAddTask={handleAddTask}
-        >
-          {filteredCompletedTasks.map((task) => (
-            <TaskCard
-              key={task._id}
-              task={task}
-              onDragStart={handleDragStart}
-              onEdit={handleEditTask}
-            />
-          ))}
-          {filteredCompletedTasks.length === 0 && (
-            <div className="text-center py-4 text-sm text-gray-500">
-              No completed tasks
-            </div>
-          )}
-        </KanbanColumn>
-      </div>
+          <KanbanColumn
+            title="Done"
+            status="completed"
+            tasks={filteredCompletedTasks}
+            onDrop={handleDrop}
+            projectId={projectId}
+            onAddTask={handleAddTask}
+          >
+            {filteredCompletedTasks.map((task) => (
+              <TaskCard
+                key={task._id}
+                task={task}
+                onDragStart={handleDragStart}
+                onEdit={handleEditTask}
+              />
+            ))}
+            {filteredCompletedTasks.length === 0 && (
+              <div className="text-center py-4 text-sm text-gray-500">
+                No completed tasks
+              </div>
+            )}
+          </KanbanColumn>
+        </div>
+      )}
 
       {/* Task form dialog */}
       <TaskForm
