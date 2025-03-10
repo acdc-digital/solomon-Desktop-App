@@ -1,7 +1,7 @@
 // EmbeddingsGraph.tsx
 import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
-import { useQuery } from 'convex/react';
+import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../../../../convex/_generated/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-import { useGraphStore } from '@/lib/store/useGraphStore';
+import { useGraphStore } from '@/lib/store/graphStore';
 
 // Define types for graph data (if not already in the store)
 interface GraphNode {
@@ -35,8 +35,8 @@ interface GraphNode {
 }
 
 interface GraphLink {
-  source: string;
-  target: string;
+  source: string | GraphNode;
+  target: string | GraphNode;
   similarity: number;
   relationship: string;
 }
@@ -56,6 +56,60 @@ function cosineSimilarity(vecA: number[], vecB: number[]): number {
   return dotProduct / (magnitudeA * magnitudeB);
 }
 
+// Function to ensure all nodes have at least one connection
+const ensureAllNodesConnected = (nodes: GraphNode[], links: GraphLink[]): GraphLink[] => {
+  // Create a set of all node IDs
+  const nodeIds = new Set(nodes.map(node => node.id));
+  
+  // Create sets for nodes that have incoming and outgoing connections
+  const connectedNodes = new Set<string>();
+  
+  // Identify connected nodes from existing links
+  links.forEach(link => {
+    const sourceId = typeof link.source === 'string' ? link.source : link.source.id;
+    const targetId = typeof link.target === 'string' ? link.target : link.target.id;
+    
+    connectedNodes.add(sourceId);
+    connectedNodes.add(targetId);
+  });
+  
+  // Find nodes without connections
+  const unconnectedNodes: string[] = [];
+  nodeIds.forEach(nodeId => {
+    if (!connectedNodes.has(nodeId)) {
+      unconnectedNodes.push(nodeId);
+    }
+  });
+  
+  console.log(`Found ${unconnectedNodes.length} unconnected nodes out of ${nodes.length} total`);
+  
+  // Create new links for unconnected nodes
+  const newLinks: GraphLink[] = [...links];
+  
+  unconnectedNodes.forEach(nodeId => {
+    // Find the closest node based on some criteria (you could use embedding similarity here)
+    // For simplicity, we'll just pick another random node that isn't this one
+    const otherNodes = Array.from(nodeIds).filter(id => id !== nodeId);
+    
+    if (otherNodes.length > 0) {
+      // Pick a random node to connect to
+      const targetId = otherNodes[Math.floor(Math.random() * otherNodes.length)];
+      
+      // Create a new link
+      newLinks.push({
+        source: nodeId,
+        target: targetId,
+        similarity: 0.3, // Default low similarity
+        relationship: 'auto-generated'
+      });
+      
+      console.log(`Added connection from ${nodeId} to ${targetId}`);
+    }
+  });
+  
+  return newLinks;
+};
+
 const EmbeddingsGraph: React.FC = () => {
   // Use the graph store from Zustand
   const { 
@@ -65,6 +119,10 @@ const EmbeddingsGraph: React.FC = () => {
     updateGraphLinks,
     setGraphData
   } = useGraphStore();
+
+  // Convex API Calls
+  const batchUpsertGraphNodes = useMutation(api.graph.batchUpsertGraphNodes);
+  const batchUpsertGraphLinks = useMutation(api.graph.batchUpsertGraphLinks);
   
   // Get graph data from Convex (fallback mechanism)
   const convexGraphData = useQuery(api.graph.getGraphData);
@@ -92,6 +150,171 @@ const EmbeddingsGraph: React.FC = () => {
   // References
   const svgRef = useRef<SVGSVGElement>(null);
   const simulationRef = useRef<d3.Simulation<GraphNode, GraphLink> | null>(null);
+  
+  // Generate emergency links for existing nodes
+  const generateEmergencyLinks = () => {
+    if (!graphData || !graphData.nodes || graphData.nodes.length === 0) {
+      console.log("No nodes available to create emergency links");
+      return;
+    }
+    
+    console.log(`Generating emergency links for ${graphData.nodes.length} nodes`);
+    
+    // Create a copy of the nodes
+    const nodes = [...graphData.nodes];
+    
+    // Create links to connect all nodes in a minimum spanning tree pattern
+    // plus some additional random connections for better visualization
+    const links: GraphLink[] = [];
+    
+    // First, ensure a connected graph by creating a "chain" through all nodes
+    for (let i = 0; i < nodes.length - 1; i++) {
+      links.push({
+        source: nodes[i].id,
+        target: nodes[i + 1].id,
+        similarity: 0.7,
+        relationship: 'structural'
+      });
+    }
+    
+    // Close the loop to create a circular structure
+    if (nodes.length > 2) {
+      links.push({
+        source: nodes[nodes.length - 1].id,
+        target: nodes[0].id,
+        similarity: 0.7,
+        relationship: 'structural'
+      });
+    }
+    
+    // Add some random connections for clusters and better force-directed layout
+    // Connect about 20% of nodes to random other nodes
+    const numRandomConnections = Math.ceil(nodes.length * 0.2);
+    
+    for (let i = 0; i < numRandomConnections; i++) {
+      const sourceIndex = Math.floor(Math.random() * nodes.length);
+      let targetIndex;
+      
+      do {
+        targetIndex = Math.floor(Math.random() * nodes.length);
+      } while (targetIndex === sourceIndex);
+      
+      links.push({
+        source: nodes[sourceIndex].id,
+        target: nodes[targetIndex].id,
+        similarity: 0.6,
+        relationship: 'random'
+      });
+    }
+    
+    // Group-based connections: connect nodes of the same group
+    // First, group nodes by their group property
+    const groupedNodes: Record<string, GraphNode[]> = {};
+    
+    nodes.forEach(node => {
+      if (!groupedNodes[node.group]) {
+        groupedNodes[node.group] = [];
+      }
+      groupedNodes[node.group].push(node);
+    });
+    
+    // Connect nodes within the same group
+    Object.values(groupedNodes).forEach(groupNodes => {
+      if (groupNodes.length > 1) {
+        // Connect each node to at least one other in the same group
+        for (let i = 0; i < groupNodes.length - 1; i++) {
+          links.push({
+            source: groupNodes[i].id,
+            target: groupNodes[i + 1].id,
+            similarity: 0.9,  // High similarity for same group
+            relationship: 'group'
+          });
+        }
+      }
+    });
+    
+    console.log(`Generated ${links.length} emergency links`);
+    
+    // Update the graph data
+    setGraphData({ nodes, links });
+    
+    // Save to database
+    batchUpsertGraphLinks({
+      links: links.map((l) => ({
+        source: typeof l.source === 'string' ? l.source : l.source.id,
+        target: typeof l.target === 'string' ? l.target : l.target.id,
+        similarity: l.similarity,
+        relationship: l.relationship
+      }))
+    }).then(() => {
+      console.log("Successfully saved links to database");
+    }).catch(error => {
+      console.error("Error saving links to database:", error);
+    });
+  };
+  
+  // Debug graph connections
+  const debugGraphConnections = () => {
+    if (!graphData) {
+      console.log("No graph data available");
+      return;
+    }
+    
+    console.log(`Graph has ${graphData.nodes?.length || 0} nodes and ${graphData.links?.length || 0} links`);
+    
+    // Track nodes without connections
+    const nodeIds = new Set(graphData.nodes?.map(node => node.id) || []);
+    const connectedNodes = new Set<string>();
+    
+    // Check link data structure
+    if (graphData.links && graphData.links.length > 0) {
+      graphData.links.forEach((link, index) => {
+        const sourceId = typeof link.source === 'string' ? link.source : link.source.id;
+        const targetId = typeof link.target === 'string' ? link.target : link.target.id;
+        
+        console.log(`Link ${index}: ${sourceId} → ${targetId} (${link.similarity.toFixed(2)})`);
+        
+        // Validate source and target
+        if (!nodeIds.has(sourceId)) {
+          console.error(`Link ${index} has invalid source: ${sourceId}`);
+        }
+        if (!nodeIds.has(targetId)) {
+          console.error(`Link ${index} has invalid target: ${targetId}`);
+        }
+        
+        connectedNodes.add(sourceId);
+        connectedNodes.add(targetId);
+      });
+    } else {
+      console.log("No links available in graph data");
+    }
+    
+    // Find nodes without connections
+    const unconnectedNodes: string[] = [];
+    nodeIds.forEach(nodeId => {
+      if (!connectedNodes.has(nodeId)) {
+        unconnectedNodes.push(nodeId);
+      }
+    });
+    
+    if (unconnectedNodes.length > 0) {
+      console.warn(`Found ${unconnectedNodes.length} nodes without connections:`, unconnectedNodes);
+    } else {
+      console.log("All nodes have at least one connection");
+    }
+    
+    // Validate prepared data for D3
+    console.log(`Prepared data has ${preparedData.nodes.length} nodes and ${preparedData.links.length} links`);
+    
+    // Check for link objects that don't have proper source/target objects
+    const invalidLinks = preparedData.links.filter(link => {
+      return typeof link.source === 'string' || typeof link.target === 'string';
+    });
+    
+    if (invalidLinks.length > 0) {
+      console.error(`Found ${invalidLinks.length} links with string source/target instead of node objects:`, invalidLinks);
+    }
+  };
   
   // Process embeddings into graph data
   const processEmbeddings = async () => {
@@ -132,7 +355,7 @@ const EmbeddingsGraph: React.FC = () => {
       // We'll use a more efficient approach than computing all pairs
       // Only calculate for a limited number of potential connections per node
       const topK = 5; // Number of connections per node to compute
-      const links: GraphLink[] = [];
+      let links: GraphLink[] = [];
       
       // For each embedding, find the top K most similar other embeddings
       for (let i = 0; i < embeddings.length; i++) {
@@ -188,7 +411,32 @@ const EmbeddingsGraph: React.FC = () => {
         }
       }
       
+      // Ensure all nodes have at least one connection
+      links = ensureAllNodesConnected(nodes, links);
+      
+      console.log(`Generated ${links.length} links from embeddings`);
+      
       updateGraphLinks(links);
+
+      // Upsert them to Convex so that data is saved in the DB.
+      await batchUpsertGraphNodes({
+        nodes: nodes.map((n) => ({
+          documentChunkId: n.documentChunkId!,
+          label: n.label,
+          group: n.group,
+          significance: n.significance ?? 1
+        }))
+      });
+      
+      await batchUpsertGraphLinks({
+        links: links.map((l) => ({
+          source: typeof l.source === 'string' ? l.source : l.source.id,
+          target: typeof l.target === 'string' ? l.target : l.target.id,
+          similarity: l.similarity,
+          relationship: l.relationship
+        }))
+      });
+
       console.log(`Processed ${nodes.length} nodes and ${links.length} links`);
     } catch (error) {
       console.error("Error processing embeddings:", error);
@@ -205,12 +453,11 @@ const EmbeddingsGraph: React.FC = () => {
   // Effect to use Convex data as fallback
   useEffect(() => {
     if (!graphData || (!graphData.nodes?.length && !graphData.links?.length)) {
-      if (convexGraphData && 
-          (convexGraphData.nodes?.length || convexGraphData.links?.length)) {
+      if (convexGraphData) {
         console.log("Using Convex graph data as fallback");
         
         // Transform Convex data to match our expected format
-        const nodes = convexGraphData.nodes.map(node => ({
+        const nodes = convexGraphData.nodes?.map(node => ({
           id: node.documentChunkId,
           documentChunkId: node.documentChunkId,
           label: node.label,
@@ -218,14 +465,58 @@ const EmbeddingsGraph: React.FC = () => {
           significance: node.significance || 1,
           x: (Math.random() - 0.5) * 800,
           y: (Math.random() - 0.5) * 600
-        }));
+        })) || [];
         
-        const links = convexGraphData.links.map(link => ({
+        // Get links from Convex data or create emergency ones if none exist
+        let links = convexGraphData.links?.map(link => ({
           source: link.source,
           target: link.target,
           similarity: link.similarity,
           relationship: link.relationship
-        }));
+        })) || [];
+        
+        console.log(`Loaded ${nodes.length} nodes and ${links.length} links from Convex`);
+        
+        // If we have nodes but no links, create emergency links automatically
+        if (nodes.length > 0 && (!links || links.length === 0)) {
+          console.log("No links found in Convex data, generating emergency links automatically");
+          
+          // Create a basic chain of links to ensure connectivity
+          for (let i = 0; i < nodes.length - 1; i++) {
+            links.push({
+              source: nodes[i].id,
+              target: nodes[i + 1].id,
+              similarity: 0.7,
+              relationship: 'auto-generated'
+            });
+          }
+          
+          // Close the loop for the last node
+          if (nodes.length > 2) {
+            links.push({
+              source: nodes[nodes.length - 1].id,
+              target: nodes[0].id,
+              similarity: 0.7,
+              relationship: 'auto-generated'
+            });
+          }
+          
+          console.log(`Generated ${links.length} emergency links automatically`);
+          
+          // Save these emergency links to Convex
+          batchUpsertGraphLinks({
+            links: links.map((l) => ({
+              source: typeof l.source === 'string' ? l.source : l.source.id,
+              target: typeof l.target === 'string' ? l.target : l.target.id,
+              similarity: l.similarity,
+              relationship: l.relationship
+            }))
+          }).then(() => {
+            console.log("Successfully saved automatically generated links to database");
+          }).catch(error => {
+            console.error("Error saving links to database:", error);
+          });
+        }
         
         setGraphData({ nodes, links });
       }
@@ -263,11 +554,22 @@ const EmbeddingsGraph: React.FC = () => {
     
     const nodeIds = new Set(filteredNodes.map(node => node.id));
     
-    return graphData.links.filter(link => {
-      return nodeIds.has(link.source as string) && 
-             nodeIds.has(link.target as string) &&
-             link.similarity >= simulationSettings.similarityThreshold;
+    // Get links where both source and target nodes are in the filtered set
+    let links = graphData.links.filter(link => {
+      const sourceId = typeof link.source === 'string' ? link.source : link.source.id;
+      const targetId = typeof link.target === 'string' ? link.target : link.target.id;
+      return nodeIds.has(sourceId) && nodeIds.has(targetId);
     });
+    
+    // If we have no links after filtering by nodes, but we should have some connections,
+    // try ignoring the similarity threshold
+    if (links.length === 0 && filteredNodes.length > 0) {
+      console.log("No links match threshold - showing all connections");
+      return links; // Return all valid links regardless of similarity
+    }
+    
+    // Otherwise, apply the similarity threshold
+    return links.filter(link => link.similarity >= simulationSettings.similarityThreshold);
   }, [filteredNodes, graphData, simulationSettings.similarityThreshold]);
   
   // Prepare data for D3
@@ -291,9 +593,81 @@ const EmbeddingsGraph: React.FC = () => {
     return { nodes: filteredNodes, links: processedLinks };
   }, [filteredNodes, filteredLinks]);
   
+  // Generate a test graph for debug purposes
+  const generateTestGraph = () => {
+    // Create test nodes
+    const nodes: GraphNode[] = Array.from({ length: 30 }, (_, i) => ({
+      id: `test-node-${i}`,
+      label: `Test Node ${i}`,
+      group: ['Group A', 'Group B', 'Group C'][Math.floor(Math.random() * 3)],
+      significance: Math.random() * 2 + 0.5,
+      x: (Math.random() - 0.5) * 800,
+      y: (Math.random() - 0.5) * 600
+    }));
+    
+    // Create test links with realistic patterns
+    let links: GraphLink[] = [];
+    
+    // Each node connects to approximately 3 others
+    nodes.forEach((source, i) => {
+      // Connect to 2-4 random nodes, preferring nodes of the same group
+      const numConnections = Math.floor(Math.random() * 3) + 2;
+      
+      for (let j = 0; j < numConnections; j++) {
+        // Choose a target, avoiding self-connection
+        let targetIndex;
+        do {
+          targetIndex = Math.floor(Math.random() * nodes.length);
+        } while (targetIndex === i);
+        
+        const target = nodes[targetIndex];
+        
+        // Higher similarity for same group
+        const baseSimilarity = source.group === target.group ? 0.7 : 0.3;
+        const similarity = Math.min(0.95, baseSimilarity + Math.random() * 0.3);
+        
+        links.push({
+          source: source.id,
+          target: target.id,
+          similarity,
+          relationship: source.group === target.group ? 'strong' : 'weak'
+        });
+      }
+    });
+    
+    // Ensure all nodes have at least one connection
+    links = ensureAllNodesConnected(nodes, links);
+    
+    console.log(`Generated test graph with ${nodes.length} nodes and ${links.length} links`);
+    
+    // Update the graph data
+    setGraphData({ nodes, links });
+    
+    // You can also save to Convex if desired
+    batchUpsertGraphNodes({
+      nodes: nodes.map((n) => ({
+        documentChunkId: n.id,
+        label: n.label,
+        group: n.group,
+        significance: n.significance ?? 1
+      }))
+    });
+    
+    batchUpsertGraphLinks({
+      links: links.map((l) => ({
+        source: typeof l.source === 'string' ? l.source : l.source.id,
+        target: typeof l.target === 'string' ? l.target : l.target.id,
+        similarity: l.similarity,
+        relationship: l.relationship
+      }))
+    });
+  };
+  
   // Set up D3 visualization
   useEffect(() => {
     if (!svgRef.current || !preparedData.nodes.length) return;
+    
+    console.log("Setting up D3 visualization with", preparedData.nodes.length, "nodes and", preparedData.links.length, "links");
     
     // Clear previous SVG content
     d3.select(svgRef.current).selectAll("*").remove();
@@ -320,17 +694,29 @@ const EmbeddingsGraph: React.FC = () => {
     const colorScale = d3.scaleOrdinal(d3.schemeCategory10)
       .domain(uniqueGroups.filter(g => g !== 'all'));
     
-    // Create links
-    const link = g.append("g")
+    // Create links with improved styling
+    const linkSelection = g.append("g")
       .attr("class", "links")
       .selectAll("line")
       .data(preparedData.links)
       .enter()
       .append("line")
-      .attr("stroke-width", d => Math.max(1, d.similarity * 5))
-      .attr("stroke", "#999")
-      .attr("stroke-opacity", 0.6)
-      .append("title")
+      .attr("stroke-width", d => Math.max(1, d.similarity * 5)) // Thicker lines for higher similarity
+      .attr("stroke", d => {
+        // Color links based on relationship or similarity
+        if (d.relationship === 'strong') return "#4a9eff";
+        if (d.relationship === 'similar') return "#66bb6a";
+        if (d.relationship === 'group') return "#8e44ad";
+        if (d.relationship === 'structural') return "#e74c3c";
+        if (d.relationship === 'auto-generated') return "#f39c12";
+        if (d.similarity > 0.7) return "#5c6bc0"; // High similarity
+        return "#999"; // Default color
+      })
+      .attr("stroke-opacity", d => Math.max(0.3, d.similarity)) // More opacity for stronger connections
+      .attr("stroke-dasharray", d => d.relationship === 'weak' || d.relationship === 'auto-generated' ? "3,3" : null); // Dashed lines for weak connections
+
+    // Add titles to links as a separate operation
+    linkSelection.append("title")
       .text(d => {
         const source = typeof d.source === 'object' ? d.source.label : d.source;
         const target = typeof d.target === 'object' ? d.target.label : d.target;
@@ -338,7 +724,7 @@ const EmbeddingsGraph: React.FC = () => {
       });
     
     // Create nodes
-    const node = g.append("g")
+    const nodeSelection = g.append("g")
       .attr("class", "nodes")
       .selectAll("circle")
       .data(preparedData.nodes)
@@ -358,14 +744,59 @@ const EmbeddingsGraph: React.FC = () => {
       })
       .on("mouseover", (event, d) => {
         setHoveredNode(d);
-        d3.select(event.currentTarget).attr("stroke", "#000").attr("stroke-width", 2);
+        
+        // Highlight the node
+        d3.select(event.currentTarget)
+          .attr("stroke", "#000")
+          .attr("stroke-width", 2);
+        
+        // Highlight connected links
+        linkSelection
+          .attr("stroke-opacity", link => {
+            const source = typeof link.source === 'object' ? link.source.id : link.source;
+            const target = typeof link.target === 'object' ? link.target.id : link.target;
+            return (source === d.id || target === d.id) 
+              ? Math.max(0.8, link.similarity) // Highlight connected links
+              : 0.1; // Fade other links
+          })
+          .attr("stroke-width", link => {
+            const source = typeof link.source === 'object' ? link.source.id : link.source;
+            const target = typeof link.target === 'object' ? link.target.id : link.target;
+            return (source === d.id || target === d.id)
+              ? Math.max(2, link.similarity * 6) // Make connected links thicker
+              : Math.max(0.5, link.similarity * 2); // Make other links thinner
+          });
+          
+        // Highlight connected nodes
+        nodeSelection
+          .attr("opacity", node => {
+            // Check if this node is connected to the hovered node
+            const isConnected = preparedData.links.some(link => {
+              const source = typeof link.source === 'object' ? link.source.id : link.source;
+              const target = typeof link.target === 'object' ? link.target.id : link.target;
+              return (source === d.id && target === node.id) || 
+                     (target === d.id && source === node.id);
+            });
+            
+            return node.id === d.id || isConnected ? 1 : 0.3;
+          });
       })
-      .on("mouseout", (event) => {
+      .on("mouseout", () => {
         setHoveredNode(null);
-        d3.select(event.currentTarget).attr("stroke", null).attr("stroke-width", null);
+        
+        // Reset all styles
+        nodeSelection
+          .attr("stroke", null)
+          .attr("stroke-width", null)
+          .attr("opacity", 1);
+          
+        linkSelection
+          .attr("stroke-opacity", d => Math.max(0.3, d.similarity))
+          .attr("stroke-width", d => Math.max(1, d.similarity * 5));
       });
     
-    node.append("title")
+    // Add titles to nodes
+    nodeSelection.append("title")
       .text(d => d.label);
     
     // Add labels if enabled
@@ -385,7 +816,7 @@ const EmbeddingsGraph: React.FC = () => {
     
     // Create force simulation
     const simulation = d3.forceSimulation<GraphNode>(preparedData.nodes)
-      .force("link", d3.forceLink<GraphNode, any>(preparedData.links)
+      .force("link", d3.forceLink<GraphNode, GraphLink>(preparedData.links)
         .id(d => d.id)
         .distance(simulationSettings.linkDistance))
       .force("charge", d3.forceManyBody().strength(simulationSettings.forceManyBody))
@@ -397,16 +828,31 @@ const EmbeddingsGraph: React.FC = () => {
     
     // Update positions on simulation tick
     simulation.on("tick", () => {
-      link
-        .attr("x1", d => (d.source as any).x)
-        .attr("y1", d => (d.source as any).y)
-        .attr("x2", d => (d.target as any).x)
-        .attr("y2", d => (d.target as any).y);
+      // Update link positions
+      linkSelection
+        .attr("x1", d => {
+          const source = d.source as any;
+          return source.x;
+        })
+        .attr("y1", d => {
+          const source = d.source as any;
+          return source.y;
+        })
+        .attr("x2", d => {
+          const target = d.target as any;
+          return target.x;
+        })
+        .attr("y2", d => {
+          const target = d.target as any;
+          return target.y;
+        });
       
-      node
+      // Update node positions
+      nodeSelection
         .attr("cx", d => d.x!)
         .attr("cy", d => d.y!);
       
+      // Update label positions if enabled
       if (simulationSettings.showLabels) {
         g.selectAll(".labels text")
           .attr("x", d => (d as any).x)
@@ -475,52 +921,6 @@ const EmbeddingsGraph: React.FC = () => {
     };
   }, []);
   
-  // Generate a test graph for debug purposes
-  const generateTestGraph = () => {
-    // Create test nodes
-    const nodes: GraphNode[] = Array.from({ length: 30 }, (_, i) => ({
-      id: `test-node-${i}`,
-      label: `Test Node ${i}`,
-      group: ['Group A', 'Group B', 'Group C'][Math.floor(Math.random() * 3)],
-      significance: Math.random() * 2 + 0.5,
-      x: (Math.random() - 0.5) * 800,
-      y: (Math.random() - 0.5) * 600
-    }));
-    
-    // Create test links with realistic patterns
-    const links: GraphLink[] = [];
-    
-    // Each node connects to approximately 3 others
-    nodes.forEach((source, i) => {
-      // Connect to 2-4 random nodes, preferring nodes of the same group
-      const numConnections = Math.floor(Math.random() * 3) + 2;
-      
-      for (let j = 0; j < numConnections; j++) {
-        // Choose a target, avoiding self-connection
-        let targetIndex;
-        do {
-          targetIndex = Math.floor(Math.random() * nodes.length);
-        } while (targetIndex === i);
-        
-        const target = nodes[targetIndex];
-        
-        // Higher similarity for same group
-        const baseSimilarity = source.group === target.group ? 0.7 : 0.3;
-        const similarity = Math.min(0.95, baseSimilarity + Math.random() * 0.3);
-        
-        links.push({
-          source: source.id,
-          target: target.id,
-          similarity,
-          relationship: source.group === target.group ? 'strong' : 'weak'
-        });
-      }
-    });
-    
-    // Update the graph data
-    setGraphData({ nodes, links });
-  };
-  
   return (
     <div className="flex h-full">
       {/* Main visualization */}
@@ -535,6 +935,20 @@ const EmbeddingsGraph: React.FC = () => {
                 onClick={generateTestGraph}
               >
                 Test Data
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={generateEmergencyLinks}
+              >
+                Generate Links
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={debugGraphConnections}
+              >
+                Debug Connections
               </Button>
               <Button 
                 variant="outline" 
@@ -730,7 +1144,7 @@ const EmbeddingsGraph: React.FC = () => {
                     linkDistance: 100,
                     charge: -300,
                     collisionRadius: 30,
-                    similarityThreshold: 0.5,
+                    similarityThreshold: 0.3, // Lower the default threshold to show more connections
                     showLabels: true,
                     nodeGroupFilter: 'all',
                     forceManyBody: -300,
@@ -810,6 +1224,7 @@ const EmbeddingsGraph: React.FC = () => {
         </Card>
       )}
     </div>
-  )};
+  );
+};
 
-  export default EmbeddingsGraph;
+export default EmbeddingsGraph;

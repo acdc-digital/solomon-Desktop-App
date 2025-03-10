@@ -1,7 +1,7 @@
 // FileList.tsx
 // /Users/matthewsimon/Documents/Github/solomon-electron/next/src/components/canvas/(Projects)/_components/FileList.tsx
 
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../../../../convex/_generated/api";
 import {
@@ -17,10 +17,24 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useEditorStore } from "@/lib/store/editorStore";
 import { DocumentData } from "@/types/DocumentData";
 import { Button } from "@/components/ui/button";
-import { Loader2, Check, XCircle } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { 
+  Loader2, 
+  Check, 
+  XCircle, 
+  Search, 
+  ArrowUpDown, 
+  FileText,
+  FileIcon,
+  Image,
+  FileSpreadsheet,
+  FilePresentation,
+  File
+} from "lucide-react";
 
 interface FileListProps {
   projectId: string;
+  title?: string;
 }
 
 /**
@@ -58,7 +72,7 @@ function extractFileExtension(input: string | undefined): string {
   return match ? match[0].toLowerCase() : "Unknown";
 }
 
-export const FileList: React.FC<FileListProps> = ({ projectId }) => {
+export const FileList: React.FC<FileListProps> = ({ projectId, title = "Project Files" }) => {
   const documents = useQuery(api.projects.getDocumentsByProjectId, { projectId });
   const {
     setActiveView,
@@ -66,7 +80,10 @@ export const FileList: React.FC<FileListProps> = ({ projectId }) => {
     pendingFiles,
     removePendingFile,
     sortOrder,
+    setSortOrder,
   } = useEditorStore();
+
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     if (documents) {
@@ -81,11 +98,6 @@ export const FileList: React.FC<FileListProps> = ({ projectId }) => {
     if (!documents) return [];
 
     const docs = documents.map((doc) => {
-      console.log("Document metadata:", {
-        contentType: doc.contentType,
-        fileName: doc.fileName,
-        documentTitle: doc.documentTitle,
-      });
       // Use the stored metadata to determine the file extension:
       // Prefer contentType if available, otherwise use fileName (or documentTitle as fallback).
       const fileType =
@@ -107,19 +119,29 @@ export const FileList: React.FC<FileListProps> = ({ projectId }) => {
       };
     });
 
-    return docs.sort((a, b) => {
+    // Filter by search query if provided
+    const filtered = searchQuery
+      ? docs.filter(doc => 
+          (doc.documentTitle?.toLowerCase().includes(searchQuery.toLowerCase())) ||
+          (doc.fileName?.toLowerCase().includes(searchQuery.toLowerCase())) ||
+          (doc.fileType?.toLowerCase().includes(searchQuery.toLowerCase()))
+        )
+      : docs;
+
+    return filtered.sort((a, b) => {
       const dateA = new Date(a._creationTime).getTime();
       const dateB = new Date(b._creationTime).getTime();
       return sortOrder === "asc" ? dateA - dateB : dateB - dateA;
     });
-  }, [documents, sortOrder]);
+  }, [documents, sortOrder, searchQuery]);
 
   const handleRowClick = (doc: DocumentData) => {
     setSelectedFile(doc);
     setActiveView("preview");
   };
 
-  const retryProcessing = async (fileId: string) => {
+  const retryProcessing = async (fileId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
     try {
       const response = await fetch("/api/retry-processing", {
         method: "POST",
@@ -136,127 +158,149 @@ export const FileList: React.FC<FileListProps> = ({ projectId }) => {
     }
   };
 
-  if (documents === undefined) {
-    return <p>Loading documents...</p>;
-  }
+  const toggleSortOrder = () => {
+    setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+  };
 
   return (
-    <div className="relative overflow-x-auto">
-      <div className="h-full overflow-y-auto">
-        <Table className="table-fixed w-full min-w-full">
-          <TableHeader className="border-t">
-            <TableRow className="cursor-default hover:bg-transparent">
-              {[
-                <TableHead key="0" className="w-8 text-left font-semibold" />,
-                <TableHead key="1" className="w-36 text-left font-semibold">
-                  Title
-                </TableHead>,
-                <TableHead key="2" className="w-24 text-left font-semibold">
-                  Type
-                </TableHead>,
-                <TableHead key="3" className="w-48 text-left font-semibold">
-                  Created At
-                </TableHead>,
-                <TableHead key="4" className="w-56 text-left font-semibold">
-                  Progress
-                </TableHead>,
-                <TableHead key="5" className="w-12 text-left font-semibold" />,
-                <TableHead key="6" className="w-12 text-left font-semibold" />,
-              ]}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {pendingFiles.map((file) => (
-              <TableRow
-                key={`pending-${file.fileId}`}
-                className="group cursor-pointer hover:bg-gray-100 bg-gray-50 animate-pulse"
-              >
-                {[
-                  <TableCell key="cell1" className="px-4 py-2 text-sm text-left" />,
-                  <TableCell key="cell2" className="px-1 py-1 text-sm text-left">
-                    <div className="pr-2">
-                      <Skeleton className="h-4 w-[180px]" />
-                    </div>
-                  </TableCell>,
-                  <TableCell key="cell3" className="px-1 py-2 text-sm text-left">
-                    <Skeleton className="h-4 w-24" />
-                  </TableCell>,
-                  <TableCell key="cell4" className="px-1 py-2 text-sm text-left">
-                    <Skeleton className="h-4 w-48" />
-                  </TableCell>,
-                  <TableCell key="cell5" className="px-1 py-2 text-sm text-left">
-                    <Skeleton className="h-4 w-56" />
-                  </TableCell>,
-                  <TableCell key="cell6" className="px-1 py-2 text-sm text-left">
-                    <Skeleton className="h-4 w-24" />
-                  </TableCell>,
-                  <TableCell key="cell7" className="px-1 py-2 text-sm text-left">
-                    <XCircle className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 h-5 w-5 text-red-500 cursor-pointer" />
-                  </TableCell>,
-                ]}
-              </TableRow>
-            ))}
+    <div className="flex flex-col h-full overflow-y-auto">
+      <div className="flex flex-col bg-white shadow-sm p-4">
+        <div className="flex items-center justify-between">
+          <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+        </div>
 
-            {processedDocuments.map((doc) => (
-              <TableRow
-                key={doc._id.toString()}
-                onClick={() => handleRowClick(doc)}
-                className={`group cursor-pointer hover:bg-gray-100 ${doc.isProcessing ? "bg-gray-50" : ""}`}
-              >
-                {[
-                  <TableCell key="cell1" className="px-4 py-2 text-sm text-left" />,
-                  <TableCell key="cell2" className="px-4 py-2 text-sm text-left">
-                    <div className="pr-2">{doc.documentTitle}</div>
-                  </TableCell>,
-                  <TableCell key="cell3" className="px-1 text-sm text-left">
-                    <div className="pr-2">{doc.fileType}</div>
-                  </TableCell>,
-                  <TableCell key="cell4" className="px-1 text-sm text-left">
-                    <div className="pr-2">{doc.formattedCreatedAt}</div>
-                  </TableCell>,
-                  <TableCell key="cell5" className="flex items-center space-x-1 px-1 text-sm text-left">
-                    {doc.isStuck ? (
-                      <div className="flex items-center space-x-1">
-                        <span className="text-red-500">Processing Stuck</span>
-                        <Button
-                          variant="secondary"
-                          size="sm"
+        <div className="relative mb-4">
+          <Input
+            placeholder="Search files by name or type..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 w-full"
+          />
+        </div>
+
+        {documents === undefined ? (
+          <div className="flex items-center justify-center h-32">
+            <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+            <p className="ml-2 text-gray-500">Loading files...</p>
+          </div>
+        ) : (
+          <div className="relative overflow-x-auto rounded-lg border">
+            <Table className="table-fixed w-full min-w-full">
+              <TableHeader className="bg-gray-50">
+                <TableRow className="cursor-default hover:bg-transparent">
+                  <TableHead className="w-36 text-left font-semibold">Title</TableHead>
+                  <TableHead className="w-24 text-left font-semibold">Type</TableHead>
+                  <TableHead className="w-48 text-left font-semibold">Created At</TableHead>
+                  <TableHead className="w-56 text-left font-semibold">Progress</TableHead>
+                  <TableHead className="w-12 text-left font-semibold">Status</TableHead>
+                  <TableHead className="w-12 text-left font-semibold"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {pendingFiles.map((file) => (
+                  <TableRow
+                    key={`pending-${file.fileId}`}
+                    className="group cursor-pointer hover:bg-gray-100 bg-gray-50 animate-pulse"
+                  >
+                    <TableCell className="py-3 text-sm">
+                      <div className="pr-2">
+                        <Skeleton className="h-4 w-[180px]" />
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      <Skeleton className="h-4 w-16" />
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      <Skeleton className="h-4 w-32" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-full" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-4 rounded-full" />
+                    </TableCell>
+                    <TableCell>
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <Skeleton className="h-4 w-4 rounded-full" />
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+
+                {processedDocuments.length === 0 && pendingFiles.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                      No files found
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  processedDocuments.map((doc) => (
+                    <TableRow
+                      key={doc._id.toString()}
+                      onClick={() => handleRowClick(doc)}
+                      className={`group cursor-pointer hover:bg-gray-100 ${doc.isProcessing ? "bg-gray-50" : ""}`}
+                    >
+                      <TableCell className="py-3 text-sm font-medium">
+                        <div className="flex items-center">
+                          <span className="ml-2">{doc.documentTitle || doc.fileName || "Untitled"}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-sm text-gray-600">
+                        {doc.fileType}
+                      </TableCell>
+                      <TableCell className="text-sm text-gray-600">
+                        {doc.formattedCreatedAt}
+                      </TableCell>
+                      <TableCell>
+                        {doc.isStuck ? (
+                          <div className="flex items-center space-x-1">
+                            <span className="text-red-500 text-xs">Processing Stuck</span>
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={(e) => retryProcessing(doc.fileId, e)}
+                              className="h-7 text-xs"
+                            >
+                              Retry
+                            </Button>
+                          </div>
+                        ) : (
+                          <Progress
+                            className="h-2"
+                            value={doc.isProcessed ? 100 : doc.progress || 0}
+                          />
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {doc.isProcessing ? (
+                          <Loader2
+                            className="animate-spin h-4 w-4 text-gray-500"
+                            aria-label="Loading"
+                          />
+                        ) : doc.isProcessed ? (
+                          <Check
+                            className="h-4 w-4 text-green-500"
+                            aria-label="Completed"
+                          />
+                        ) : null}
+                      </TableCell>
+                      <TableCell>
+                        <XCircle 
+                          className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 h-5 w-5 text-red-500 cursor-pointer"
                           onClick={(e) => {
                             e.stopPropagation();
-                            retryProcessing(doc.fileId);
+                            // Add delete functionality here
+                            console.log("Delete file", doc._id);
                           }}
-                        >
-                          Retry
-                        </Button>
-                      </div>
-                    ) : (
-                      <Progress
-                        className="mt-2"
-                        value={doc.isProcessed ? 100 : doc.progress || 0}
-                      />
-                    )}
-                  </TableCell>,
-                  <TableCell key="cell6" className="px-1 py-2 text-sm text-left">
-                    {doc.isProcessing ? (
-                      <Loader2
-                        className="animate-spin h-4 w-4 text-gray-500"
-                        aria-label="Loading"
-                      />
-                    ) : doc.isProcessed ? (
-                      <Check
-                        className="h-4 w-4 text-green-500"
-                        aria-label="Completed"
-                      />
-                    ) : null}
-                  </TableCell>,
-                  <TableCell key="cell7" className="px-1 py-2 text-sm text-left">
-                    <XCircle className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 h-5 w-5 text-red-500 cursor-pointer" />
-                  </TableCell>,
-                ]}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        )}
       </div>
     </div>
   );

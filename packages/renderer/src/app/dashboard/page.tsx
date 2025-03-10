@@ -29,7 +29,7 @@ export default function DashboardPage() {
   function handleCalendarClick() {}
 
   return (
-    <div className="flex flex-col w-screen h-screen overflow-hidden pt-9 draggable bg-zinc-50">
+    <div className="flex flex-col w-screen h-screen overflow-hidden pt-9 draggable bg-indigo-50">
       {/*
         The first 9px (the padding-top) is effectively your draggable "title bar."
         Everything else is wrapped in "no-drag," so it won't move the window when clicked or dragged.

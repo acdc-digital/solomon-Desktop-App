@@ -109,7 +109,7 @@ const Projects: React.FC<ProjectsProps> = ({ projectId }) => {
 
   return (
     <div id="project-container" className="flex flex-col bg-gray-50 h-full w-full">
-      <div className="flex flex-col pt-5">
+      <div className="flex flex-col mt-4">
         <Tabs
           value={activeView}
           onValueChange={(value) => setActiveView(value as "editor" | "files" | "tasks" | "preview")}
@@ -124,14 +124,14 @@ const Projects: React.FC<ProjectsProps> = ({ projectId }) => {
             )}
             
             {/* Right: Folder-style Tabs - adjust spacing based on title visibility */}
-            <TabsList className={`flex gap-2 ${showTitle ? 'pr-4' : 'flex-1'} bg-transparent`}>
+            <TabsList className={`flex gap-2.5 ${showTitle ? 'pr-4' : 'flex-1'} bg-transparent`}>
               <TabsTrigger
                 value="editor"
                 className="
                   w-36
                   h-10
                   relative overflow-visible
-                  px-3 text-sm font-medium flex items-center
+                  px-3 pb-1 text-sm font-medium flex items-center
                   border border-gray-200 border-b-0
                   rounded-t-lg
                   transition-all
@@ -154,7 +154,7 @@ const Projects: React.FC<ProjectsProps> = ({ projectId }) => {
                   w-36
                   h-10
                   relative overflow-visible
-                  px-3 text-sm font-medium flex items-center
+                  px-3 pb-1 text-sm font-medium flex items-center
                   border border-gray-200 border-b-0
                   rounded-t-lg
                   transition-all
@@ -177,7 +177,7 @@ const Projects: React.FC<ProjectsProps> = ({ projectId }) => {
                   w-36
                   h-10
                   relative overflow-visible
-                  px-3 text-sm font-medium flex items-center
+                  px-3 pb-1 text-sm font-medium flex items-center
                   border border-gray-200 border-b-0
                   rounded-t-lg
                   transition-all

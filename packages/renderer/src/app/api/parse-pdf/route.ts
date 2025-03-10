@@ -39,6 +39,8 @@ import {
 
 import { retryWithBackoff } from "@/lib/pipe/utils";
 
+import { upsertNodesAndLinks } from "@/lib/pipe/upsetNodes";
+
 // Helper to fallback-parse the first page for lines like "Author:" or "Title:"
 function detectAuthorAndTitleFromFirstPage(text: string): {
   detectedAuthor?: string;
@@ -246,6 +248,10 @@ export async function POST(request: Request) {
 
     // 7) Update Embeddings in DB
     await updateEmbeddingsInDB(docChunks, chunkEmbeddings, 1, 250, 5, 1000);
+
+    // 8) upsertNodes to graphTable
+    const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL || "";
+    await upsertNodesAndLinks(docChunks, chunkEmbeddings, convexUrl);
 
     // Mark final progress as complete
     await updateProcessingStatus(documentId, {

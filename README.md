@@ -15,7 +15,7 @@
 
   Welcome!   
   
-  Our Goal at ACDC.digital is to create a Full-Service workstation which enables ERP (enterprise resource planning) with integrated artificial intellgent assistants. To be a part of our journey, you can begin by following any of the below steps to be a part of our ongoing development.
+  Our Goal at ACDC.digital is to create a Full-Service workstation which brings ERP (enterprise resource planning) to individuals with integrated artificial intellgent assistants. To be a part of our journey, you can begin by following any of the below steps to be a part of our ongoing development.
 
 --- 
 ![Alt Text](./packages/renderer/public/solomon-screenshot.png)
@@ -61,7 +61,7 @@ Once cloned ensure you have pnpm installed (if not already): npm install -g pnpm
 Our Front-End application is currently being hosted on Vercel, free tier as noted in the domain above.
 
 **Latest Release:**   
-v1.2.80   
+v1.2.81   
 
 **Stable Version:**   
 v1.1.51   
