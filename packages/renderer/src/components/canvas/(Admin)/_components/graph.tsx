@@ -1,6 +1,6 @@
 // pages/graph.tsx
 import React from 'react';
-import EmbeddingsGraph from './EmbeddingsGraph';
+import EmbeddingsGraph from '../graph/EmbeddingsGraph';
 
 const GraphPage: React.FC = () => {
   return <EmbeddingsGraph />;
