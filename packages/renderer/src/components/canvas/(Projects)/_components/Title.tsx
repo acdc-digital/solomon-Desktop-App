@@ -76,9 +76,7 @@ export const Title = ({
                     <span className="text-sm font-medium truncate">
                         {initialData?.title || "Untitled"}
                     </span>
-                    {isHovering && (
                         <Pencil className="h-3 w-3 text-gray-400" />
-                    )}
                 </div>
             )}
         </div>

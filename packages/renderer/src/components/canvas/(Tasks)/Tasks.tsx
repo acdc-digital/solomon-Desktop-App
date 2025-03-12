@@ -1,3 +1,9 @@
+// TASKS
+// /Users/matthewsimon/Documents/Github/solomon-Desktop-App/packages/renderer/src/components/canvas/(Tasks)/_components/Tasks.tsx
+
+// DASHBOARD TASK OVERVIEW
+// /Users/matthewsimon/Documents/Github/solomon-Desktop-App/packages/renderer/src/components/canvas/(Tasks)/Tasks.tsx
+
 'use client'
 
 import React from "react";
@@ -16,13 +22,13 @@ const Tasks = () => {
         There are Currently No Tasks.
       </h2>
 
-     <Image
+     {/* <Image
      src="/undraw_outer_space.svg"
      height="350"
      width="350"
      alt="To the moon."
      className="pb-4"
-     />
+     /> */}
 
      <Button
      className="border-black"

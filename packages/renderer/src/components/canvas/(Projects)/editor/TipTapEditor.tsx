@@ -1,6 +1,5 @@
 // TipTapEditor.tsx
 // File Location: /Users/matthewsimon/Documents/Github/solomon-electron/next/src/components/canvas/(Projects)/_components/TipTapEditor.tsx
-// TipTapEditor.tsx with fixed headers but compatible with parent container
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
@@ -37,8 +36,11 @@ import {
   Save,
 } from 'lucide-react';
 
+// Ruler Component
+import { Ruler } from './_components/Ruler';
 // Page Visualization Component
-import PageVisualization from './_components/PageVisualization';
+import MultiPageVisualization from './_components/MultiPageVisualization';
+import PageBreakComponent from './_components/PageBreak';
 // Import the Menubar component and FormattingControls
 import { Menubar } from './_components/Menubar';
 import { FormattingControls } from './_components/FormattingControls';
@@ -61,6 +63,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { FontSizeExtension } from '@/extensions/fontsize';
 import { lineHeightExtension } from '@/extensions/lineheight';
 import { Pagination } from 'tiptap-pagination-breaks';
+import { PageBreak } from '@/extensions/page-break';
+import { EnhancedPaginationExtension } from '@/extensions/enhanced-pagination';
+
 
 /**
  * TipTapEditor Props Interface
@@ -70,6 +75,49 @@ interface TipTapEditorProps {
   initialContent?: string;
   immediatelyRender?: boolean;
 }
+
+/**
+ * Get page dimensions based on page size
+ * Returns width, height, and margin (in pixels)
+ */
+const getPageDimensions = (size: string) => {
+  // Standard margin is 1 inch = 96px
+  const margin = 0;
+  
+  let width, height;
+  
+  switch(size) {
+    case 'A4': 
+      width = 595; 
+      height = 842;
+      break;
+    case 'Letter': 
+      width = 612; 
+      height = 792;
+      break;
+    case 'Legal': 
+      width = 612; 
+      height = 1008;
+      break;
+    case 'A3': 
+      width = 842; 
+      height = 1191;
+      break;
+    case 'Tabloid': 
+      width = 792; 
+      height = 1224;
+      break;
+    default: 
+      width = 612; 
+      height = 792;
+  }
+  
+  return { 
+    width, 
+    height, 
+    margin 
+  };
+};
 
 /**
  * Page Size Selector Component
@@ -174,7 +222,7 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
 }) => {
   // State management
   const [zoom, setZoom] = useState(1);
-  const [pageSize, setPageSize] = useState('A4');
+  const [pageSize, setPageSize] = useState('Letter');
   const [isSaving, setIsSaving] = useState(false);
   const [pageCount, setPageCount] = useState(1);
   const [editorContent, setEditorContent] = useState('');
@@ -186,10 +234,15 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
    * Initialize TipTap editor with extensions and configurations
    */
   const editor = useEditor({
+    immediatelyRender: false,
     editorProps: {
       attributes: {
-        style: "padding: 56px;",
-        class: 'prose prose-slate max-w-none focus:outline-none cursor-text pt-00 tiptap-pagination',
+        // Set Page-Margin Here (padding)
+        style: `
+          --page-margin: 48px;
+          padding: var(--page-margin);
+        `,
+        class: 'prose prose-slate max-w-none focus:outline-none cursor-text tiptap-pagination',
         'data-page-size': pageSize,
       },
     },
@@ -235,11 +288,12 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
       Placeholder.configure({
         placeholder: 'Start typing here...',
       }),
-      // Add our custom PageBreak extension
-      Pagination.configure({
-        pageHeight: 842,
-        pageWidth: 595,
-        pageMargin: 0,
+      // Configure the Page-Break Custom Extension
+      PageBreak,
+      EnhancedPaginationExtension({
+        pageHeight: getPageDimensions(pageSize).height,
+        pageWidth: getPageDimensions(pageSize).width,
+        pageMargin: getPageDimensions(pageSize).margin,
       }),
     ],
     content: initialContent,
@@ -248,73 +302,104 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
       setEditorContent(content);
       onChange(content);
       
-      // Update page count estimation based on content
-      estimatePageCount();
+      // Count the page breaks to determine page count
+      let pageBreakCount = 0;
+      editor.state.doc.descendants((node) => {
+        if (node.type.name === 'pageBreak') {
+          pageBreakCount++;
+        }
+        return true;
+      });
+      
+      setPageCount(pageBreakCount + 1); // Number of breaks + 1 = number of pages
     },
   });
 
-  // Update editor attributes when page size changes
+  // Update pagination settings when page size changes
   useEffect(() => {
     if (editor) {
+      // Get dimensions based on page size
+      const dimensions = getPageDimensions(pageSize);
+      
+      // Update editor attributes
       editor.setOptions({
         editorProps: {
           ...editor.options.editorProps,
           attributes: {
             ...editor.options.editorProps.attributes,
             'data-page-size': pageSize,
+            style: `
+              --page-margin: ${dimensions.margin}px;
+              padding: var(--page-margin);
+            `,
           },
         },
       });
-
-      // Dynamically update pagination options based on the pageSize state:
-    if (pageSize === 'A4') {
-      (editor.commands as any).setPaginationOptions({
-        pageHeight: 842,
-        pageWidth: 595,
-        pageMargin: 50,
-      });
-    } else if (pageSize === 'Letter') {
-      (editor.commands as any).setPaginationOptions({
-        pageHeight: 792,
-        pageWidth: 612,
-        pageMargin: 50,
-      });
-    }
       
-      // Re-estimate page count when page size changes
-      estimatePageCount();
+      try {
+        // Try using the command directly
+        if (typeof editor.commands.setPaginationOptions === 'function') {
+          editor.commands.setPaginationOptions({
+            pageHeight: dimensions.height,
+            pageWidth: dimensions.width,
+            pageMargin: dimensions.margin,
+          });
+        } else {
+          // Fallback: Update the extensions manually
+          console.warn('setPaginationOptions command not found, applying manual update');
+
+          // This is a more direct approach to update the options
+          editor.extensionManager.extensions.forEach(extension => {
+            if (extension.name === 'enhancedPagination') {
+              if (typeof extension.options === 'object') {
+                Object.assign(extension.options, {
+                  pageHeight: dimensions.height,
+                  pageWidth: dimensions.width,
+                  pageMargin: dimensions.margin,
+                });
+              }
+            }
+          });
+
+          // Force a re-render of the editor
+          const currentContent = editor.getHTML();
+          editor.commands.setContent(currentContent);
+        }
+      } catch (error) {
+        console.error('Error updating pagination options:', error);
+      }
     }
   }, [pageSize, editor]);
 
-  // Function to estimate the number of pages based on content
-  const estimatePageCount = () => {
-    if (!editor || !editorRef.current) return;
-    
-    // A simple estimation based on the editor content height
-    // This could be improved with more sophisticated measurements
-    const contentHeight = editorRef.current.scrollHeight;
-    const pageSizes: Record<string, number> = {
-      'A4': 842,
-      'Letter': 792,
-      'Legal': 1008,
-      'A3': 1191,
-      'Tabloid': 1224,
-    };
-    
-    const pageHeight = pageSizes[pageSize] || 842;
-    const effectivePageHeight = pageHeight - 100; // Account for margins
-    
-    // Estimate number of pages and ensure at least 1 page
-    const estimatedPages = Math.max(1, Math.ceil(contentHeight / effectivePageHeight));
-    setPageCount(estimatedPages);
-  };
 
-  // Cleanup effect
-  useEffect(() => {
-    return () => {
-      editor?.destroy();
-    };
-  }, [editor]);
+  // Add manual page break insertion function
+  const insertPageBreak = () => {
+    if (editor) {
+      // Get the current node position
+      const { selection } = editor.state;
+      const pos = selection.$anchor.pos;
+
+      // Calculate the current page number based on position
+      let currentPage = 1;
+      let breakPositions: number[] = [];
+
+      editor.state.doc.descendants((node, nodePos) => {
+        if (node.type.name === 'pageBreak') {
+          breakPositions.push(nodePos);
+          if (nodePos < pos) currentPage++;
+        }
+        return true;
+      });
+
+      // Insert a page break at the current cursor position with the next page number
+      editor.commands.insertPageBreak();
+
+      // Set focus after the page break
+      setTimeout(() => {
+        editor.commands.focus('end');
+      }, 10);
+    }
+  };
 
   // Early return if editor is not initialized
   if (!editor) {
@@ -347,8 +432,9 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
   };
 
   // Calculate the approximate header height
-  const headerHeight = 120; // Adjust this value based on your actual header height
-  const footerHeight = 30;  // Fixed footer height
+  const headerHeight = 180; // Adjust this value based on your actual header height
+  // NOT A REAL FOOTER: Fixed Height for Bottom Pages/ Words/ Characters
+  const footerHeight = 30;
 
   return (
     <div className="flex flex-col h-full bg-background">
@@ -387,7 +473,7 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
                 </Tooltip>
               </TooltipProvider>
               
-              {/* Insert Page Break Button - hidden on small screens */}
+              {/* Insert Page Break Button - now enabled */}
               {/* <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -410,7 +496,10 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
               
               {/* Formatting Controls - will scroll horizontally if needed */}
               <div className="flex items-center overflow-x-auto scrollbar-hide min-w-0">
-                <FormattingControls editor={editor} />
+                <FormattingControls
+                  editor={editor}
+                  insertPageBreak={insertPageBreak} // Pass the function here
+                />
               </div>
             </div>
             
@@ -430,6 +519,7 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
             </div>
           </div>
         </div>
+        <Ruler />
       </div>
 
       {/* Scrollable Content Area */}
@@ -437,23 +527,24 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
            id="editor-scrollable-content"
            style={{
             height: `calc(100vh - ${headerHeight + footerHeight}px)`,
-            maxHeight: `calc(100% - ${footerHeight}px)` // Fallback if 100vh doesn't work
+            maxHeight: `calc(100% - ${footerHeight}px)`, // Fallback if 100vh doesn't work
+            paddingBottom: '60px' // Add padding to ensure scrollability to the end
             }}
            >
-        <div className="p-4">
-            <PageVisualization 
-              ref={editorRef}
-              pageSize={pageSize} 
-              zoom={zoom}
-              content={editorContent}
-              pageMargin="20px"
-            >
-              <EditorContent
-                editor={editor}
-                className="w-full bg-background"
-                style={{ caretColor: "black" }}
-              />
-            </PageVisualization>
+        <div className="p-2">
+        <MultiPageVisualization
+          ref={editorRef}
+          pageSize={pageSize}
+          zoom={zoom}
+          content={editorContent}
+          editor={editor}
+        >
+          <EditorContent
+            editor={editor}
+            className="w-full bg-background"
+            style={{ caretColor: "black" }}
+          />
+        </MultiPageVisualization>
         </div>
       </div>
 

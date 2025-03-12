@@ -51,19 +51,20 @@ import { Separator } from '@/components/ui/separator';
  */
 interface FormattingControlsProps {
   editor: Editor;
+  insertPageBreak?: () => void; // Add this prop to accept the insertPageBreak function
 }
 
 /**
  * FormattingControls: A component that renders formatting controls for the TipTap editor
  */
-export function FormattingControls({ editor }: FormattingControlsProps) {
+export function FormattingControls({ editor, insertPageBreak }: FormattingControlsProps) {
   // ---------------------------------------------------------------------------
   // 1) Font Size Button with ShadCN UI styling
   // ---------------------------------------------------------------------------
   const FontSizeButton = () => {
     const currentFontSize = editor?.getAttributes('textStyle').fontSize
       ? editor.getAttributes('textStyle').fontSize.replace('px', '')
-      : '16';
+      : '14';
 
     const [fontSize, setFontSize] = useState(currentFontSize);
     const [inputValue, setInputValue] = useState(fontSize);
@@ -410,6 +411,12 @@ export function FormattingControls({ editor }: FormattingControlsProps) {
       <HighlightColorButton />
       <Separator orientation="vertical" className="mx-0.5 h-6" />
       <LineHeightButton />
+      {/* Only render the page break button if the function is provided */}
+      {insertPageBreak && (
+        <>
+          <Separator orientation="vertical" className="mx-0.5 h-6" />
+        </>
+      )}
     </div>
   );
 }

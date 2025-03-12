@@ -85,7 +85,6 @@ body {
   }
 }
 
-/* Add these to your globals.css */
 html, body {
   overflow: hidden;
   margin: 0;
@@ -107,14 +106,6 @@ html, body {
   overflow: hidden;
 }
 
-/* Editor page-reak logic */
-.page-break {
-  height: 20px;
-  width: 100%;
-  border-top: 1px dashed #ccc;
-  margin: 40px;
-}
-
 /* Draggable region */
 .draggable {
   -webkit-app-region: drag;
@@ -124,4 +115,155 @@ html, body {
 /* If you have buttons or links in the bar, mark them with .no-drag */
 .no-drag {
   -webkit-app-region: no-drag;
+}
+
+/* Custom dashes for the Editor */
+.custom-dashed-ruler {
+  border-left: 1px solid transparent;
+  border-image: repeating-linear-gradient(
+    to bottom,
+    #d1d5db,           /* Dash color */
+    #d1d5db 9px,       /* Dash length */
+    transparent 8px,   /* Gap starts */
+    transparent 16px   /* Gap length */
+  ) 1;
+}
+
+/* Page container styling */
+.page-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding-bottom: 60px; /* Add extra padding at the bottom to ensure scrollability */
+}
+
+/* Individual page styling */
+.page {
+  background-color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  border: 1px solid #e2e8f0;
+  margin-bottom: 40px;
+  position: relative;
+  box-sizing: border-box;
+}
+
+/* Page number indicator */
+.page-number {
+  position: absolute;
+  top: 4px;
+  right: 8px;
+  font-size: 0.7rem;
+  color: #6b7280;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* Page break styling */
+.page-break {
+  position: relative;
+  height: 20px;
+  margin: 1rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-top-width: 1px;
+  border-top-style: dashed;
+  border-top-color: #d1d5db; /* gray-300 */
+  /* Customize dash pattern with the border-image property */
+  border-image: repeating-linear-gradient(
+    to right,
+    #d1d5db 0,
+    #d1d5db 7px, /* Length of each dash - make longer */
+    transparent 7px,
+    transparent 12px /* Gap between dashes - increase this value for more spacing */
+  ) 1;
+  page-break-after: always;
+  page-break-before: auto;
+}
+
+.page-break-label {
+  position: absolute;
+  top: 60%; /* Move closer to the bottom of divider */
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: white;
+  padding: 2px 8px; /* Reduced padding */
+  border-radius: 0; /* Remove rounded corners */
+  font-size: 0.7rem; /* Smaller font */
+  font-weight: 400; /* Less bold */
+  color: #6b7280; /* gray-500 for subtle text */
+  border: none; /* Remove border */
+  user-select: none;
+}
+
+/* Page break wrapper to ensure proper spacing */
+.page-break-wrapper {
+  width: 100%;
+  position: relative;
+  margin: 1rem 0;
+}
+
+/* Page separator between pages */
+.page-separator {
+  width: 100%;
+  padding: 0.5rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Editor specific styles */
+.tiptap-pagination {
+  min-height: calc(100vh - 250px);
+  position: relative;
+  
+  /* CSS variable for margin control */
+  --page-margin: 48px;
+  
+  /* Apply margin using CSS variable */
+  padding: var(--page-margin);
+}
+
+/* Custom dashed line for margin indicators */
+.custom-dashed {
+  background-image: linear-gradient(to bottom, #3b82f6 50%, transparent 50%);
+  background-size: 1px 8px;
+  width: 1px;
+}
+
+/* Fix for scrolling to see bottom of editor */
+#editor-scrollable-content {
+  padding-bottom: 60px;
+}
+
+/* Print styles */
+@media print {
+  .page-break {
+    height: 0;
+    visibility: hidden;
+    margin: 0;
+    padding: 0;
+    page-break-after: always;
+    border: none;
+  }
+  
+  .page-break-label {
+    display: none;
+  }
+  
+  .page-separator {
+    display: none;
+  }
+  
+  .page {
+    box-shadow: none;
+    border: none;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .page-number {
+    display: none;
+  }
 }

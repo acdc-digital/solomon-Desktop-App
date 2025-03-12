@@ -15,7 +15,11 @@
 
   Welcome!   
   
-  Our Goal at ACDC.digital is to create a Full-Service workstation which brings ERP (enterprise resource planning) to individuals with integrated artificial intellgent assistants. To be a part of our journey, you can begin by following any of the below steps to be a part of our ongoing development.
+  Our Goal at ACDC.digital is to create a Full-Service workstation which brings ERP (enterprise resource planning) to individuals with integrated artificial intellgent assistants. To be a part of our journey, you can begin by following any of the below steps to be a part of our ongoing development.   
+  
+  At its core, Solomon is a full-service workstation application for proactively managing projects with the assistance of artificial intelligence. Project content is vectorized and can be utilized by the in-app assistant for contextual data-analysis within an intuitive Dashboard used to create & investigate similarities within your data. The assistant can also help you identify key financial metrics, and provide important insight to project specific data.     
+  
+  We're building a windowed Electron application, rendering a NextJs project within a mono-repo, and its written in Typescript, and uses Tailwind CSS. Our backend and Authentication is Convex DB, and our main component UI library is ShadCN with our DOM provider being TipTap.
 
 --- 
 ![Alt Text](./packages/renderer/public/solomon-screenshot.png)

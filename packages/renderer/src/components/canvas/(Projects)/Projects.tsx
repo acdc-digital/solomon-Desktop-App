@@ -124,7 +124,7 @@ const Projects: React.FC<ProjectsProps> = ({ projectId }) => {
             )}
             
             {/* Right: Folder-style Tabs - adjust spacing based on title visibility */}
-            <TabsList className={`flex gap-2.5 ${showTitle ? 'pr-4' : 'flex-1'} bg-transparent`}>
+            <TabsList className={`flex gap-1 ${showTitle ? 'pr-4' : 'flex-1'} bg-transparent`}>
               <TabsTrigger
                 value="editor"
                 className="

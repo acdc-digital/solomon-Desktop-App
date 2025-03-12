@@ -703,18 +703,18 @@ export const getById = query({
   });
 
   export const getTasksByProjectId = query({
-	args: { parentProject: v.id("projects") },
-	async handler(ctx, args) {
-	  const userDoc = await getStableUserDoc(ctx);
-	  return await ctx.db
-		.query("projects")
-		.withIndex("by_user_parent", (q) =>
-		  q.eq("userId", userDoc._id).eq("parentProject", args.parentProject)
-		)
-		.filter((q) => q.eq("type", "task"))
-		.collect();
-	},
-  });
+  args: { parentProject: v.id("projects") },
+  async handler(ctx, args) {
+    const userDoc = await getStableUserDoc(ctx);
+    return await ctx.db
+      .query("projects")
+      .withIndex("by_user_parent", (q) =>
+        q.eq("userId", userDoc._id).eq("parentProject", args.parentProject)
+      )
+      .filter((q) => q.eq("type", "task"))
+      .collect();
+  },
+});
 
   export const getTasksByParentProject = query({
 	args: { parentProject: v.id("projects") },
