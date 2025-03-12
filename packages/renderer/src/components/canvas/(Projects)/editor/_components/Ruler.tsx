@@ -1,22 +1,23 @@
 // RULER
 // /Users/matthewsimon/Documents/Github/solomon-Desktop-App/packages/renderer/src/components/canvas/(Projects)/editor/_components/Ruler.tsx
 
+// Ruler.tsx
 import { useRef, useState, useEffect } from "react";
 import { FaCaretDown } from "react-icons/fa";
 
-// Create markers for ruler display (8.5 inches at 96ppi = 816px)
-const markers = Array.from({ length: 86 }, (_, i) => i);
+// Create markers for ruler display
+const markers = Array.from({ length: 96 }, (_, i) => i);
 
 export const Ruler = () => {
-    // Default 1-inch margins (96px)
+    // Default margins (72px = 3/4 inch)
     const [leftMargin, setLeftMargin] = useState(72);
     const [rightMargin, setRightMargin] = useState(72);
     const [isDraggingLeft, setIsDraggingLeft] = useState(false);
     const [isDraggingRight, setIsDraggingRight] = useState(false);
     const rulerRef = useRef<HTMLDivElement>(null);
 
-    // Get page width for the current page size (default to Letter)
-    const pageWidth = 612; // Letter width in pixels
+    // Get page width for the current page size (Letter)
+    const pageWidth = 816; // Letter width in pixels
 
     // Update editor margins when ruler margins change
     useEffect(() => {
@@ -47,19 +48,18 @@ export const Ruler = () => {
                 // Ensure margin is within page bounds
                 if (isDraggingLeft) {
                     // Minimum space for content (200px)
-                    const maxLeftPosition = pageWidth - rightMargin - 200;
+                    const maxLeftPosition = pageWidth - rightMargin - 100;
                     const newLeftPosition = Math.max(0, Math.min(maxLeftPosition, relativeX));
                     setLeftMargin(newLeftPosition);
                     
                     // Sync with editor
                     updateEditorMargins(newLeftPosition, rightMargin);
                 } else if (isDraggingRight) {
-                    const contentWidth = pageWidth - relativeX;
                     // Calculate right margin from right edge
                     const newRightPosition = Math.max(0, pageWidth - relativeX);
                     
-                    // Ensure there's at least 200px of content area
-                    const maxRightPosition = pageWidth - (leftMargin + 200);
+                    // Ensure there's at least 100px of content area
+                    const maxRightPosition = pageWidth - (leftMargin + 100);
                     const constrainedRightPosition = Math.min(newRightPosition, maxRightPosition);
                     
                     setRightMargin(constrainedRightPosition);
@@ -85,7 +85,7 @@ export const Ruler = () => {
         setIsDraggingRight(false);
     };
 
-    // Reset to default 1-inch margins (96px)
+    // Reset to default margins (72px = 3/4 inch)
     const handleLeftDoubleClick = () => {
         setLeftMargin(72);
         updateEditorMargins(72, rightMargin);
@@ -102,51 +102,53 @@ export const Ruler = () => {
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
-            className="h-6 border-b border-gray-300 flex items-end relative select-none print:hidden">
+            className="h-6 border-b border-gray-300 flex items-center justify-center relative select-none print:hidden"
+        >
             <div
                 id="ruler-container"
-                className="w-full max-w-[612px] mx-auto h-full relative"
-                >
-                    <Marker 
-                        position={leftMargin}
-                        isLeft={true}
-                        isDragging={isDraggingLeft}
-                        onMouseDown={handleLeftMouseDown}
-                        onDoubleClick={handleLeftDoubleClick}
-                    />
+                className="w-[816px] h-full relative" // Fixed width to match page width
+            >
+                <Marker 
+                    position={leftMargin}
+                    isLeft={true}
+                    isDragging={isDraggingLeft}
+                    onMouseDown={handleLeftMouseDown}
+                    onDoubleClick={handleLeftDoubleClick}
+                />
 
-                    <Marker 
-                        position={pageWidth - rightMargin}
-                        isLeft={false}
-                        isDragging={isDraggingRight}
-                        onMouseDown={handleRightMouseDown}
-                        onDoubleClick={handleRightDoubleClick}
-                    />
+                <Marker 
+                    position={pageWidth - rightMargin}
+                    isLeft={false}
+                    isDragging={isDraggingRight}
+                    onMouseDown={handleRightMouseDown}
+                    onDoubleClick={handleRightDoubleClick}
+                />
+                
                 <div className="absolute inset-x-0 bottom-0 h-full">
-                    <div className="relative h-full w-full max-w-[612px]">
+                    <div className="relative h-full w-full">
                         {markers.map((marker) => {
-                            const position = (marker * pageWidth) / 85;
+                            const position = (marker * pageWidth) / 95; // Adjusted for more accurate spacing
 
                             return (
                                 <div
                                     key={marker}
                                     className="absolute bottom-0"
                                     style={{ left: `${position}px` }}
-                                    >
-                                        {marker % 8 === 0 && (
-                                            <>
-                                                <div className="absolute bottom-0 w-[1px] h-2 bg-neutral-500" />
-                                                <span className="absolute bottom-2 text-[10px] text-neutral-500 transform -translate-x-1/2">
-                                                    {marker / 8}
-                                                </span>
-                                            </>
-                                        )}
-                                        {marker % 8 === 4 && (
-                                            <div className="absolute bottom-0 w-[1px] h-1.5 bg-neutral-500" />
-                                        )}
-                                        {marker % 8 !== 0 && marker % 8 !== 4 && (
-                                            <div className="absolute bottom-0 w-[1px] h-1 bg-neutral-500" />
-                                        )}
+                                >
+                                    {marker % 8 === 0 && (
+                                        <>
+                                            <div className="absolute bottom-0 w-[1px] h-2 bg-neutral-500" />
+                                            <span className="absolute bottom-2 text-[10px] text-neutral-500 transform -translate-x-1/2">
+                                                {marker / 8}
+                                            </span>
+                                        </>
+                                    )}
+                                    {marker % 8 === 4 && (
+                                        <div className="absolute bottom-0 w-[1px] h-1.5 bg-neutral-500" />
+                                    )}
+                                    {marker % 8 !== 0 && marker % 8 !== 4 && (
+                                        <div className="absolute bottom-0 w-[1px] h-1 bg-neutral-500" />
+                                    )}
                                 </div>
                             )
                         })}
@@ -178,7 +180,7 @@ const Marker = ({
             style={{ left: `${position}px` }}
             onMouseDown={onMouseDown}
             onDoubleClick={onDoubleClick} 
-            >
+        >
             <FaCaretDown 
                 className="absolute left-1/2 top-0 h-full fill-blue-500 transform -translate-x-1/2"
             />

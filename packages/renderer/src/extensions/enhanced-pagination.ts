@@ -79,7 +79,7 @@ export const EnhancedPagination = Extension.create<PaginationOptions>({
                 contentHeight = pageHeight - ((pageMargin.top || 0) + (pageMargin.bottom || 0));
               } else {
                 // Default fallback if pageMargin is undefined
-                contentHeight = pageHeight - 192; // Default 96px * 2
+                contentHeight = pageHeight - 96; // Default 48px * 2
               }
               
               if (currentHeight > contentHeight) {
@@ -139,15 +139,35 @@ export const EnhancedPagination = Extension.create<PaginationOptions>({
 
 // Helper function to calculate approximate node height
 function calculateNodeHeight(node: any): number {
-  // This is a simplified calculation - in production you'd need DOM measurement
+  // For text nodes, calculate based on actual font size
   if (node.isText) {
-    // Approximate text height
-    const lines = node.text?.split('\n').length || 1;
-    return lines * 20; // Assume 20px per line
+    const text = node.text || '';
+    const lines = text.split('\n').length;
+    // Use font size 14px × line height 1.15
+    return Math.max(1, lines) * 16 * 1.15; // 16px font × 1.15 line height
   }
   
-  // For blocks, use a base height plus child heights
-  let height = 30; // Base height for block elements
+  // For paragraphs, add extra spacing
+  if (node.type?.name === 'paragraph') {
+    let height = 0;
+    if (node.content?.size > 0) {
+      node.content.forEach((child: any) => {
+        height += calculateNodeHeight(child);
+      });
+    }
+    return height > 0 ? height : 16 * 1.15; // Min height for empty paragraph
+  }
+  
+  // For headings, use larger font sizes
+  if (node.type?.name === 'heading') {
+    const level = node.attrs?.level || 1;
+    const fontSizeMap = { 1: 24, 2: 20, 3: 18 }; // Font sizes by heading level
+    const fontSize = fontSizeMap[level] || 16;
+    return fontSize * 1.2; // Add extra space for headings
+  }
+  
+  // Handle other block elements with reasonable heights
+  let height = 16; // Base height for block elements
   
   if (node.content && node.content.size > 0) {
     node.content.forEach((child: any) => {

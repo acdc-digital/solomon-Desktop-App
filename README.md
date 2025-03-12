@@ -65,7 +65,7 @@ Once cloned ensure you have pnpm installed (if not already): npm install -g pnpm
 Our Front-End application is currently being hosted on Vercel, free tier as noted in the domain above.
 
 **Latest Release:**   
-v1.2.83   
+v1.2.84   
 
 **Stable Version:**   
 v1.1.51   
@@ -93,6 +93,7 @@ If you follow these steps, you’ll have a smooth, automated release process.
 5. Browser: In-App Browser Extension for web-browsing and research oriented context scraping
 6. R.A.G (retrieval augmented generation) API for external use of proprietary unstructured content processing
 7. Collaboration features (organizations and real-time multi-user project editing)
-8. ... 
+8. Sync Files w/ Sharepoint, Docs, etc. 
+9. ... 
 
 Enjoy!

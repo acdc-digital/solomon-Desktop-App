@@ -34,6 +34,7 @@ import {
   Minus,
   ChevronDown,
   Save,
+  Printer 
 } from 'lucide-react';
 
 // Ruler Component
@@ -82,7 +83,7 @@ interface TipTapEditorProps {
  */
 const getPageDimensions = (size: string) => {
   // Standard margin is 1 inch = 96px
-  const margin = 0;
+  const margin = 48;
   
   let width, height;
   
@@ -92,8 +93,8 @@ const getPageDimensions = (size: string) => {
       height = 842;
       break;
     case 'Letter': 
-      width = 612; 
-      height = 792;
+      width = 816;
+      height = 1056;
       break;
     case 'Legal': 
       width = 612; 
@@ -252,7 +253,7 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
       FontFamily,
       lineHeightExtension.configure({
         types: ["heading", "paragraph"],
-        defaultLineHeight: "normal"
+        defaultLineHeight: "1.15"
       }),
       Color,
       TextStyle,
@@ -436,6 +437,77 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
   // NOT A REAL FOOTER: Fixed Height for Bottom Pages/ Words/ Characters
   const footerHeight = 30;
 
+  /**
+ * Editor/ DOM Print Function
+ */
+  const handlePrint = () => {
+    // Create a new window for printing
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      alert('Please allow popups to print the document');
+      return;
+    }
+
+    // Get the editor content
+    const content = editor.getHTML();
+
+    // Create print-specific CSS
+    const printStyles = `
+      @page {
+        size: letter;
+        margin: 48px; /* Match your editor margin */
+      }
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+        margin: 0;
+        padding: 0;
+      }
+      .content {
+        max-width: 100%;
+        margin: 0 auto;
+      }
+      /* Hide page breaks in print mode */
+      .page-break {
+        display: none;
+        height: 0;
+        page-break-after: always;
+      }
+      /* Preserve formatting from editor */
+      h1, h2, h3 { margin-top: 0; }
+      table { border-collapse: collapse; width: 100%; }
+      th, td { border: 1px solid #ddd; padding: 8px; }
+    `;
+
+    // Prepare document content for printing
+    const printContent = content.replace(
+      /<div class="page-break[\s\S]*?<\/div>/g,
+      '<div style="page-break-after:always;height:0;"></div>'
+    );
+
+    // Write the document to the new window
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Print Document</title>
+        <style>${printStyles}</style>
+      </head>
+      <body>
+        <div class="content">${printContent}</div>
+        <script>
+          // Auto print and close the window after printing
+          window.onload = function() {
+            window.print();
+            // setTimeout(() => window.close(), 500);
+          }
+        </script>
+      </body>
+      </html>
+    `);
+
+    printWindow.document.close();
+  };
+
   return (
     <div className="flex flex-col h-full bg-background">
       {/* Header Section - not sticky, part of the flow */}
@@ -454,6 +526,7 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
             {/* Left group - save, page break and formatting */}
             <div className="flex items-center gap-1 overflow-x-auto min-w-0 scrollbar-hide">
               {/* Save Button - always visible */}
+              {/* Save Button */}
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -472,25 +545,25 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-              
-              {/* Insert Page Break Button - now enabled */}
-              {/* <TooltipProvider>
+
+              {/* Print Button */}
+              <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button 
                       variant="ghost" 
                       size="icon"
-                      onClick={insertPageBreak}
-                      className="h-8 w-8 shrink-0 hidden sm:flex"
+                      onClick={handlePrint}
+                      className="h-8 w-8 shrink-0"
                     >
-                      <ChevronDown className="h-4 w-4" />
+                      <Printer className="h-4 w-4" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent side="bottom">
-                    <p>Insert Page Break</p>
+                    <p>Print Document (⌘P)</p>
                   </TooltipContent>
                 </Tooltip>
-              </TooltipProvider> */}
+              </TooltipProvider>
               
               <div className="h-8 border-r mx-1 shrink-0 hidden sm:block" />
               

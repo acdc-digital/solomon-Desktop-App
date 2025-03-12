@@ -26,7 +26,7 @@ const MultiPageVisualization = forwardRef<HTMLDivElement, PageVisualizationProps
   const dimensions = (() => {
     switch(pageSize) {
       case 'A4': return { width: 595, height: 842 };
-      case 'Letter': return { width: 612, height: 792 };
+      case 'Letter': return { width: 816, height: 1056 };
       case 'Legal': return { width: 612, height: 1008 };
       case 'A3': return { width: 842, height: 1191 };
       case 'Tabloid': return { width: 792, height: 1224 };
@@ -35,7 +35,7 @@ const MultiPageVisualization = forwardRef<HTMLDivElement, PageVisualizationProps
   })();
   
   // Standard margin (1 inch = 96px)
-  const margin = 0;
+  const margin = 24;
   
   // Update page count when content changes
   useEffect(() => {

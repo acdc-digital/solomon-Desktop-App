@@ -25,7 +25,7 @@ const PageBreakComponent: React.FC<PageBreakProps> = ({ node, updateAttributes }
         data-type="pageBreak"
       >
         <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white px-3 py-1 rounded-full border border-blue-400">
-          <span className="page-break-label text-sm font-medium text-gray-400">
+          <span className="page-break-label text-sm font-medium text-blue-600">
             Page Break
           </span>
         </div>
