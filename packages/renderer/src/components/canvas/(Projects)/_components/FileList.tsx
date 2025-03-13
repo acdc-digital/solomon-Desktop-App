@@ -163,8 +163,8 @@ export const FileList: React.FC<FileListProps> = ({ projectId, title = "Project 
   };
 
   return (
-    <div className="flex flex-col h-full overflow-y-auto">
-      <div className="flex flex-col bg-white shadow-sm p-4">
+    <div className="min-h-screen flex flex-col overflow-y-auto">
+      <div className="flex flex-col bg-white p-4">
         <div className="flex items-center justify-between">
           <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
         </div>

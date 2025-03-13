@@ -1,6 +1,3 @@
-// TASKS
-// /Users/matthewsimon/Documents/Github/solomon-Desktop-App/packages/renderer/src/components/canvas/(Tasks)/_components/Tasks.tsx
-
 // DASHBOARD TASK OVERVIEW
 // /Users/matthewsimon/Documents/Github/solomon-Desktop-App/packages/renderer/src/components/canvas/(Tasks)/Tasks.tsx
 

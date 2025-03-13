@@ -76,7 +76,7 @@ const MultiPageVisualization = forwardRef<HTMLDivElement, PageVisualizationProps
   
   return (
     <div 
-      className="page-container"
+      className="page-container pt-4"
       ref={pagesContainerRef}
     >
       {pageIndices.map((pageIndex) => (

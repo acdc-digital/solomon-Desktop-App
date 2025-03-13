@@ -101,7 +101,7 @@ const Tasks: React.FC<TasksProps> = ({ projectId }) => {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="min-h-screen w-full flex flex-col">
       {/* Header */}
       <div className="flex-shrink-0">
         <div className="flex items-center justify-between p-4">
@@ -248,7 +248,7 @@ const Tasks: React.FC<TasksProps> = ({ projectId }) => {
 
       {/* Kanban Board container */}
       <div className="flex-grow h-[calc(100%-1px)] overflow-hidden">
-        <div className="h-full px-4 pt-4 pb-4">
+        <div className="flex-grow overflow-auto px-4 pt-4 pb-8">
           <KanbanBoard projectId={projectId} />
         </div>
       </div>

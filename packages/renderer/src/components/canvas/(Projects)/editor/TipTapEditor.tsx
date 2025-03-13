@@ -592,7 +592,9 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
             </div>
           </div>
         </div>
-        <Ruler />
+          <div className='bg-blue-50'>
+            <Ruler />
+          </div>
       </div>
 
       {/* Scrollable Content Area */}

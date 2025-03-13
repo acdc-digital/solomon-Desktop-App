@@ -14,9 +14,8 @@ import { useEditorStore } from "@/lib/store/editorStore";
 
 import TipTapEditor from "./editor/TipTapEditor";
 import Tasks from "./tasks/Tasks";
+import Forms from "./forms/Forms";
 import dynamic from "next/dynamic";
-
-
 
 import {
   Tabs,
@@ -24,7 +23,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
-import { BoltIcon, FolderIcon, CheckSquareIcon, Loader2 } from "lucide-react";
+import { BoltIcon, FolderIcon, CheckSquareIcon, Loader2, SquareActivityIcon } from "lucide-react";
 
 // Dynamically import FilePreview component to avoid SSR issues
 const FilePreviewNoSSR = dynamic(() => import("./_components/FilePreview"), {
@@ -126,6 +125,29 @@ const Projects: React.FC<ProjectsProps> = ({ projectId }) => {
             {/* Right: Folder-style Tabs - adjust spacing based on title visibility */}
             <TabsList className={`flex gap-1 ${showTitle ? 'pr-4' : 'flex-1'} bg-transparent`}>
               <TabsTrigger
+                value="forms"
+                className="
+                  w-36
+                  h-10
+                  relative overflow-visible
+                  px-3 pb-1 text-sm font-medium flex items-center
+                  border border-gray-200 border-b-0
+                  rounded-t-lg
+                  transition-all
+                  data-[state=active]:rounded-out-b-lg
+                  data-[state=active]:bg-white
+                  data-[state=active]:z-10
+                  data-[state=active]:text-gray-700
+                  data-[state=inactive]:bg-gray-50
+                  data-[state=inactive]:text-gray-600
+                  data-[state=inactive]:hover:bg-gray-100
+                "
+              >
+                <SquareActivityIcon className="h-4 w-4 mr-1" />
+                <span className={containerWidth < 450 ? "hidden" : "block"}>Forms</span>
+              </TabsTrigger>
+
+              <TabsTrigger
                 value="editor"
                 className="
                   w-36
@@ -144,7 +166,7 @@ const Projects: React.FC<ProjectsProps> = ({ projectId }) => {
                   data-[state=inactive]:hover:bg-gray-100
                 "
               >
-                <BoltIcon className="h-4 w-4" />
+                <BoltIcon className="h-4 w-4 mr-1" />
                 <span className={containerWidth < 450 ? "hidden" : "block"}>Editor</span>
               </TabsTrigger>
 
@@ -167,7 +189,7 @@ const Projects: React.FC<ProjectsProps> = ({ projectId }) => {
                   data-[state=inactive]:hover:bg-gray-100
                 "
               >
-                <FolderIcon className="h-4 w-4" />
+                <FolderIcon className="h-4 w-4 mr-1" />
                 <span className={containerWidth < 450 ? "hidden" : "block"}>Files</span>
               </TabsTrigger>
 
@@ -190,7 +212,7 @@ const Projects: React.FC<ProjectsProps> = ({ projectId }) => {
                   data-[state=inactive]:hover:bg-gray-100
                 "
               >
-                <CheckSquareIcon className="h-4 w-4" />
+                <CheckSquareIcon className="h-4 w-4 mr-1" />
                 <span className={containerWidth < 450 ? "hidden" : "block"}>Tasks</span>
               </TabsTrigger>
             </TabsList>
@@ -200,6 +222,11 @@ const Projects: React.FC<ProjectsProps> = ({ projectId }) => {
           {/* <div className="h-px bg-gray-200 -mt-px relative z-0"></div> */}
 
           {/* Content Area */}
+          <TabsContent value="forms" className="bg-white flex flex-col h-full m-0">
+            <Forms
+            />
+          </TabsContent>
+
           <TabsContent value="editor" className="bg-white flex flex-col h-full m-0">
             <TipTapEditor
               initialContent={project.content}

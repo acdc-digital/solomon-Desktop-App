@@ -194,8 +194,8 @@ function ChatInner({ projectId }: ChatProps) {
                       <div className="text-sm text-gray-500 mb-1">Solomon:</div>
                       <div className="ml-2 text-gray-800 prose prose-sm max-w-none">
                         <ReactMarkdown
-                          remarkPlugins={[remarkGfm]}
-                          rehypePlugins={[rehypeHighlight]}
+                        //  remarkPlugins={[remarkGfm]}
+                        //  rehypePlugins={[rehypeHighlight]}
                         >
                           {entry.response}
                         </ReactMarkdown>

@@ -101,7 +101,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ projectId }) => {
     filteredCompletedTasks.length === 0
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full pb-8">
       {/* Empty state */}
       {hasNoTasks && (
         <div className="flex flex-col items-center justify-center py-10 text-center">
@@ -115,7 +115,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ projectId }) => {
 
       {/* Kanban board - take up all available height */}
       {!hasNoTasks && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-full">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-full pb-8">
           <KanbanColumn
             title="To Do"
             status="pending"

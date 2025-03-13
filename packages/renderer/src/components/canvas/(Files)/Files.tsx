@@ -135,7 +135,7 @@ const Files = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen overflow-y-auto pb-10">
+    <div className="min-h-screen w-full flex flex-col overflow-y-auto">
       <div className="flex flex-col gap-y-4 border rounded-lg bg-white shadow-sm mx-6 my-6 p-6">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-2xl font-bold flex items-center">
