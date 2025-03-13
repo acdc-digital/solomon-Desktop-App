@@ -1,3 +1,6 @@
+// TRASHBOX
+// /Users/matthewsimon/Documents/Github/solomon-Desktop-App/packages/renderer/src/components/sidebar/Trashbox.tsx
+
 'use client'
 
 import { useState } from "react";

@@ -10,6 +10,7 @@ export interface GraphUtilityButtonsProps {
   onDebugConnections: () => void;
   showPanel: boolean;
   onTogglePanel: () => void;
+  onResetGraph: () => void; // Add this prop
 }
 
 export const GraphUtilityButtons: React.FC<GraphUtilityButtonsProps> = ({
@@ -18,20 +19,15 @@ export const GraphUtilityButtons: React.FC<GraphUtilityButtonsProps> = ({
   onDebugConnections,
   showPanel,
   onTogglePanel,
+  onResetGraph, // Destructure the new prop
 }) => {
   return (
     <div className="flex gap-2">
-      {/* <Button variant="outline" size="sm" onClick={onGenerateTestData}>
-        Test Data
-      </Button> */}
-      <Button variant="outline" size="sm" onClick={onGenerateLinks}>
-        Generate Links
-      </Button>
-      <Button variant="outline" size="sm" onClick={onDebugConnections}>
-        Debug Connections
-      </Button>
       <Button variant="outline" size="sm" onClick={onTogglePanel}>
         {showPanel ? 'Hide Controls' : 'Show Controls'}
+      </Button>
+      <Button variant="destructive" size="sm" onClick={onResetGraph}> {/* Add Reset button */}
+        Reset Graph
       </Button>
     </div>
   );

@@ -22,6 +22,7 @@ const EmbeddingsGraph: React.FC = () => {
     updateGraphNodes,
     updateGraphLinks,
     setGraphData,
+    resetGraph
   } = useGraphStore();
 
   const batchUpsertGraphNodes = useMutation(api.graph.batchUpsertGraphNodes);
@@ -42,6 +43,7 @@ const EmbeddingsGraph: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showPanel, setShowPanel] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [refreshCount, setRefreshCount] = useState(0);
 
   // 3) Compute unique groups for filtering
   const uniqueGroups = useMemo(() => {
@@ -95,30 +97,38 @@ const EmbeddingsGraph: React.FC = () => {
         x: (Math.random() - 0.5) * 800,
         y: (Math.random() - 0.5) * 600,
       })) || [];
+      
       const links = convexGraphData.links?.map((link) => ({
         source: link.source,
-        target: link.target,
+        target: link.target, 
         similarity: link.similarity,
         relationship: link.relationship,
       })) || [];
+      
       setGraphData({ nodes, links });
     }
   }, [convexGraphData, graphData, setGraphData]);
 
-  // Handlers for utility toolbar buttons
-  const handleGenerateTestData = () => {
-    // TODO: Add logic for generating test data.
-    console.log("Generate test data triggered");
-  };
-
-  const handleGenerateLinks = () => {
-    // TODO: Add logic for generating links.
-    console.log("Generate links triggered");
-  };
-
-  const handleDebugConnections = () => {
-    // TODO: Add logic for debugging graph connections.
-    console.log("Debug connections triggered");
+  // Handle refresh graph
+  const handleRefreshGraph = () => {
+    // Reset the graph state in our store
+    resetGraph();
+    
+    // Reset any UI state
+    setSelectedNode(null);
+    setHoveredNode(null);
+    setSearchTerm('');
+    setSimulationSettings({
+      linkDistance: 100,
+      forceManyBody: -300,
+      collisionRadius: 30,
+      similarityThreshold: 0.5,
+      showLabels: true,
+      nodeGroupFilter: 'all',
+    });
+    
+    // Force a complete remount of the GraphCanvas component
+    setRefreshCount(prevCount => prevCount + 1);
   };
 
   // 7) Render main layout: graph area and controls side panel
@@ -130,11 +140,9 @@ const EmbeddingsGraph: React.FC = () => {
           <div className="flex justify-between items-center">
             <CardTitle>Embeddings Visualization</CardTitle>
             <GraphUtilityButtons
-              onGenerateTestData={handleGenerateTestData}
-              onGenerateLinks={handleGenerateLinks}
-              onDebugConnections={handleDebugConnections}
               showPanel={showPanel}
               onTogglePanel={() => setShowPanel(!showPanel)}
+              onRefreshGraph={handleRefreshGraph}
             />
           </div>
           <CardDescription>
@@ -146,6 +154,7 @@ const EmbeddingsGraph: React.FC = () => {
         <CardContent className="flex-1 relative min-h-0">
           <div className="absolute inset-0 overflow-hidden">
             <GraphCanvas
+              key={`graph-canvas-${refreshCount}`} // Force complete remount on refresh
               width={800}
               height={600}
               nodes={filteredNodes}
@@ -170,9 +179,8 @@ const EmbeddingsGraph: React.FC = () => {
               <div className="text-center p-6">
                 <h3 className="text-lg font-medium mb-2">No Graph Data Available</h3>
                 <p className="text-muted-foreground mb-4">
-                  There are no nodes to display. Either no embeddings are loaded or they don’t match your filters.
+                  There are no nodes to display. Either no embeddings are loaded or they don't match your filters.
                 </p>
-                <Button>Generate Test Data</Button>
               </div>
             </div>
           )}
