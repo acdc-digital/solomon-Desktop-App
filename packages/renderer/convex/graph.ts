@@ -91,17 +91,32 @@ export const batchUpsertGraphNodes = mutation({
     ),
   },
   handler: async (ctx, { nodes }) => {
+    // Process in smaller batches to avoid timeouts
+    const BATCH_SIZE = 50;
     const results = [];
-    for (const node of nodes) {
-      const data = {
-        elementType: "node",
-        documentChunkId: node.documentChunkId,
-        label: node.label,
-        group: node.group,
-        significance: node.significance ?? 0,
-      };
-      results.push(await ctx.db.insert("graph", data));
+    
+    for (let i = 0; i < nodes.length; i += BATCH_SIZE) {
+      const batch = nodes.slice(i, i + BATCH_SIZE);
+      const batchPromises = batch.map(node => {
+        const data = {
+          elementType: "node",
+          documentChunkId: node.documentChunkId,
+          label: node.label,
+          group: node.group,
+          significance: node.significance ?? 0,
+        };
+        return ctx.db.insert("graph", data);
+      });
+      
+      try {
+        const batchResults = await Promise.all(batchPromises);
+        results.push(...batchResults);
+      } catch (error) {
+        console.error(`Error in batch ${i / BATCH_SIZE}:`, error);
+        // Continue with next batch instead of failing completely
+      }
     }
+    
     return results;
   },
 });
@@ -119,17 +134,33 @@ export const batchUpsertGraphLinks = mutation({
     ),
   },
   handler: async (ctx, { links }) => {
+    const BATCH_SIZE = 50;
     const results = [];
-    for (const link of links) {
-      const data = {
-        elementType: "link",
-        source: link.source,
-        target: link.target,
-        similarity: link.similarity,
-        relationship: link.relationship,
-      };
-      results.push(await ctx.db.insert("graph", data));
+    
+    // Sort links by similarity (highest first) to prioritize important connections
+    const sortedLinks = [...links].sort((a, b) => b.similarity - a.similarity);
+    
+    for (let i = 0; i < sortedLinks.length; i += BATCH_SIZE) {
+      const batch = sortedLinks.slice(i, i + BATCH_SIZE);
+      const batchPromises = batch.map(link => {
+        const data = {
+          elementType: "link",
+          source: link.source,
+          target: link.target,
+          similarity: link.similarity,
+          relationship: link.relationship,
+        };
+        return ctx.db.insert("graph", data);
+      });
+      
+      try {
+        const batchResults = await Promise.all(batchPromises);
+        results.push(...batchResults);
+      } catch (error) {
+        console.error(`Error in links batch ${i / BATCH_SIZE}:`, error);
+      }
     }
+    
     return results;
   },
 });

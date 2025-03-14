@@ -13,12 +13,14 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
+import type * as aiServices from "../aiServices.js";
 import type * as auth from "../auth.js";
 import type * as chat from "../chat.js";
 import type * as chunks from "../chunks.js";
 import type * as graph from "../graph.js";
 import type * as graphChat from "../graphChat.js";
 import type * as http from "../http.js";
+import type * as labelCache from "../labelCache.js";
 import type * as langchain_db from "../langchain/db.js";
 import type * as lib_getUserOrThrow from "../lib/getUserOrThrow.js";
 import type * as lib_permissions from "../lib/permissions.js";
@@ -36,12 +38,14 @@ import type * as users from "../users.js";
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  aiServices: typeof aiServices;
   auth: typeof auth;
   chat: typeof chat;
   chunks: typeof chunks;
   graph: typeof graph;
   graphChat: typeof graphChat;
   http: typeof http;
+  labelCache: typeof labelCache;
   "langchain/db": typeof langchain_db;
   "lib/getUserOrThrow": typeof lib_getUserOrThrow;
   "lib/permissions": typeof lib_permissions;

@@ -3,31 +3,29 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
+import { RefreshCw } from 'lucide-react';
 
 export interface GraphUtilityButtonsProps {
-  onGenerateTestData: () => void;
-  onGenerateLinks: () => void;
-  onDebugConnections: () => void;
   showPanel: boolean;
   onTogglePanel: () => void;
-  onResetGraph: () => void; // Add this prop
+  onRefreshGraph?: () => void; // Optional to maintain backward compatibility
 }
 
 export const GraphUtilityButtons: React.FC<GraphUtilityButtonsProps> = ({
-  onGenerateTestData,
-  onGenerateLinks,
-  onDebugConnections,
   showPanel,
   onTogglePanel,
-  onResetGraph, // Destructure the new prop
+  onRefreshGraph,
 }) => {
   return (
     <div className="flex gap-2">
+      {onRefreshGraph && (
+        <Button variant="outline" size="sm" onClick={onRefreshGraph}>
+          <RefreshCw className="h-4 w-4 mr-1" />
+          Reset
+        </Button>
+      )}
       <Button variant="outline" size="sm" onClick={onTogglePanel}>
         {showPanel ? 'Hide Controls' : 'Show Controls'}
-      </Button>
-      <Button variant="destructive" size="sm" onClick={onResetGraph}> {/* Add Reset button */}
-        Reset Graph
       </Button>
     </div>
   );

@@ -1,8 +1,6 @@
 // /lib/store/formsStore.tsx
 // /Users/matthewsimon/Documents/Github/solomon-Desktop-App/packages/renderer/src/lib/store/formsStore.tsx
 
-// /lib/store/formsStore.tsx
-
 import { create } from 'zustand';
 
 // Define the project data interface

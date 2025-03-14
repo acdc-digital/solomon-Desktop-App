@@ -44,7 +44,7 @@ Once cloned ensure you have pnpm installed (if not already): npm install -g pnpm
 1. pnpm install
 2. spinup Convex backend prior to rundev   
 2.1. cd /Users/matthewsimon/Documents/Github/solomon-Desktop-App/packages/renderer   
-2.2. npx convex dev : install missing dependencies   
+2.2. 1 : install missing dependencies   
 2.3. [optional/ if necessary] next/ uuid/ node-fetch recurring missing modules**   
 2.4. [optional/ if necessary]JWT token bug, sometimes need the curlies sometimes not.... ie; import '{' jwtDecode '}' from "jwt-decode";
 3. **Optional development mode:** pnpm run dev
@@ -65,7 +65,7 @@ Once cloned ensure you have pnpm installed (if not already): npm install -g pnpm
 Our Front-End application is currently being hosted on Vercel, free tier as noted in the domain above.
 
 **Latest Release:**   
-v1.2.86   
+v1.2.89   
 
 **Stable Version:**   
 v1.1.51   

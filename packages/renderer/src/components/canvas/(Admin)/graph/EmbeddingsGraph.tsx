@@ -1,51 +1,49 @@
-// EmbeddingsGraph.tsx
-// /Users/matthewsimon/Documents/Github/solomon-Desktop-App/packages/renderer/src/components/canvas/(Admin)/graph/EmbeddingsGraph.tsx
-
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../../../../convex/_generated/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
+import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from 'lucide-react';
+import debounce from 'lodash/debounce';
+
 import { useGraphStore } from '@/lib/store/graphStore';
-import { GraphCanvas, GraphNode, GraphLink, SimulationSettings } from './_components/GraphCanvas';
+import { GraphCanvas, GraphNode, GraphLink } from './_components/GraphCanvas';
 import { GraphControls } from './_components/GraphControls';
 import { GraphUtilityButtons } from './_components/GraphUtilityButtons';
 import { NodeDetailsPanel } from './_components/NodeDetailsPanel';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const EmbeddingsGraph: React.FC = () => {
-  // 1) Retrieve data and functions from the store & Convex
   const {
-    embeddings,
     graphData,
     updateGraphNodes,
     updateGraphLinks,
     setGraphData,
-    resetGraph
+    simulationSettings,
+    updateSimulationSettings,
+    resetGraph,
+    resetAll,
+    isProcessing,
+    setProcessing,
+    selectionState,
+    setSelectedNode,
+    setHoveredNode,
+    undo,
+    redo,
+    pushStateToHistory
   } = useGraphStore();
+
+  const { toast } = useToast();
+
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showPanel, setShowPanel] = useState(true);
 
   const batchUpsertGraphNodes = useMutation(api.graph.batchUpsertGraphNodes);
   const batchUpsertGraphLinks = useMutation(api.graph.batchUpsertGraphLinks);
   const convexGraphData = useQuery(api.graph.getGraphData);
+  const generateLabels = useMutation(api.aiServices.batchGenerateLabels);
 
-  // 2) Local UI state
-  const [simulationSettings, setSimulationSettings] = useState<SimulationSettings>({
-    linkDistance: 100,
-    forceManyBody: -300,
-    collisionRadius: 30,
-    similarityThreshold: 0.5,
-    showLabels: true,
-    nodeGroupFilter: 'all',
-  });
-  const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
-  const [hoveredNode, setHoveredNode] = useState<GraphNode | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [showPanel, setShowPanel] = useState(true);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [refreshCount, setRefreshCount] = useState(0);
-
-  // 3) Compute unique groups for filtering
   const uniqueGroups = useMemo(() => {
     const groups = new Set<string>();
     if (graphData && graphData.nodes) {
@@ -54,7 +52,14 @@ const EmbeddingsGraph: React.FC = () => {
     return ['all', ...Array.from(groups)];
   }, [graphData]);
 
-  // 4) Filter nodes based on search term and selected group
+  const debouncedSetSearchTerm = useMemo(
+    () =>
+      debounce((term: string) => {
+        setSearchTerm(term);
+      }, 300),
+    [setSearchTerm]
+  );
+
   const filteredNodes = useMemo(() => {
     if (!graphData || !graphData.nodes) return [];
     return graphData.nodes.filter((node) => {
@@ -70,107 +75,287 @@ const EmbeddingsGraph: React.FC = () => {
     });
   }, [graphData, searchTerm, simulationSettings.nodeGroupFilter]);
 
-  // 5) Filter links based on filtered nodes and similarity threshold
   const filteredLinks = useMemo(() => {
-    if (!graphData || !graphData.links) return [];
+    if (!graphData || !graphData.links || filteredNodes.length === 0) return [];
     const nodeIds = new Set(filteredNodes.map((node) => node.id));
-    let links = graphData.links.filter((link) => {
+    return graphData.links.filter((link) => {
       const sourceId = typeof link.source === 'string' ? link.source : link.source.id;
       const targetId = typeof link.target === 'string' ? link.target : link.target.id;
-      return nodeIds.has(sourceId) && nodeIds.has(targetId);
+      return (
+        nodeIds.has(sourceId) &&
+        nodeIds.has(targetId) &&
+        link.similarity >= simulationSettings.similarityThreshold
+      );
     });
-    return links.filter((link) => link.similarity >= simulationSettings.similarityThreshold);
   }, [graphData, filteredNodes, simulationSettings.similarityThreshold]);
 
-  // 6) Fallback: if graphData is empty, use data from Convex
+  // Fallback: load fresh data from Convex only if convexGraphData exists and has nodes.
   useEffect(() => {
     if (
-      (!graphData || (!graphData.nodes?.length && !graphData.links?.length)) &&
-      convexGraphData
+      convexGraphData &&
+      convexGraphData.nodes &&
+      convexGraphData.nodes.length > 0 &&
+      (!graphData || !graphData.nodes || graphData.nodes.length === 0)
     ) {
-      const nodes = convexGraphData.nodes?.map((node) => ({
-        id: node.documentChunkId,
-        documentChunkId: node.documentChunkId,
-        label: node.label,
-        group: node.group,
-        significance: node.significance || 1,
-        x: (Math.random() - 0.5) * 800,
-        y: (Math.random() - 0.5) * 600,
-      })) || [];
-      
-      const links = convexGraphData.links?.map((link) => ({
-        source: link.source,
-        target: link.target, 
-        similarity: link.similarity,
-        relationship: link.relationship,
-      })) || [];
-      
+      const nodes =
+        convexGraphData.nodes.map((node) => ({
+          id: node.documentChunkId,
+          documentChunkId: node.documentChunkId,
+          label: node.label,
+          group: node.group,
+          significance: node.significance || 1,
+          x: (Math.random() - 0.5) * 800,
+          y: (Math.random() - 0.5) * 600,
+        })) || [];
+      const links =
+        convexGraphData.links?.map((link) => ({
+          source: link.source,
+          target: link.target,
+          similarity: link.similarity,
+          relationship: link.relationship,
+        })) || [];
       setGraphData({ nodes, links });
+      toast({
+        title: "Graph data loaded",
+        description: `Loaded ${nodes.length} nodes and ${links.length} links`,
+      });
     }
-  }, [convexGraphData, graphData, setGraphData]);
+  }, [convexGraphData, graphData, setGraphData, toast]);
 
-  // Handle refresh graph
-  const handleRefreshGraph = () => {
-    // Reset the graph state in our store
-    resetGraph();
-    
-    // Reset any UI state
-    setSelectedNode(null);
-    setHoveredNode(null);
-    setSearchTerm('');
-    setSimulationSettings({
-      linkDistance: 100,
-      forceManyBody: -300,
-      collisionRadius: 30,
-      similarityThreshold: 0.5,
-      showLabels: true,
-      nodeGroupFilter: 'all',
+  // Reset handler to clear local state (and optionally localStorage) so fresh data is loaded.
+  const handleResetGraphState = useCallback(() => {
+    resetAll();
+    localStorage.removeItem('solomon-graph-storage');
+    toast({
+      title: "Graph reset",
+      description: "Graph state has been reset and will load fresh data.",
     });
-    
-    // Force a complete remount of the GraphCanvas component
-    setRefreshCount(prevCount => prevCount + 1);
-  };
+  }, [resetAll, toast]);
 
-  // 7) Render main layout: graph area and controls side panel
+  const handleGenerateTestData = useCallback(async () => {
+    setProcessing(true);
+    try {
+      const testNodes = Array.from({ length: 30 }, (_, i) => ({
+        documentChunkId: `test-${i}`,
+        label: `Test Node ${i}`,
+        group: ['Research', 'Design', 'Development', 'Marketing'][Math.floor(Math.random() * 4)],
+        significance: Math.random() * 2 + 0.5,
+      }));
+      const testLinks = [];
+      for (let i = 0; i < testNodes.length; i++) {
+        const numConnections = Math.floor(Math.random() * 4) + 2;
+        for (let j = 0; j < numConnections; j++) {
+          let targetIndex;
+          do {
+            targetIndex = Math.floor(Math.random() * testNodes.length);
+          } while (targetIndex === i);
+          const similarity = Math.random() * 0.6 + 0.4;
+          let relationship;
+          if (similarity > 0.8) relationship = "strong";
+          else if (similarity > 0.6) relationship = "similar";
+          else relationship = "related";
+          testLinks.push({
+            source: testNodes[i].documentChunkId,
+            target: testNodes[targetIndex].documentChunkId,
+            similarity,
+            relationship,
+          });
+        }
+      }
+      await batchUpsertGraphNodes({ nodes: testNodes });
+      await batchUpsertGraphLinks({ links: testLinks });
+      setGraphData({
+        nodes: testNodes.map(node => ({
+          ...node,
+          id: node.documentChunkId,
+          x: (Math.random() - 0.5) * 800,
+          y: (Math.random() - 0.5) * 600,
+        })),
+        links: testLinks
+      });
+      toast({
+        title: "Test data generated",
+        description: `Created ${testNodes.length} nodes and ${testLinks.length} connections`,
+      });
+    } catch (error) {
+      console.error("Error generating test data:", error);
+      toast({
+        title: "Error",
+        description: "Failed to generate test data",
+        variant: "destructive",
+      });
+    } finally {
+      setProcessing(false);
+    }
+  }, [batchUpsertGraphNodes, batchUpsertGraphLinks, setGraphData, setProcessing, toast]);
+
+  const handleGenerateLinks = useCallback(async () => {
+    if (!graphData || !graphData.nodes || graphData.nodes.length < 2) {
+      toast({
+        title: "Cannot generate links",
+        description: "Need at least 2 nodes to generate links",
+        variant: "destructive",
+      });
+      return;
+    }
+    setProcessing(true);
+    try {
+      const nodes = graphData.nodes;
+      const newLinks = [];
+      for (let i = 0; i < nodes.length; i++) {
+        const sourceNode = nodes[i];
+        const sameGroupNodes = nodes.filter((n, idx) => idx !== i && n.group === sourceNode.group);
+        sameGroupNodes.forEach((targetNode) => {
+          newLinks.push({
+            source: sourceNode.id,
+            target: targetNode.id,
+            similarity: 0.7 + Math.random() * 0.3,
+            relationship: "strong",
+          });
+        });
+        const otherGroupNodes = nodes.filter((n, idx) => idx !== i && n.group !== sourceNode.group);
+        const randomCount = Math.min(3, otherGroupNodes.length);
+        const selectedIndices = new Set<number>();
+        while (selectedIndices.size < randomCount) {
+          selectedIndices.add(Math.floor(Math.random() * otherGroupNodes.length));
+        }
+        Array.from(selectedIndices).forEach((idx) => {
+          newLinks.push({
+            source: sourceNode.id,
+            target: otherGroupNodes[idx].id,
+            similarity: 0.4 + Math.random() * 0.3,
+            relationship: "related",
+          });
+        });
+      }
+      await batchUpsertGraphLinks({ links: newLinks });
+      const existingLinkKeys = new Set();
+      graphData.links.forEach((link) => {
+        const sourceId = typeof link.source === 'string' ? link.source : link.source.id;
+        const targetId = typeof link.target === 'string' ? link.target : link.target.id;
+        existingLinkKeys.add(`${sourceId}-${targetId}`);
+      });
+      const uniqueNewLinks = newLinks.filter((link) => {
+        const key = `${link.source}-${link.target}`;
+        return !existingLinkKeys.has(key);
+      });
+      updateGraphLinks([...graphData.links, ...uniqueNewLinks]);
+      pushStateToHistory();
+      toast({
+        title: "Links generated",
+        description: `Created ${uniqueNewLinks.length} new connections`,
+      });
+    } catch (error) {
+      console.error("Error generating links:", error);
+      toast({
+        title: "Error",
+        description: "Failed to generate links",
+        variant: "destructive",
+      });
+    } finally {
+      setProcessing(false);
+    }
+  }, [batchUpsertGraphLinks, graphData, pushStateToHistory, setProcessing, toast, updateGraphLinks]);
+
+  const handleOptimizeLabels = useCallback(async () => {
+    if (!graphData || !graphData.nodes || graphData.nodes.length === 0) {
+      toast({
+        title: "No nodes to optimize",
+        description: "Add some nodes first",
+        variant: "destructive",
+      });
+      return;
+    }
+    setProcessing(true);
+    try {
+      const nodeContents = graphData.nodes.map((node) =>
+        node.label.length > 20 ? node.label : `Sample content for ${node.label}`
+      );
+      const optimizedLabels = await generateLabels({
+        texts: nodeContents,
+        maxWords: 5,
+      });
+      const updatedNodes = graphData.nodes.map((node, idx) => ({
+        ...node,
+        label: optimizedLabels[idx] || node.label,
+      }));
+      updateGraphNodes(updatedNodes);
+      pushStateToHistory();
+      toast({
+        title: "Labels optimized",
+        description: `Updated labels for ${updatedNodes.length} nodes`,
+      });
+    } catch (error) {
+      console.error("Error optimizing labels:", error);
+      toast({
+        title: "Error",
+        description: "Failed to optimize labels",
+        variant: "destructive",
+      });
+    } finally {
+      setProcessing(false);
+    }
+  }, [generateLabels, graphData, pushStateToHistory, setProcessing, toast, updateGraphNodes]);
+
+  const handleNodeSelect = useCallback((node: GraphNode | null) => {
+    setSelectedNode(node);
+  }, [setSelectedNode]);
+
+  const handleNodeHover = useCallback((node: GraphNode | null) => {
+    setHoveredNode(node);
+  }, [setHoveredNode]);
+
   return (
     <div className="flex h-full">
-      {/* Graph visualization area */}
       <Card className="flex-1 p-4 h-full flex flex-col">
         <CardHeader className="pb-2">
           <div className="flex justify-between items-center">
             <CardTitle>Embeddings Visualization</CardTitle>
-            <GraphUtilityButtons
-              showPanel={showPanel}
-              onTogglePanel={() => setShowPanel(!showPanel)}
-              onRefreshGraph={handleRefreshGraph}
-            />
+            <div className="flex space-x-2">
+              <Button size="sm" variant="outline" onClick={undo} disabled={!graphData}>
+                Undo
+              </Button>
+              <Button size="sm" variant="outline" onClick={redo} disabled={!graphData}>
+                Redo
+              </Button>
+              <GraphUtilityButtons
+                onGenerateTestData={handleGenerateTestData}
+                onGenerateLinks={handleGenerateLinks}
+                onOptimizeLabels={handleOptimizeLabels}
+                onDebugConnections={() => console.log("Debug connections triggered")}
+                showPanel={showPanel}
+                onTogglePanel={() => setShowPanel(!showPanel)}
+                onResetGraph={resetGraph}
+                isProcessing={isProcessing}
+              />
+              <Button size="sm" variant="outline" onClick={handleResetGraphState}>
+                Reset Graph
+              </Button>
+            </div>
           </div>
           <CardDescription>
-            {filteredNodes.length} nodes and {filteredLinks.length} connections
-            {isProcessing && ' (Processing...)'}
+            {filteredNodes.length} nodes and {filteredLinks.length} connections {isProcessing && ' (Processing...)'}
           </CardDescription>
         </CardHeader>
-
         <CardContent className="flex-1 relative min-h-0">
           <div className="absolute inset-0 overflow-hidden">
             <GraphCanvas
-              key={`graph-canvas-${refreshCount}`} // Force complete remount on refresh
               width={800}
               height={600}
               nodes={filteredNodes}
               links={filteredLinks}
               simulationSettings={simulationSettings}
-              onNodeHover={setHoveredNode}
-              onNodeSelect={setSelectedNode}
-              hoveredNode={hoveredNode}
-              selectedNode={selectedNode}
+              onNodeHover={handleNodeHover}
+              onNodeSelect={handleNodeSelect}
+              hoveredNode={selectionState.hoveredNode}
+              selectedNode={selectionState.selectedNode}
             />
           </div>
           {isProcessing && filteredNodes.length === 0 && (
             <div className="absolute inset-0 flex items-center justify-center bg-white/50">
               <div className="flex flex-col items-center gap-2">
-                <div className="h-8 w-8 rounded-full border-t-2 border-b-2 border-gray-900 animate-spin"></div>
-                <div className="text-sm font-medium">Processing embeddings...</div>
+                <Loader2 className="h-8 w-8 text-gray-900 animate-spin" />
+                <div className="text-sm font-medium">Processing data...</div>
               </div>
             </div>
           )}
@@ -181,13 +366,12 @@ const EmbeddingsGraph: React.FC = () => {
                 <p className="text-muted-foreground mb-4">
                   There are no nodes to display. Either no embeddings are loaded or they don't match your filters.
                 </p>
+                <Button>Generate Test Data</Button>
               </div>
             </div>
           )}
         </CardContent>
       </Card>
-
-      {/* Side panel with controls and details */}
       {showPanel && (
         <Card className="w-72 ml-2 p-2 flex flex-col">
           <CardHeader className="pb-2">
@@ -206,18 +390,18 @@ const EmbeddingsGraph: React.FC = () => {
               <TabsContent value="controls" className="space-y-4 pt-4">
                 <GraphControls
                   searchTerm={searchTerm}
-                  onSearchChange={setSearchTerm}
+                  onSearchChange={(value) => debouncedSetSearchTerm(value)}
                   simulationSettings={simulationSettings}
-                  onSimulationSettingsChange={setSimulationSettings}
+                  onSimulationSettingsChange={updateSimulationSettings}
                   uniqueGroups={uniqueGroups}
                 />
               </TabsContent>
               <TabsContent value="details" className="pt-4">
                 <NodeDetailsPanel
-                  selectedNode={selectedNode}
+                  selectedNode={selectionState.selectedNode}
                   filteredLinks={filteredLinks}
                   filteredNodes={filteredNodes}
-                  onSelectNode={setSelectedNode}
+                  onSelectNode={handleNodeSelect}
                 />
               </TabsContent>
             </Tabs>

@@ -150,6 +150,16 @@ const schema = defineSchema({
   })
     .searchIndex("search_label", { searchField: "label" })
     .searchIndex("search_group", { searchField: "group" }),
+
+    // Add a new table for label caching
+    labelCache: defineTable({
+      textHash: v.string(),
+      originalText: v.string(),
+      label: v.string(),
+      createdAt: v.optional(v.number()),
+    }),
 });
+
+
 
 export default schema;

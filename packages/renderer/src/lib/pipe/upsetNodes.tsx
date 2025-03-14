@@ -1,8 +1,12 @@
+// UPSET NODES
+// /Users/matthewsimon/Documents/Github/solomon-Desktop-App/packages/renderer/src/lib/pipe/upsetNodes.tsx
+
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "../../../convex/_generated/api";
+import md5 from "md5";
 
-/** 
- * Example cosine similarity function 
+/**
+ * Cosine similarity function.
  */
 function cosineSimilarity(vecA: number[], vecB: number[]): number {
   if (vecA.length !== vecB.length) return 0;
@@ -19,116 +23,199 @@ function cosineSimilarity(vecA: number[], vecB: number[]): number {
 }
 
 /**
- * This function takes docChunks + chunkEmbeddings, 
- * and writes a corresponding graph of nodes/links to Convex's "graph" table.
- * 
- * We'll enhance the logic for label, group, significance, and link relationship.
+ * Normalization helper: returns a normalized (unit-length) vector.
+ */
+function normalize(vector: number[]): number[] {
+  const norm = Math.sqrt(vector.reduce((sum, val) => sum + val * val, 0));
+  return norm ? vector.map(val => val / norm) : vector;
+}
+
+/**
+ * Optimized function to upsert nodes and links with:
+ * - Smart batching
+ * - AI-generated labels with caching
+ * - Prioritized link creation
  */
 export async function upsertNodesAndLinks(
   docChunks: any[],
   chunkEmbeddings: { embedding: number[] }[],
   convexUrl: string,
-  similarityThreshold = 0.4,  // Lower threshold = more edges
-  topK = 5                   // Up to 5 neighbors per node
+  similarityThreshold = 0.4,  // Adjust this (e.g., 0.2) if necessary.
+  topK = 5
 ): Promise<void> {
-  // 1) Create the Convex client for server-side usage
+  // Create Convex client.
   const convex = new ConvexHttpClient(convexUrl);
 
-  // 2) Upsert Graph Nodes
-  const nodes = docChunks.map((chunk, index) => {
+  // Step 1: Prepare node data (we use docChunks and the corresponding embedding arrays)
+  const nodePrep = docChunks.map((chunk, index) => {
     const meta = chunk.metadata || {};
-
-    // Dynamic label: prefer docTitle, else the first heading, else snippet, else fallback
-    let label = meta.docTitle;
-    if (!label || label === "Untitled") {
-      if (meta.headings && meta.headings.length > 0) {
-        label = meta.headings[0];
-      } else if (meta.snippet) {
-        label = meta.snippet.slice(0, 60);
-      } else {
-        // Fallback to first ~60 chars of text
-        label = chunk.pageContent.slice(0, 60).replace(/\s+/g, " ");
-      }
+    const textForLabel = chunk.pageContent || "";
+    let textHash: string;
+    try {
+      textHash = md5(textForLabel.slice(0, 500));
+    } catch (error) {
+      console.error("Error generating md5 hash; applying fallback:", error);
+      // Fallback: encode the text to try to avoid malformed sequences.
+      textHash = md5(encodeURI(textForLabel.slice(0, 500)));
     }
 
-    // Dynamic group: prefer topics[0], else docAuthor, else fallback
-    let group = "Unknown";
-    if (meta.topics && meta.topics.length > 0) {
-      group = meta.topics[0];
-    } else if (meta.docAuthor && meta.docAuthor !== "Unknown") {
-      group = meta.docAuthor;
-    }
-
-    // Dynamic significance: maybe use the number of tokens or an “importance” field if you have it
-    const significance = meta.numTokens
-      ? Math.max(1, Math.log10(meta.numTokens + 1)) // e.g. scale up by log(# tokens)
-      : 1;
+    // DEBUG: Log embedding length for each chunk.
+    console.log(`Chunk ${chunk.uniqueChunkId}: embedding length =`, chunkEmbeddings[index]?.length || 0);
 
     return {
       documentChunkId: chunk.uniqueChunkId,
-      label,
-      group,
-      // any numeric measure, e.g. token-based
-      significance,
+      textHash,
+      textForLabel,
+      group: determineGroup(meta),
+      significance: calculateSignificance(meta),
+      // Use the embedding directly since chunkEmbeddings is an array of number[].
+      embedding: chunkEmbeddings[index] || []
     };
   });
 
-  await convex.mutation(api.graph.batchUpsertGraphNodes, {
-    nodes,
-  });
+  // (Optional) Log all node IDs to help verify uniqueness:
+  nodePrep.forEach((node) => console.log("Prepared node ID:", node.documentChunkId));
 
-  // 3) Upsert Graph Links
-  // Build an array to handle (chunkId, embedding, maybe some metadata)
-  const chunkItems = docChunks.map((chunk, i) => ({
-    id: chunk.uniqueChunkId,
-    embedding: chunkEmbeddings[i]?.embedding || [],
-    metadata: chunk.metadata || {}
+  // Step 2: Check which labels we already have cached.
+  const textHashes = nodePrep.map(node => node.textHash);
+  const existingLabels = new Map<string, string>();
+  for (let i = 0; i < textHashes.length; i += 20) {
+    const batchHashes = textHashes.slice(i, i + 20);
+    const labelPromises = batchHashes.map(hash =>
+      convex.query(api.labelCache.getLabel, { textHash: hash })
+    );
+    const batchResults = await Promise.all(labelPromises);
+    batchHashes.forEach((hash, idx) => {
+      if (batchResults[idx]) {
+        existingLabels.set(hash, batchResults[idx]);
+      }
+    });
+  }
+
+  // Step 3: Generate missing labels with AI.
+  const missingLabelTexts: string[] = [];
+  const missingLabelIndices: number[] = [];
+  nodePrep.forEach((node, index) => {
+    if (!existingLabels.has(node.textHash)) {
+      missingLabelTexts.push(node.textForLabel);
+      missingLabelIndices.push(index);
+    }
+  });
+  if (missingLabelTexts.length > 0) {
+    const generatedLabels: string[] = await convex.action(
+      api.aiServices.batchGenerateLabels,
+      { texts: missingLabelTexts }
+    );
+    missingLabelIndices.forEach((nodeIndex, arrayIndex) => {
+      const node = nodePrep[nodeIndex];
+      const newLabel = generatedLabels[arrayIndex];
+      existingLabels.set(node.textHash, newLabel);
+      // Cache the new label in the database.
+      convex.mutation(api.labelCache.storeLabel, {
+        textHash: node.textHash,
+        originalText: node.textForLabel.slice(0, 500),
+        label: newLabel
+      }).catch(err => console.error("Error caching label:", err));
+    });
+  }
+
+  // Step 4: Prepare final node data with labels (for insertion into the graph table).
+  const nodes = nodePrep.map(node => ({
+    documentChunkId: node.documentChunkId,
+    label: existingLabels.get(node.textHash) || defaultLabel(node.textForLabel),
+    group: node.group,
+    significance: node.significance
   }));
 
+  // Step 5: Upsert nodes in batches.
+  await convex.mutation(api.graph.batchUpsertGraphNodes, { nodes });
+  console.log("Upserted nodes:", nodes.length);
+
+  // Step 6: Calculate and upsert links.
+  // We use the original nodePrep data to compute pairwise similarities based on embeddings.
+  const chunkItems = nodePrep.map(node => ({
+    id: node.documentChunkId,
+    embedding: node.embedding
+  }));
   const allLinks: Array<{
     source: string;
     target: string;
     similarity: number;
     relationship: string;
   }> = [];
-
   for (let i = 0; i < chunkItems.length; i++) {
     const source = chunkItems[i];
     if (!source.embedding.length) continue;
-
-    // Calculate similarity to all other embeddings
-    const scores: { targetId: string; similarity: number }[] = [];
+    const similarities: Array<{ targetId: string; similarity: number; relationship: string }> = [];
     for (let j = 0; j < chunkItems.length; j++) {
       if (i === j) continue;
       const target = chunkItems[j];
       if (!target.embedding.length) continue;
-
-      const sim = cosineSimilarity(source.embedding, target.embedding);
+      // Normalize embeddings for a fair cosine similarity comparison.
+      const sourceNorm = normalize(source.embedding);
+      const targetNorm = normalize(target.embedding);
+      const sim = cosineSimilarity(sourceNorm, targetNorm);
+      console.log(`Similarity between ${source.id} and ${target.id}:`, sim);
       if (sim >= similarityThreshold) {
-        scores.push({ targetId: target.id, similarity: sim });
+        similarities.push({
+          targetId: target.id,
+          similarity: sim,
+          relationship: determineRelationship(sim)
+        });
       }
     }
-
-    // Sort descending by similarity & take topK
-    scores.sort((a, b) => b.similarity - a.similarity);
-    const topMatches = scores.slice(0, topK);
-
+    similarities.sort((a, b) => b.similarity - a.similarity);
+    const topMatches = similarities.slice(0, topK);
     topMatches.forEach(match => {
-      // If you have a more advanced logic for "relationship," do it here
-      // e.g. "sameAuthor," "sameTopic," etc. For now, "similar."
       allLinks.push({
         source: source.id,
         target: match.targetId,
         similarity: match.similarity,
-        relationship: "similar"
+        relationship: match.relationship
       });
     });
   }
+  console.log("Total generated links:", allLinks.length);
 
-  // Insert all links
+  // Step 7: Upsert links in batches.
   if (allLinks.length > 0) {
-    await convex.mutation(api.graph.batchUpsertGraphLinks, {
-      links: allLinks
-    });
+    await convex.mutation(api.graph.batchUpsertGraphLinks, { links: allLinks });
+    console.log("Upserted links:", allLinks.length);
+  } else {
+    console.warn("No links generated - check your embeddings and similarity threshold");
   }
+}
+
+// Helper functions.
+function determineGroup(meta: any): string {
+  if (meta.topics && meta.topics.length > 0) {
+    return meta.topics[0];
+  } else if (meta.docAuthor && meta.docAuthor !== "Unknown") {
+    return meta.docAuthor;
+  } else if (meta.docTitle) {
+    return "From: " + meta.docTitle.split(" ")[0];
+  }
+  return "Unknown";
+}
+
+function calculateSignificance(meta: any): number {
+  let score = 1;
+  if (meta.numTokens) {
+    score += Math.log10(meta.numTokens + 1);
+  }
+  if (meta.headings && meta.headings.length > 0) {
+    score += 0.5;
+  }
+  return score;
+}
+
+function determineRelationship(similarity: number): string {
+  if (similarity > 0.8) return "strong";
+  if (similarity > 0.6) return "similar";
+  if (similarity > 0.4) return "related";
+  return "weak";
+}
+
+function defaultLabel(text: string): string {
+  return text.slice(0, 40).replace(/\s+/g, " ") + "...";
 }
